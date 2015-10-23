@@ -1,0 +1,15 @@
+{
+  "name": "federalist-builder",
+  "version": "0.0.0",
+  "description": "Checks an SQS queue and launches Federalist builds on ECS",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "dhcole",
+  "license": "CC0",
+  "dependencies": {
+    "aws-sdk": "^2.2.10",
+    "cfenv": "^1.0.3"
+  }
+}
