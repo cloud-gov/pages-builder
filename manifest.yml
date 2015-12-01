@@ -1,0 +1,15 @@
+---
+applications:
+- name: federalist-builder
+domain: 18f.gov
+hostname: federalist-builder
+disk_quota: 512M
+memory: 1G
+instances: 1
+services:
+- federalist-aws-user
+env:
+  SQS_URL: "https://sqs.us-east-1.amazonaws.com/144433228153/federalist-builds"
+  ECS_CLUSTER: default
+  ECS_TASK: "federalist-builder:4"
+  MAX_TASKS: 2

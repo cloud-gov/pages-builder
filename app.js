@@ -7,20 +7,23 @@ var queueUrl = process.env.SQS_URL,
 
 // Librarys
 var AWS = require('aws-sdk'),
-    sqs = new AWS.SQS(),
-    ecs = new AWS.ECS(),
     http = require('http'),
     cfenv = require('cfenv'),
     appEnv = cfenv.getAppEnv(),
     awsCreds = appEnv.getServiceCreds('federalist-aws-user');
 
 // If running in Cloud Foundry, use AWS credentials from a service
-if (s3Creds) {
+if (awsCreds) {
   AWS.config.update({
     accessKeyId: awsCreds.access_key,
-    secretAccessKey: awsCreds.secret_key
+    secretAccessKey: awsCreds.secret_key,
+    region: 'us-east-1'
   });
 }
+
+// AWS services
+var sqs = new AWS.SQS(),
+    ecs = new AWS.ECS();
 
 // Listen on PORT (CloudFoundry pings this to make sure the script is running)
 http.createServer(function(req, res) {
@@ -33,7 +36,6 @@ checkQueue();
 
 // Check SQS queue
 function checkQueue() {
-  console.log('checking queue');
   var params = {
         QueueUrl: queueUrl,
         MaxNumberOfMessages: 1,
@@ -41,7 +43,9 @@ function checkQueue() {
       };
   sqs.receiveMessage(params, function(err, data) {
     if (err) error(err);
-    if (data && data.Messages[1]) checkCapacity(data.Messages[1]);
+    if (data && data.Messages && data.Messages[0]) {
+      checkCapacity(data.Messages[0]);
+    }
     checkQueue();
   });
 }
@@ -53,8 +57,7 @@ function checkCapacity(message) {
       };
   ecs.describeClusters(params, function(err, data) {
     if (err) return error(err);
-
-    var cluster = data.clusters[1],
+    var cluster = data.clusters[0],
         tasks;
 
     if (cluster) {
@@ -67,7 +70,7 @@ function checkCapacity(message) {
 
 // Run task and delete message once it's initialized
 function runTask(message) {
-  var body = JSON.parse(message.body),
+  var body = JSON.parse(message.Body),
       params = {
         taskDefinition: taskDefinition,
         cluster: clusterName,
@@ -80,9 +83,11 @@ function runTask(message) {
           QueueUrl: queueUrl,
           ReceiptHandle: message.ReceiptHandle
         };
-    sqs.deleteMessage(params, function(err, data) {
-      if (err) return error(err);
-    });
+    if (data.tasks.length) {
+      sqs.deleteMessage(params, function(err, data) {
+        if (err) return error(err);
+      });
+    }
   });
 }
 
