@@ -1,0 +1,12 @@
+sudo: required
+deploy:
+  edge: true
+  provider: deploy-federalist
+  username: DEPLOYER_USER
+  password:
+    secure: d2KNQ/VHupHWGsYYsuLHOaV+ETCEUAtlBjAd4vRoo0AbzbklkrtVrWKvaPQLcapf/AVDrhn0OlgbTDTpkrrOV69BzLa7ETJJM+6dV08jh69lpHKXDJhxzuaKex8KnhWZP9iK7A8BpJEc7fItdJeFeyzJQ+g2+eHRKSDp8Y/JMckZsBKJheG0MkFTTYqC4rWaj4Gvqnl7T0ylGrNEf827e3UTf1G1tg20Zr8m6jQltoKORYP3twDN76yliv1KU6MAZXO2h26pc59wDrpNbpITtuU4j3S/Dr7bLpCNU1iqnPw3Ywa74JsYuTE5EAD0gTM5gnL/xG2x1nR3Mh/IRmLPo4+gpKnNUDAiVtaPWJxyFIUtvk8Dga9VQV9ICg6B640x2UBZCHY434DerNAZ2tOX9Fng6x34/BuKRTVbTmanXNWan6zwol1/FJDHZYDEx0/t7QQwEhRPmerZVZ5k5yYTp6akU/gxVVgwY6gjKIZTSHwkVGD3raBb3oBcGopISH5ufORDA+UEmpfZ24++W1ulVyeMqw3qZBRjymiPxDXZta/IEXRcbG+5Utt86VQogk57RqGmAlTc7/IIKBqvnHfgNCvAdgXgMpfqyQHV/7PvLaDFcJcbRfSFvSccls/mto/jlULTgkYifdcRWSu0ma4v5PftBXoUUPMSXgQTOU84itU=
+  api: https://api.cloud.gov
+  organization: federalist
+  space: prod
+  on:
+    branch: master
