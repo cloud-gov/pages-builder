@@ -1,13 +1,19 @@
-sudo: required
 language: node_js
+sudo: true
+node_js:
+- "4.2.3"
+env:
+  global:
+  - CF_APP=federalist-builder
+  - CF_API=https://api.cloud.gov
+  - CF_USERNAME=deploy-federalist
+  - CF_ORGANIZATION=federalist
+  - CF_SPACE=prod
+  - secure: "dQnuUVyWtfYtjXuMXZJ48IN14M+FnbJ/euMOrBolxBnqKbQkLbnKY+BsGsgM1Lj9r611gczWIkt1Lv487gc2Z1LSWnTMrwgFLG4C7B+n7nRkhZGo8aisp+KjzeJljVkj7XoMNJ23qYkkAZ40/TpCj8C2CVGDvf2H9L0O0NlEkZCTmSWyvBSJ/+FHZVFICM8sm4qrGjDKTlPEaPS+ZHBHp3Ow6irpgCYfFPGyODEIkGfAzAu7t3Ta4cOaC7ha1hr+ayj9W6ImGvFvK1hFWQkpDiJanK+42keCk8KPJAwmP6a0r4BJ6UtzmNlN7N4+BL8WhvS3QrgWiEWjEVSli3Y3IUUS66hPOo0YrzbPK5TBscgh9HyWpPooKz8se5J8ehvhCR/vOzjJpg1AVeegCJczWe4t/XWNZKHtqu7z6e0Ft7DuDAUvY1BSObNSPPCP6Omx69nfeRENj5QEZNM7hFMxBQxBHmUdFroogN2jAXx4i8sTLfMUr0sDFyslX8FRrQtCUIKSvHzBwLb57riRnv3YfI9MNG2hOqN0aeQFQ2v65+Q02f6Ms6Jrj5YQV6B8dJ9RkwCXoDKN+FOtjepYaQCZbBWqnJJlULYVp/fVkHaU4COxUt3t86/w2ymYuLBvgeLEpYC8JIoM6T0V8dfE6kH3OvvYNEW4L2+w8rZU25St1Xs="
+  - CXX=g++-4.8
+before_deploy: npm install -g https://github.com/18F/cf-blue-green/tarball/master
 deploy:
-  edge: true
-  provider: cloudfoundry
-  username: deploy-federalist
-  password:
-    secure: sLw6BSkVU9OUTJmZ6EysgAr+WtdIvSuo+b+bZ2Zk6wk4ayt+NWVcSYqkdkFH5spQ+pUWb1VgOWxFltlNhhkgzgDBxTOMehhKJ0/X/s0RJPdd16oX6kCBjxvJLesC9dXQG3zjuw5F51IXIqaQJfCP8/MtAL/LPxOeZL87dBHaj1QZGY4g90zfAM5WTS3zlgKCNq2KDXPKou4IboPVfZ16HGFdwxmnL9XNOtHOMd1Uutk8gGyeIi83gpqEzpiGYGAn6qYIBZf9XxhG7Iv+cH2arb1nKvERyp9/5GJBo1u0eAnjUu/9qR5BLEixHNwwC2DyaCgeBUz087M9pqpsWqXV0OSHbYkpBz3R8/bagmj3wLb5/yDRFy2xRpmkVDO0pH0NkEv0ldos3p+0d8++sPk15L/UsTlzxe84YhOI+Aqd3dpXwyZk/Gdd5C+vc2IYpGDlJeIolvDIjhLbIzmWBtz909YJMEdIckYxqmJxm9AEJ5JovLswN5u0ZSBX01Mus3ZuhliFD2vJU473nUnljW99pHaqe0z0EKyMDCclgPcK8IohS5OsBizhOzHbGrKU97mVPHx7wP31zltJgO59BO99/aaL9u9oIf8JJT/N4EOWSRtH74/46E2Yhc7vh+IjcWwn53EqCN24d1oZ9//hOC/BYX7uwJ9uevEK0c4CvJarfQ4=
-  api: https://api.cloud.gov
-  organization: federalist
-  space: prod
+  provider: script
+  script: cf-blue-green-travis
   on:
     branch: master
