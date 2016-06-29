@@ -1,4 +1,4 @@
-# federalist-builder
+# federalist-builder [![Build Status](https://travis-ci.org/18F/federalist-builder.svg?branch=master)](https://travis-ci.org/18F/federalist-builder)
 
 This application is used to launch build tasks for Federalist in an AWS ECS Docker container based on messages from an AWS SQS queue. It limits the number of simultaneous tasks to stay under the ECS cluster's memory capacity.
 
