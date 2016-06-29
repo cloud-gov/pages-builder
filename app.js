@@ -1,3 +1,9 @@
+// If settings present, start New Relic
+if (process.env.NEW_RELIC_APP_NAME && process.env.NEW_RELIC_LICENSE_KEY) {
+  console.log('Activating New Relic: ', process.env.NEW_RELIC_APP_NAME);
+  require('newrelic');
+}
+
 // ENV Vars
 var queueUrl = process.env.SQS_URL,
     clusterName = process.env.ECS_CLUSTER,
