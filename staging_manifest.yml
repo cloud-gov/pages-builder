@@ -1,0 +1,16 @@
+---
+applications:
+- name: federalist-builder-staging
+domain: 18f.gov
+hostname: federalist-builder-staging
+disk_quota: 512M
+memory: 512M
+instances: 1
+services:
+- federalist-aws-user
+env:
+  SQS_URL: "https://sqs.us-east-1.amazonaws.com/144433228153/federalist-builds-staging"
+  ECS_CLUSTER: default
+  ECS_TASK: "federalist-builder:4"
+  MAX_TASKS: 2
+  DEBUG: true
