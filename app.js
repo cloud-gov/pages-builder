@@ -6,19 +6,20 @@ if (process.env.NEW_RELIC_APP_NAME && process.env.NEW_RELIC_LICENSE_KEY) {
 
 // ENV Vars
 var queueUrl = process.env.SQS_URL,
-    clusterName = process.env.ECS_CLUSTER,
-    taskDefinition = process.env.ECS_TASK,
     maxTasks = process.env.MAX_TASKS,
     port = process.env.PORT,
     debugMode = process.env.DEBUG || false;
 
 // Librarys
-const AWS = require("./src/aws")
 var http = require('http')
 
 // AWS services
+const AWS = require("./src/aws")
 const sqs = new AWS.SQS()
-const ecs = new AWS.ECS()
+
+// Setup cluster manager
+const Cluster = require("./src/cluster")
+const cluster = new Cluster()
 
 // Listen on PORT (CloudFoundry pings this to make sure the script is running)
 http.createServer(function(req, res) {
@@ -54,53 +55,32 @@ function checkQueue() {
 
 // On message, check ECS task capacity and length
 function checkCapacity(message) {
-  log('function checkCapacity() called');
-
-  var params = {
-    clusters: [ clusterName ]
-  };
-  ecs.describeClusters(params, function(err, data) {
-    log('ECS describeClusters: ', err, data);
-
-    if (err) return error(err);
-
-    var cluster = data.clusters[0],
-        tasks;
-
-    if (cluster) {
-      tasks = cluster.runningTasksCount + cluster.pendingTasksCount;
-      if (tasks < maxTasks) runTask(message);
+  cluster.countAvailableNodes().then(nodeCount => {
+    if (nodeCount < maxTasks) {
+      runTask(message)
     }
-
-  });
+  }).catch(err => {
+    error(err)
+  })
 }
 
 // Run task and delete message once it's initialized
 function runTask(message) {
-  log('function runTask() called');
+  const containerOverrides = JSON.parse(message.Body)
 
-  var body = JSON.parse(message.Body),
-      params = {
-        taskDefinition: taskDefinition,
-        cluster: clusterName,
-        overrides: { containerOverrides: [ body ] }
-      };
-
-  ecs.runTask(params, function(err, data) {
-    log('ECS runTask: ', err, data);
-
-    if (err) return error(err);
-
-    var params = {
-          QueueUrl: queueUrl,
-          ReceiptHandle: message.ReceiptHandle
-        };
-    if (data.tasks.length) {
-      sqs.deleteMessage(params, function(err, data) {
-        if (err) return error(err);
-      });
+  cluster.runTask(containerOverrides).then(() => {
+    const params = {
+      QueueUrl: queueUrl,
+      ReceiptHandle: message.ReceiptHandle
     }
-  });
+    sqs.deleteMessage(params, (err) => {
+      if (err) {
+        throw err
+      }
+    })
+  }).catch(err => {
+    error(err)
+  })
 }
 
 // Handle errors
