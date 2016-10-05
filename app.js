@@ -5,21 +5,19 @@ if (process.env.NEW_RELIC_APP_NAME && process.env.NEW_RELIC_LICENSE_KEY) {
 }
 
 // ENV Vars
-var queueUrl = process.env.SQS_URL,
-    maxTasks = process.env.MAX_TASKS,
-    port = process.env.PORT,
-    debugMode = process.env.DEBUG || false;
+const maxTasks = process.env.MAX_TASKS
+const port = process.env.PORT
 
 // Librarys
 var http = require('http')
 
-// AWS services
-const AWS = require("./src/aws")
-const sqs = new AWS.SQS()
-
 // Setup cluster manager
 const Cluster = require("./src/cluster")
 const cluster = new Cluster()
+
+// Setup SQS client
+const SQSClient = require("./src/sqs-client")
+const sqsClient = new SQSClient()
 
 // Listen on PORT (CloudFoundry pings this to make sure the script is running)
 http.createServer(function(req, res) {
@@ -34,23 +32,15 @@ checkQueue();
 
 // Check SQS queue
 function checkQueue() {
-  log('function checkQueue() called');
-
-  var params = {
-        QueueUrl: queueUrl,
-        MaxNumberOfMessages: 1,
-        WaitTimeSeconds: 20
-      };
-  sqs.receiveMessage(params, function(err, data) {
-    log('SQS receiveMessage: ', err, data.Messages);
-
-    if (err) error(err);
-
-    if (data && data.Messages && data.Messages[0]) {
-      checkCapacity(data.Messages[0]);
+  sqsClient.receiveMessage().then(message => {
+    if (message) {
+      checkCapacity(message)
     }
-    checkQueue();
-  });
+    checkQueue()
+  }).catch(err => {
+    error(err)
+    checkQueue()
+  })
 }
 
 // On message, check ECS task capacity and length
@@ -59,9 +49,7 @@ function checkCapacity(message) {
     if (nodeCount < maxTasks) {
       runTask(message)
     }
-  }).catch(err => {
-    error(err)
-  })
+  }).catch(err => error(err))
 }
 
 // Run task and delete message once it's initialized
@@ -69,18 +57,8 @@ function runTask(message) {
   const containerOverrides = JSON.parse(message.Body)
 
   cluster.runTask(containerOverrides).then(() => {
-    const params = {
-      QueueUrl: queueUrl,
-      ReceiptHandle: message.ReceiptHandle
-    }
-    sqs.deleteMessage(params, (err) => {
-      if (err) {
-        throw err
-      }
-    })
-  }).catch(err => {
-    error(err)
-  })
+    return sqsClient.deleteMessage(message)
+  }).catch(err => error(err))
 }
 
 // Handle errors
