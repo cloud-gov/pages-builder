@@ -13,26 +13,12 @@ var queueUrl = process.env.SQS_URL,
     debugMode = process.env.DEBUG || false;
 
 // Librarys
-var AWS = require('aws-sdk'),
-    http = require('http'),
-    cfenv = require('cfenv'),
-    appEnv = cfenv.getAppEnv(),
-    awsCreds = appEnv.getServiceCreds('federalist-aws-user');
-
-// If running in Cloud Foundry, use AWS credentials from a service
-if (awsCreds) {
-  log('AWS Creds received: ', Object.keys(awsCreds));
-
-  AWS.config.update({
-    accessKeyId: awsCreds.access_key,
-    secretAccessKey: awsCreds.secret_key,
-    region: 'us-east-1'
-  });
-}
+const AWS = require("./src/aws")
+var http = require('http')
 
 // AWS services
-var sqs = new AWS.SQS(),
-    ecs = new AWS.ECS();
+const sqs = new AWS.SQS()
+const ecs = new AWS.ECS()
 
 // Listen on PORT (CloudFoundry pings this to make sure the script is running)
 http.createServer(function(req, res) {
