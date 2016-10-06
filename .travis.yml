@@ -1,7 +1,7 @@
 language: node_js
 sudo: true
 node_js:
-- "4.2.3"
+- "6.6.0"
 env:
   global:
   - CF_API=https://api.cloud.gov

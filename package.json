@@ -5,7 +5,7 @@
   "main": "app.js",
   "scripts": {
     "start": "node app",
-    "test": "exit 0"
+    "test": "`npm bin`/mocha"
   },
   "author": "dhcole",
   "license": "CC0",
@@ -13,5 +13,9 @@
     "aws-sdk": "^2.2.10",
     "cfenv": "^1.0.3",
     "newrelic": "^1.28.1"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^3.1.0"
   }
 }
