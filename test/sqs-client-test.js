@@ -1,5 +1,3 @@
-process.env.SQS_URL = "https://sqs.us-east-1.amazonaws.com/123abc/456def"
-
 let expect = require("chai").expect
 let SQSClient = require("../src/sqs-client")
 

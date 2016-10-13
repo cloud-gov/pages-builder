@@ -1,5 +1,3 @@
-process.env.BUILD_COMPLETE_CALLBACK = "https://example.com"
-
 const expect = require("chai").expect
 const Build = require("../src/build")
 
@@ -32,7 +30,7 @@ describe("Build", () => {
       const build = new Build(sqsMessage)
       expect(build.containerEnvironment).to.have.property(
         "FEDERALIST_BUILDER_CALLBACK",
-        `https://example.com/node/${build.buildID}`
+        `https://example.com/builds/${build.buildID}/callback`
       )
     })
   })

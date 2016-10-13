@@ -2,15 +2,16 @@ const crypto = require("crypto")
 const nock = require("nock")
 
 const mockUpdateAppRequest = (guid, environment) => {
-  nock("https://api.example.com", {
-      reqheaders: {
-        "authorization": /Bearer .+/
-      }
-    })
-    .put(`/v2/apps/${guid}`, {
+  const requestMock = nock("https://api.example.com", {
+    reqheaders: {
+      "authorization": /Bearer .+/
+    }
+  })
+
+  if (guid && environment) {
+    requestMock.put(`/v2/apps/${guid}`, {
       environment_json: environment,
-    })
-    .reply(201, {
+    }).reply(201, {
       metadata: {
         guid: guid,
         url: `/v2/apps/${guid}`
@@ -21,6 +22,11 @@ const mockUpdateAppRequest = (guid, environment) => {
         environment_json: environment,
       },
     })
+  } else {
+    requestMock.put(/v2\/apps\/.+/).reply(201)
+  }
+
+  return requestMock
 }
 
 module.exports = mockUpdateAppRequest

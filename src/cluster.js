@@ -1,77 +1,105 @@
+const url = require("url")
 const AWS = require("./aws")
+const CloudFoundryAPIClient = require("./cloud-foundry-api-client")
 
 class Cluster {
   constructor() {
-    this.capacity = process.env.MAX_TASKS || 1
-    this._ecs = new AWS.ECS()
+    this._containers = []
+    this._monitoringCluster = false
+    this._apiClient = new CloudFoundryAPIClient()
   }
 
-  countAvailableNodes() {
-    const params = this._ecsDescriptionParams()
-
-    return new Promise((resolve, reject) => {
-      this._ecs.describeClusters(params, (err, data) => {
-        if (err) {
-          reject(err)
-        } else if (data.clusters.length == 0) {
-          reject(new ClusterNotPresentInECSCallbackError())
-        } else {
-          const cluster = data.clusters[0]
-          const busyNodeCount = cluster.runningTasksCount + cluster.pendingTasksCount
-          resolve(this.capacity - busyNodeCount)
-        }
-      })
-    })
+  countAvailableContainers() {
+    return this._containers.filter(container => !container.build).length
   }
 
-  runTask(containerOverrides) {
-    const params = this._ecsTaskParams(containerOverrides)
-
-    return new Promise((resolve, reject) => {
-      this._ecs.runTask(params, (err, data) => {
-        if (err) {
-          reject(err)
-        } else if (data.tasks.length == 0) {
-          reject(new TaskNotPresentInECSCallbackError())
-        } else {
-          resolve(data.tasks[0])
-        }
-      })
-    })
+  start() {
+    this._monitoringCluster = true
+    this._monitorCluster()
   }
 
-  _ecsClustName() {
-    return process.env.ECS_CLUSTER || "default"
-  }
+  startBuild(build) {
+    let container = this._firstAvailableContainer()
 
-  _ecsDescriptionParams() {
-    return {
-      clusters: [ this._ecsClustName() ]
+    if (container) {
+      return this._startBuildOnContainer(build, container)
+    } else {
+      return Promise.reject(new NoContainersAvailableError())
     }
   }
 
-  _ecsTaskDefinition() {
-    return process.env.ECS_TASK
+  stop() {
+    this._monitoringCluster = false
   }
 
-  _ecsTaskParams(containerOverrides) {
-    return {
-      taskDefinition: this._ecsTaskDefinition(),
-      cluster: this._ecsClustName(),
-      overrides: { containerOverrides: [ containerOverrides ] }
+  stopBuild(buildID) {
+    const container = this._findBuildContainer(buildID)
+    if (container) {
+      clearTimeout(container.timeout)
+      container.build = undefined
     }
   }
-}
 
-class ClusterNotPresentInECSCallbackError extends Error {
-  constructor() {
-    super("ECS.DescribeClusters called back with a response that did not include any clusters")
+  _firstAvailableContainer() {
+    return this._containers.find(container => !container.build)
+  }
+
+  _findBuildContainer(buildID) {
+    return this._containers.find(container => {
+      return container.build.buildID === buildID
+    })
+  }
+
+  _findContainer(guid) {
+    return this._containers.find(container => container.guid === guid)
+  }
+
+  _monitorCluster() {
+    if (this._monitoringCluster) {
+      this._apiClient.fetchBuildContainers().then(containers => {
+        this._resolveNewContainers(containers)
+      }).then(() => {
+        setTimeout(() => {
+          this._monitorCluster()
+        }, 60 * 1000)
+      })
+    }
+  }
+
+  _resolveNewContainers(containers) {
+    this._containers = containers.map(newContainer => {
+      const existingContainer = this._findContainer(newContainer.guid)
+
+      if (existingContainer) {
+        return Object.assign(newContainer, {
+          build: existingContainer.build,
+          timeout: timeout,
+        })
+      } else {
+        return newContainer
+      }
+    })
+  }
+
+  _startBuildOnContainer(build, container) {
+    container.build = build
+    container.timeout = setTimeout(() => {
+      this.stopBuild(build.buildID)
+    }, 300 * 1000)
+    return this._apiClient.updateBuildContainer(
+      container,
+      build.containerEnvironment
+    ).catch(error => {
+      container.build = undefined
+      clearTimeout(container.timeout)
+      throw error
+    })
   }
 }
 
-class TaskNotPresentInECSCallbackError extends Error {
+class NoContainersAvailableError extends Error {
   constructor() {
-    super("ECS.RunTask called back with a response that did not include any tasks")
+    super("Unable to start build because no containers were available")
   }
 }
 

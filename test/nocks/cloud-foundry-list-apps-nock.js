@@ -2,15 +2,15 @@ const crypto = require("crypto")
 const nock = require("nock")
 
 const mockListAppsRequest = (resources) => {
-  nock("https://api.example.com", {
-      reqheaders: {
-        "authorization": /Bearer .+/
-      }
-    })
-    .get(`/v2/spaces/123abc-456def-789ghi/apps`)
-    .reply(200, {
-      resources: resources.map(expandResource)
-    })
+  return nock("https://api.example.com", {
+    reqheaders: {
+      "authorization": /Bearer .+/
+    }
+  }).get(
+    `/v2/spaces/123abc-456def-789ghi/apps`
+  ).reply(200, {
+    resources: resources.map(expandResource)
+  })
 }
 
 const expandResource = (resource) => {

@@ -1,7 +1,3 @@
-process.env.CLOUD_FOUNDRY_OAUTH_TOKEN_URL = "https://login.example.com/oauth/token"
-process.env.DEPLOY_USER_USERNAME = "deploy_user"
-process.env.DEPLOY_USER_PASSWORD = "deploy_pass"
-
 const expect = require("chai").expect
 const jwt = require("jsonwebtoken")
 const nock = require("nock")

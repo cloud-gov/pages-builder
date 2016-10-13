@@ -2,13 +2,16 @@ const crypto = require("crypto")
 const nock = require("nock")
 
 const mockRestageAppRequest = (guid, environment) => {
-  nock("https://api.example.com", {
-      reqheaders: {
-        "authorization": /Bearer .+/
-      }
-    })
-    .post(`/v2/apps/${guid}/restage`)
-    .reply(201, {
+  const requestMock = nock("https://api.example.com", {
+    reqheaders: {
+      "authorization": /Bearer .+/
+    }
+  })
+
+  if (guid && environment) {
+    requestMock.post(
+      `/v2/apps/${guid}/restage`
+    ).reply(201, {
       metadata: {
         guid: guid,
         url: `/v2/apps/${guid}`
@@ -19,6 +22,11 @@ const mockRestageAppRequest = (guid, environment) => {
         environment_json: environment,
       },
     })
+  } else {
+    requestMock.post(/v2\/apps\/.+\/restage/).reply(201)
+  }
+
+  return requestMock
 }
 
 module.exports = mockRestageAppRequest
