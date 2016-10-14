@@ -1,8 +1,32 @@
 # federalist-builder [![Build Status](https://travis-ci.org/18F/federalist-builder.svg?branch=master)](https://travis-ci.org/18F/federalist-builder)
 
-This application is used to launch build tasks for Federalist in an AWS ECS Docker container based on messages from an AWS SQS queue. It limits the number of simultaneous tasks to stay under the ECS cluster's memory capacity.
+This application is used to launch build tasks for Federalist in containers on cloud.gov based on messages from an AWS SQS queue.
 
-It works by recursively checking an SQS queue for new messages. When a message is received, it checks an ECS cluster to see if it has capacity to run a task. If it does, it runs the task. When the task successfully returns, the message is deleted from the queue.
+##### The Build Scheduler
+
+The Build Scheduler is the component of this app that recurively monitors SQS for new messages.
+When a new messages is received, it checks the cluster to see if a container is available on which to run a build in response to the message.
+If a container is available, it tells the cluster to start the build.
+
+##### The Cluster
+
+The Cluster is responsible for being aware of what is going on in cloud.gov.
+It does the following:
+
+- Maintains a list of what build containers are running in cloud.gov, and which ones are running builds
+- Starts new builds on an available container
+- Marks containers as available when a build is complete
+- Stops builds if they run for more than 5 minutes without calling back
+
+The Cluster regularly queries cloud.gov's API for apps running a [federalist-docker-build](https://github.com/18F/federalist-docker-build) container and keeps a list of them.
+
+When a build is started, it finds an available container and associates the build with the container.
+Then it uses the Cloud Foundy API to update the container's environment to match the environment specified by the build and restages the container's app.
+
+When a build is complete, the container will callback to an HTTP hook on this app with its `buildID`.
+When this happens, the cluster looks up the container running the build and dissociates the build from the container.
+
+If a build runs on a container for more than 5 minutes, the cluster will consider the build a failure, and dissociate the build from the container without a callback.
 
 ## Installation and configuration
 
@@ -31,11 +55,17 @@ The SQS message body should be JSON that takes the form of an ECS task override 
 
 Additional configuration is set up through environment variables:
 
-- `SQS_URL` the URL of the SQS queue to poll
-- `ECS_CLUSTER` the name of the cluster on which tasks should run (usually `default`)
-- `ECS_TASK` the name and version of the task to run (for example, `federalist-builder:4`)
-- `MAX_TASKS` the maximum number of tasks that can be run at once without exceeding the cluster's resources
-- `PORT` the port for health check pings. This is set automatically by CloudFoundry
+- `BUILD_COMPLETE_CALLBACK_HOST` (required) the host that a build container should callback to when finished, e.g. `https://federalist-builder.18f.gov`
+- `BUILD_CONTAINER_DOCKER_IMAGE_NAME` (required) the name of the docker image that is used to run builds
+- `BUILD_SPACE_GUID` (required) the guid for the cloud.gov space where the build containers are located
+- `CLOUD_FOUNDRY_API_HOST` (required) the host for the Cloud Foundry API endpoint, e.g. `https://api.fr.cloud.gov`
+- `CLOUD_FOUNDRY_OAUTH_TOKEN_URL` (required) the OAuth2 token URL for Cloud Foundry, e.g. `https://login.fr.cloud.gov`
+- `DEPLOY_USER_USERNAME` (required) the username for the deploy user that starts builds in cloud.gov.
+- `DEPLOY_USER_PASSWORD` (required) the password for the deploy user that starts builds in cloud.gov.
+- `NEW_RELIC_APP_NAME` the name of the app in New Relic
+- `NEW_RELIC_LICENSE_KEY` the license key for the app in New Relic
+- `PORT` the port for the server that handles healthcheck pings and build callbacks
+- `SQS_URL` (required) the URL of the SQS queue to poll
 
 ## Public domain
 
