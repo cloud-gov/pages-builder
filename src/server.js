@@ -1,4 +1,5 @@
 const Hapi = require("hapi")
+const winston = require("winston")
 
 const server = (cluster) => {
   const server = new Hapi.Server()
@@ -12,6 +13,8 @@ const server = (cluster) => {
       const response = reply('Server running')
       response.type('text/plain')
       response.statusCode = 200
+
+      winston.info("GET %s - 200", request.url.path)
     }
   })
 
@@ -22,13 +25,14 @@ const server = (cluster) => {
       try {
         cluster.stopBuild(request.params.buildID)
       } catch (error) {
-        console.error("Error stopping build: " + request.params.buildID)
-        console.error(error)
+        winston.error("Error stopping build" + request, error)
       }
 
       const response = reply('Callback registered')
       response.type('text/plain')
       response.statusCode = 200
+
+      winston.info("GET %s - 200", request.url.path)
     },
   })
 

@@ -1,4 +1,5 @@
 const url = require("url")
+const winston = require("winston")
 const AWS = require("./aws")
 const CloudFoundryAPIClient = require("./cloud-foundry-api-client")
 const server = require("./server")
@@ -25,7 +26,9 @@ class Cluster {
     let container = this._firstAvailableContainer()
 
     if (container) {
-      return this._startBuildOnContainer(build, container)
+      return this._startBuildOnContainer(build, container).then(() => {
+        winston.info("Staged build %s on container %s", build.buildID, container.name)
+      })
     } else {
       return Promise.reject(new NoContainersAvailableError())
     }
@@ -37,10 +40,14 @@ class Cluster {
   }
 
   stopBuild(buildID) {
+    winston.info("Stopping build", buildID)
+
     const container = this._findBuildContainer(buildID)
     if (container) {
       clearTimeout(container.timeout)
       container.build = undefined
+    } else {
+      winston.warn("Unable to stop build %s. Container not found.", buildID)
     }
   }
 
@@ -62,6 +69,7 @@ class Cluster {
     if (this._monitoringCluster) {
       this._apiClient.fetchBuildContainers().then(containers => {
         this._resolveNewContainers(containers)
+        winston.info("Cluster monitor: %s container(s) present", this._containers.length)
       }).then(() => {
         setTimeout(() => {
           this._monitorCluster()
@@ -88,6 +96,7 @@ class Cluster {
   _startBuildOnContainer(build, container) {
     container.build = build
     container.timeout = setTimeout(() => {
+      winston.warn("Build %s timed out", build.buildID)
       this.stopBuild(build.buildID)
     }, 300 * 1000)
     return this._apiClient.updateBuildContainer(

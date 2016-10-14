@@ -1,3 +1,4 @@
+const winston = require("winston")
 const Build = require("./build")
 const Cluster = require("./cluster")
 const SQSClient = require("./sqs-client")
@@ -21,7 +22,7 @@ class BuildScheduler {
 
   _run() {
     this._findAndScheduleNewBuild().catch(error => {
-      console.error(error)
+      winston.error(error)
     }).then(() => {
       if (this.running) {
         setImmediate(() => {
@@ -32,21 +33,34 @@ class BuildScheduler {
   }
 
   _attemptToStartBuild(build) {
+    winston.verbose("Attempting to start build")
+
     if (this._cluster.countAvailableContainers() > 0) {
       return this._startBuildAndDeleteMessage(build)
+    } else {
+      winston.info(
+        "No containers available. Stopping build %s and waiting",
+        build.buildID
+      )
     }
   }
 
   _findAndScheduleNewBuild() {
+    winston.verbose("Receiving message")
+
     return this._sqsClient.receiveMessage().then(message => {
       if (message) {
         const build = new Build(message)
+        winston.info("New build %s - %s", build.containerEnvironment.REPOSITORY, build.buildID)
+
         return this._attemptToStartBuild(build)
       }
     })
   }
 
   _startBuildAndDeleteMessage(build) {
+    winston.verbose("Starting build")
+
     return this._cluster.startBuild(build).then(() => {
       return this._sqsClient.deleteMessage(build.sqsMessage)
     })

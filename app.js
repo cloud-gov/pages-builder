@@ -1,6 +1,10 @@
+// Setup winston for logging
+const winston = require("winston")
+winston.level = process.env.LOG_LEVEL || "info"
+
 // If settings present, start New Relic
 if (process.env.NEW_RELIC_APP_NAME && process.env.NEW_RELIC_LICENSE_KEY) {
-  console.log('Activating New Relic: ', process.env.NEW_RELIC_APP_NAME);
+  winston.info('Activating New Relic: ', process.env.NEW_RELIC_APP_NAME);
   require('newrelic');
 }
 
