@@ -15,4 +15,4 @@ process.env.BUILD_CONTAINER_DOCKER_IMAGE_NAME = "example.com:5000/builder/1"
 
 // Server
 process.env.PORT = 3000
-process.env.BUILD_COMPLETE_CALLBACK = "https://example.com/builds/{buildID}/callback"
+process.env.BUILD_COMPLETE_CALLBACK_HOST = "https://example.com"

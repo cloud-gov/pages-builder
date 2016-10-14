@@ -12,7 +12,10 @@ class Build {
   }
 
   _buildCallbackURL(buildID) {
-    return process.env.BUILD_COMPLETE_CALLBACK.replace("{buildID}", buildID)
+    return url.resolve(
+      process.env.BUILD_COMPLETE_CALLBACK_HOST,
+      `builds/${buildID}/callback`
+    )
   }
 
   _generateBuildID() {

@@ -1,4 +1,4 @@
-const expect = require('chai').expect
+const expect = require("chai").expect
 
 const nock = require("nock")
 const Cluster = require("../src/cluster")
@@ -35,6 +35,7 @@ describe("Cluster", () => {
       const mockedRestageRequest = mockRestageAppRequest()
 
       const cluster = new Cluster()
+      mockServer(cluster)
       cluster.start()
 
       setTimeout(() => {
@@ -57,6 +58,7 @@ describe("Cluster", () => {
       mockRestageAppRequest()
 
       const cluster = new Cluster()
+      mockServer(cluster)
       cluster.start()
 
       setTimeout(() => {
@@ -102,6 +104,7 @@ describe("Cluster", () => {
   describe(".stopBuild(buildID)", () => {
     it("should make the build for the given buildID available", () => {
       const cluster = new Cluster()
+
       cluster._containers = [
         {
           guid: "123abc",
@@ -124,3 +127,7 @@ describe("Cluster", () => {
     })
   })
 })
+
+const mockServer = (cluster) => {
+  cluster._server.start = () => {}
+}

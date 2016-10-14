@@ -1,12 +1,14 @@
 const url = require("url")
 const AWS = require("./aws")
 const CloudFoundryAPIClient = require("./cloud-foundry-api-client")
+const server = require("./server")
 
 class Cluster {
   constructor() {
     this._containers = []
     this._monitoringCluster = false
     this._apiClient = new CloudFoundryAPIClient()
+    this._server = server(this)
   }
 
   countAvailableContainers() {
@@ -14,6 +16,7 @@ class Cluster {
   }
 
   start() {
+    this._server.start()
     this._monitoringCluster = true
     this._monitorCluster()
   }
@@ -29,6 +32,7 @@ class Cluster {
   }
 
   stop() {
+    this._server.stop()
     this._monitoringCluster = false
   }
 
