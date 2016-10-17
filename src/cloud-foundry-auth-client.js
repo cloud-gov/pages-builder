@@ -1,10 +1,11 @@
+const cfenv = require("cfenv")
 const jwt = require("jsonwebtoken")
 const request = require("request")
 
 class CloudFoundryAuthClient {
   constructor() {
-    this._username = process.env.DEPLOY_USER_USERNAME
-    this._password = process.env.DEPLOY_USER_PASSWORD
+    this._username = this._cloudFoundryCredentials().DEPLOY_USER_USERNAME
+    this._password = this._cloudFoundryCredentials().DEPLOY_USER_PASSWORD
     this._token = ""
   }
 
@@ -16,6 +17,20 @@ class CloudFoundryAuthClient {
         resolve(this._token)
       }
     })
+  }
+
+  _cloudFoundryCredentials() {
+    const appEnv = cfenv.getAppEnv()
+    const cloudFoundryCredentials = appEnv.getServiceCreds('federalist-deploy-user')
+
+    if (cloudFoundryCredentials) {
+      return cloudFoundryCredentials
+    } else {
+      return {
+        DEPLOY_USER_USERNAME: process.env.DEPLOY_USER_USERNAME,
+        DEPLOY_USER_PASSWORD: process.env.DEPLOY_USER_PASSWORD,
+      }
+    }
   }
 
   _fetchNewToken() {

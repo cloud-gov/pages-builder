@@ -13,3 +13,8 @@ env:
   ECS_CLUSTER: default
   ECS_TASK: "federalist-builder:4"
   MAX_TASKS: 2
+  BUILD_COMPLETE_CALLBACK_HOST: "https://federalist-builder.18f.gov"
+  BUILD_CONTAINER_DOCKER_IMAGE_NAME: "federalist-registry.fr.cloud.gov/federalist-docker-build"
+  BUILD_SPACE_GUID: "a1e19bd4-5066-40a7-8d53-fc9644c27e8e"
+  CLOUD_FOUNDRY_API_HOST: "https://api.fr.cloud.gov"
+  CLOUD_FOUNDRY_OAUTH_TOKEN_URL: "https://login.fr.cloud.gov/oauth/token"
