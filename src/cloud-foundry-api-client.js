@@ -80,7 +80,7 @@ class CloudFoundryAPIClient {
           reject(error)
         } else if (response.statusCode > 399) {
           let errorMessage = `Received status code: ${response.statusCode}`
-          reject(new Error(errorMessage, response))
+          reject(new Error(body || errorMessage))
         } else {
           resolve(body)
         }

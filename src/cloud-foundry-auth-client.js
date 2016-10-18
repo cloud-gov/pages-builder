@@ -57,6 +57,9 @@ class CloudFoundryAuthClient {
       }, (error, response, body) => {
         if (error) {
           reject(error)
+        } else if (response.statusCode > 399) {
+          let errorMessage = `Received status code: ${response.statusCode}`
+          reject(new Error(body || errorMessage))
         } else {
           resolve(JSON.parse(body).access_token)
         }

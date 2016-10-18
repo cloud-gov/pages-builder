@@ -70,6 +70,8 @@ class Cluster {
       this._apiClient.fetchBuildContainers().then(containers => {
         this._resolveNewContainers(containers)
         winston.info("Cluster monitor: %s container(s) present", this._containers.length)
+      }).catch(error => {
+        winston.error(error)
       }).then(() => {
         setTimeout(() => {
           this._monitorCluster()
@@ -85,7 +87,7 @@ class Cluster {
       if (existingContainer) {
         return Object.assign(newContainer, {
           build: existingContainer.build,
-          timeout: timeout,
+          timeout: existingContainer.timeout,
         })
       } else {
         return newContainer
