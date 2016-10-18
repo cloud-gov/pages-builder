@@ -57,7 +57,7 @@ class Cluster {
 
   _findBuildContainer(buildID) {
     return this._containers.find(container => {
-      return container.build.buildID === buildID
+      return container.build && container.build.buildID === buildID
     })
   }
 
