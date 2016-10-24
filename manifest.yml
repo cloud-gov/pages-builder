@@ -1,7 +1,7 @@
 ---
 applications:
 - name: federalist-builder
-domain: 18f.gov
+domain: fr.cloud.gov
 hostname: federalist-builder
 disk_quota: 512M
 memory: 1G

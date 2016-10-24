@@ -1,7 +1,7 @@
 ---
 applications:
 - name: federalist-builder-staging
-domain: 18f.gov
+domain: fr.cloud.gov
 hostname: federalist-builder-staging
 disk_quota: 512M
 memory: 512M
