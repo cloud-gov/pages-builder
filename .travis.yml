@@ -4,11 +4,11 @@ node_js:
 - "6.6.0"
 env:
   global:
-  - CF_API=https://api.cloud.gov
-  - CF_USERNAME=deploy-federalist
-  - CF_ORGANIZATION=federalist
-  # CF_PASSWORD for deploy-federalist user
-  - secure: "OhaoSZh2Glurc3ilIsddS4im/canoc2vNkON0haIxPepnQumL6bkwWD8xPi0gotYI28AHr9KZgkhPTDI8rKx/wVI+R98BTnxmpur9487jATplgeAkkWsxQIZki4V5TnNS01cLWhboR6Ge48Ryi0YdSYaP02jahAkoeTbgYzqLw9yBtOF5RccS8yV7SbnTJ6qT+b1Y85he/K39qYmvCGhCLhTM2KCjJnidaxj5ZUSNX2+0Bd3wq9L82qpY2eROu9f5AuEQV2hAkg+0i4+hhQc3kBO2WHAOgZADE3FWPY1KQofeLDRlr2GosnZAtFYFp6pFwiALqi2q1+y3IA+t5/eVUDMVxgbl1BdMkjJ6GLJyaghkO5qF59hKYET8P15FPiT3QqeTi/Fpd7impZt+CI9fd3PcFgb4wuHJfEjHnE9BlyZ8hN+zWS49+tyMRsrGY+kWZH1lhgiFpStWcNCmNCpcMExoGidFsrzIXfpDCVa6X4Ilr+dPjR6PcchjcyYa1Wf20TiDGyxUlu+pcfgHG8skTXbV3g20V63kO59xhG+lz8OlTn1TKtyv8pOnjKqQ/OvSY1/L/MMc0q1ASwTfdZ991uCT+soTu2yT5x355q+82YKyWyMo1Pi5cTFyY3wdAntp1h8lxiLXAlBQqkcGPqHRzDDhgDaWAkSe6j8rzXOAGQ="
+  - CF_API=https://api.fr.cloud.gov
+  - CF_USERNAME=gsa-18f-federalist_deployer
+  - CF_ORGANIZATION=gsa-18f-federalist
+  # CF_PASSWORD for gsa-18f-federalist_deployer user
+  - secure: "ovjRuWHniFKz+Yr6eOO89E8LZhxs1BRdqpGdljZnf70XsdoldqdVN0Lr0Vd1zJMD/ep5TPfaT9h4VADB9JqMF1ODWmX7LiJ2W7GP309S9KWDUkUbl5xOp4mCMl0XDlStwLZeIcPt6Oa2UpSQCnjFMUK1KLBEGC/8vxtp4X18VjPmZ2V9Uu6lMB6Fe2fZbx7N7QWsQjciwUd1bVyseIMHCSGWeZ3OZARxBsfJT7ZwHX5zD8xT3IfHSUArDhYYM5+Q/ApP+MK3N9gZXukKeq6/2V4t8WNuCPEqcJH/eRBKu5IS/ddk09KXWS51aMdU0zC4/LL/sSvOsdufPf+e6Ha2RZV+6BoWFFSZKRWpCSpVNj6ORSGICCudFtC4oIJaTKB1qqcAjT/fB7iuHsWnymUNTpHDIAeuOA4kvwTLG0LnrPxfe6Midpx4ceYb+Jv0BIosVKK2ZoLsQDSGgOLYvhw4nhzqbo8jHkmq8PhZUODiK7vlwIZWwnFkvqkmKHEKILeTikZ4Gx5DWbMB/AAlp/NSLZHVRz+ARKZ3qKe5wUgDkbkCuDqEOq7xnUN8g05Kp8NlIbEI7JJjrgbSfjBUqApTLyjwEx94bw6Wo7iVexBzW0l+TsoIiI5FkgWFrM8YFXEunBpwMpzJ6fr0EMFWnxzVvH8yhMewS7O1tn+gqhPtoNg="
 before_deploy:
   - export PATH=$HOME:$PATH
   - travis_retry curl -L -o $HOME/cf.tgz "https://cli.run.pivotal.io/stable?release=linux64-binary&version=6.15.0"
