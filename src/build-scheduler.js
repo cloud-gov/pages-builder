@@ -51,7 +51,10 @@ class BuildScheduler {
     return this._sqsClient.receiveMessage().then(message => {
       if (message) {
         const build = new Build(message)
-        winston.info("New build %s - %s", build.containerEnvironment.REPOSITORY, build.buildID)
+        const owner = build.containerEnvironment.OWNER
+        const repo = build.containerEnvironment.REPOSITORY
+        const branch = build.containerEnvironment.BRANCH
+        winston.info("New build %s/%s/%s - %s", owner, repo, branch, build.buildID)
 
         return this._attemptToStartBuild(build)
       }
