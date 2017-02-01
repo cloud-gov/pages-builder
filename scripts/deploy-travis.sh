@@ -4,7 +4,7 @@ set -e
 
 if [ "$TRAVIS_BRANCH" == "master" ]
 then
-  CF_SPACE="prod"
+  CF_SPACE="production"
   CF_APP="federalist-builder"
   CF_MANIFEST="manifest.yml"
 elif [ "$TRAVIS_BRANCH" == "staging" ]
