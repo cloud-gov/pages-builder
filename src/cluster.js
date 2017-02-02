@@ -100,7 +100,7 @@ class Cluster {
     container.timeout = setTimeout(() => {
       winston.warn("Build %s timed out", build.buildID)
       this.stopBuild(build.buildID)
-    }, 300 * 1000)
+    }, 21 * 60 * 1000)
     return this._apiClient.updateBuildContainer(
       container,
       build.containerEnvironment
