@@ -4,7 +4,7 @@ applications:
 domain: fr.cloud.gov
 hostname: federalist-builder-staging
 disk_quota: 512M
-memory: 512M
+memory: 128MB
 instances: 1
 services:
 - federalist-ew-sqs-user
