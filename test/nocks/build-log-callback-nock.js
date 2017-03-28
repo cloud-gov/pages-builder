@@ -1,11 +1,11 @@
 const nock = require("nock")
 
 const mockBuildLogCallback = (url) => {
-  const message = "The build timed out"
+  const output = "The build timed out"
   const source = "Build scheduler"
 
   return nock(`${url.protocol}//${url.hostname}`)
-    .post(url.path, { message, source })
+    .post(url.path, { output, source })
     .reply(200)
 }
 
