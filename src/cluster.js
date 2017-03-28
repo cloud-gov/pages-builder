@@ -1,6 +1,7 @@
 const url = require("url")
 const winston = require("winston")
 const AWS = require("./aws")
+const BuildTimeoutReporter = require("./build-timeout-reporter")
 const CloudFoundryAPIClient = require("./cloud-foundry-api-client")
 const server = require("./server")
 
@@ -45,6 +46,7 @@ class Cluster {
     const container = this._findBuildContainer(buildID)
     if (container) {
       clearTimeout(container.timeout)
+      new BuildTimeoutReporter(container.build).reportBuildTimeout()
       container.build = undefined
     } else {
       winston.warn("Unable to stop build %s. Container not found.", buildID)
