@@ -37,7 +37,7 @@ class BuildTimeoutReporter {
   _sendBuildLogRequest() {
     const url = this._build.containerEnvironment.LOG_CALLBACK
     return this._request("POST", url, {
-      message: "The build timed out",
+      output: "The build timed out",
       source: "Build scheduler",
     })
   }
