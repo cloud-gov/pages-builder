@@ -12,7 +12,20 @@ const mockTokenRequest = require("./nocks/cloud-foundry-oauth-token-nock")
 const mockUpdateAppRequest = require("./nocks/cloud-foundry-update-app-nock")
 
 describe("Cluster", () => {
-  afterEach(() => nock.cleanAll())
+  const logCallbackURL = url.parse("https://www.example.gov/log")
+  const statusCallbackURL = url.parse("https://www.example.gov/status")
+  let logCallbackNock
+  let statusCallbackNock
+
+  beforeEach(() => {
+    logCallbackNock = mockBuildLogCallback(logCallbackURL)
+    statusCallbackNock = mockBuildStatusCallback(statusCallbackURL)
+  })
+
+  afterEach(() => {
+    process.env.BUILD_TIMEOUT_SECONDS = undefined
+    nock.cleanAll()
+  })
 
   describe(".countAvailableContainers()", () => {
     it("should return the number of available containers", done => {
@@ -102,23 +115,64 @@ describe("Cluster", () => {
         }, 50)
       }, 50)
     })
+
+    it("should stop the build after the timeout has been exceeded", done => {
+      mockTokenRequest()
+      mockListAppsRequest([{}])
+      mockUpdateAppRequest()
+      mockRestageAppRequest()
+
+      process.env.BUILD_TIMEOUT_SECONDS = -1
+
+      const cluster = new Cluster()
+      cluster.stopBuild = (buildID) => {
+        expect(buildID).to.equal("123abc")
+        done()
+      }
+      mockServer(cluster)
+      cluster.start()
+
+      setTimeout(() => {
+        cluster.startBuild({
+          buildID: "123abc",
+          containerEnvironment: {
+            LOG_CALLBACK: logCallbackURL.href,
+            STATUS_CALLBACK: statusCallbackURL.href,
+          },
+        })
+      }, 50)
+    })
+
+    it("should send a request to the build's log and status callback when the build timesout", done => {
+      mockTokenRequest()
+      mockListAppsRequest([{}])
+      mockUpdateAppRequest()
+      mockRestageAppRequest()
+
+      process.env.BUILD_TIMEOUT_SECONDS = -1
+
+      const cluster = new Cluster()
+      mockServer(cluster)
+      cluster.start()
+
+      setTimeout(() => {
+        cluster.startBuild({
+          buildID: "123abc",
+          containerEnvironment: {
+            LOG_CALLBACK: logCallbackURL.href,
+            STATUS_CALLBACK: statusCallbackURL.href,
+          },
+        })
+        setTimeout(() => {
+          expect(logCallbackNock.isDone()).to.be.true
+          expect(statusCallbackNock.isDone()).to.be.true
+          done()
+        }, 200)
+      }, 50)
+    })
   })
 
   describe(".stopBuild(buildID)", () => {
-    const logCallbackURL = url.parse("https://www.example.gov/log")
-    const statusCallbackURL = url.parse("https://www.example.gov/status")
-    let logCallbackNock
-    let statusCallbackNock
-
-    beforeEach(() => {
-      logCallbackNock = mockBuildLogCallback(logCallbackURL)
-      statusCallbackNock = mockBuildStatusCallback(statusCallbackURL)
-    })
-
-    afterEach(() => {
-      nock.cleanAll()
-    })
-
     it("should make the build for the given buildID available", () => {
       const cluster = new Cluster()
 
@@ -147,7 +201,7 @@ describe("Cluster", () => {
       expect(container.build).to.be.undefined
     })
 
-    it("should send a request to the build's log and status callback", done => {
+    it("should not send a request to the build's log and status callback", done => {
       const cluster = new Cluster()
 
       cluster._containers = [
@@ -166,8 +220,8 @@ describe("Cluster", () => {
       cluster.stopBuild("456def")
 
       setTimeout(() => {
-        expect(logCallbackNock.isDone()).to.be.true
-        expect(statusCallbackNock.isDone()).to.be.true
+        expect(logCallbackNock.isDone()).to.be.false
+        expect(statusCallbackNock.isDone()).to.be.false
         done()
       }, 200)
     })

@@ -10,6 +10,7 @@ services:
 - federalist-ew-sqs-user
 - federalist-deploy-user
 env:
+  BUILD_TIMEOUT_SECONDS: 1200
   SQS_URL: "https://sqs.us-west-2.amazonaws.com/144433228153/federalist-builds-cloudgov"
   BUILD_COMPLETE_CALLBACK_HOST: "https://federalist-builder.fr.cloud.gov"
   BUILD_CONTAINER_DOCKER_IMAGE_NAME: "federalist-registry.fr.cloud.gov/federalist-docker-build"
