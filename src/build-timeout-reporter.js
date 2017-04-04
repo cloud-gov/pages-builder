@@ -36,14 +36,16 @@ class BuildTimeoutReporter {
 
   _sendBuildLogRequest() {
     const url = this._build.containerEnvironment.LOG_CALLBACK
+    winston.verbose(`Sending timeout log request for ${this._build.buildID}`)
     return this._request("POST", url, {
-      output: "The build timed out",
+      output: Buffer.from("The build timed out").toString("base64"),
       source: "Build scheduler",
     })
   }
 
   _sendBuildStatusRequest() {
     const url = this._build.containerEnvironment.STATUS_CALLBACK
+    winston.verbose(`Sending timeout status request for ${this._build.buildID}`)
     return this._request("POST", url, {
       message: Buffer.from("The build timed out").toString("base64"),
       status: "1",
