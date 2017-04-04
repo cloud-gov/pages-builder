@@ -1,6 +1,7 @@
 const url = require("url")
 const winston = require("winston")
 const AWS = require("./aws")
+const BuildTimeoutReporter = require("./build-timeout-reporter")
 const CloudFoundryAPIClient = require("./cloud-foundry-api-client")
 const server = require("./server")
 
@@ -51,6 +52,11 @@ class Cluster {
     }
   }
 
+  _buildTimeoutMilliseconds() {
+    const timeoutSeconds = parseInt(process.env.BUILD_TIMEOUT_SECONDS) || 21 * 60
+    return timeoutSeconds * 1000
+  }
+
   _firstAvailableContainer() {
     return this._containers.find(container => !container.build)
   }
@@ -99,8 +105,8 @@ class Cluster {
     container.build = build
     container.timeout = setTimeout(() => {
       winston.warn("Build %s timed out", build.buildID)
-      this.stopBuild(build.buildID)
-    }, 21 * 60 * 1000)
+      this._timeoutBuild(build)
+    }, this._buildTimeoutMilliseconds())
     return this._apiClient.updateBuildContainer(
       container,
       build.containerEnvironment
@@ -109,6 +115,11 @@ class Cluster {
       clearTimeout(container.timeout)
       throw error
     })
+  }
+
+  _timeoutBuild(build) {
+    this.stopBuild(build.buildID)
+    new BuildTimeoutReporter(build).reportBuildTimeout()
   }
 }
 

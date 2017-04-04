@@ -4,12 +4,13 @@ applications:
 domain: fr.cloud.gov
 hostname: federalist-builder
 disk_quota: 512M
-memory: 512M
+memory: 128MB
 instances: 1
 services:
 - federalist-ew-sqs-user
 - federalist-deploy-user
 env:
+  BUILD_TIMEOUT_SECONDS: 1200
   SQS_URL: "https://sqs.us-west-2.amazonaws.com/144433228153/federalist-builds-cloudgov"
   BUILD_COMPLETE_CALLBACK_HOST: "https://federalist-builder.fr.cloud.gov"
   BUILD_CONTAINER_DOCKER_IMAGE_NAME: "federalist-registry.fr.cloud.gov/federalist-docker-build"
