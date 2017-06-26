@@ -13,7 +13,7 @@ env:
   BUILD_TIMEOUT_SECONDS: 1200
   SQS_URL: "https://sqs.us-east-1.amazonaws.com/144433228153/federalist-builds-staging"
   BUILD_COMPLETE_CALLBACK_HOST: "https://federalist-builder-staging.fr.cloud.gov"
-  BUILD_CONTAINER_DOCKER_IMAGE_NAME: "federalist-registry-staging.fr.cloud.gov/federalist-docker-build"
+  BUILD_CONTAINER_DOCKER_IMAGE_NAME: "federalist-registry-staging.fr.cloud.gov/federalist-garden-build"
   BUILD_SPACE_GUID: "af7be42d-47d6-4b4d-a15a-7098c7695c43"
   CLOUD_FOUNDRY_API_HOST: "https://api.fr.cloud.gov"
   CLOUD_FOUNDRY_OAUTH_TOKEN_URL: "https://login.fr.cloud.gov/oauth/token"
