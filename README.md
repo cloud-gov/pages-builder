@@ -18,7 +18,7 @@ It does the following:
 - Marks containers as available when a build is complete
 - Stops builds if they run for more than 5 minutes without calling back
 
-The Cluster regularly queries cloud.gov's API for apps running a [federalist-docker-build](https://github.com/18F/federalist-docker-build) container and keeps a list of them.
+The Cluster regularly queries cloud.gov's API for apps running a [federalist-garden-build](https://github.com/18F/federalist-garden-build) container and keeps a list of them.
 
 When a build is started, it finds an available container and associates the build with the container.
 Then it uses the Cloud Foundy API to update the container's environment to match the environment specified by the build and restages the container's app.
