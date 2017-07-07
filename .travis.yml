@@ -6,6 +6,9 @@ env:
   global:
   - CF_API=https://api.fr.cloud.gov
   - CF_ORGANIZATION=gsa-18f-federalist
+script:
+  - npm run eslint
+  - npm test
 before_deploy:
   - export PATH=$HOME:$PATH
   - travis_retry curl -L -o $HOME/cf.tgz "https://cli.run.pivotal.io/stable?release=linux64-binary&version=6.23.1"

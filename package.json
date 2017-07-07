@@ -5,7 +5,8 @@
   "main": "app.js",
   "scripts": {
     "start": "node app",
-    "test": "`npm bin`/mocha --require test/env.js"
+    "test": "`npm bin`/mocha --require test/env.js",
+    "eslint": "eslint ."
   },
   "author": "dhcole",
   "license": "CC0",
