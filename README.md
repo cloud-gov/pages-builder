@@ -30,7 +30,9 @@ If a build runs on a container for more than 5 minutes, the cluster will conside
 
 ## Installation and configuration
 
-Run this with `npm install` and `npm start`.
+This application uses [`yarn`](https://yarnpkg.com) to manage node dependencies.
+
+Run this with `yarn` and `yarn start`.
 
 The AWS SDK credentials should be in place, or if running on CloudFoundry, a `federalist-aws-creds` service available.
 
