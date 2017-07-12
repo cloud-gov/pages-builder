@@ -1,14 +1,20 @@
 {
   "name": "federalist-builder",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/18f/federalist-builder.git"
+  },
   "version": "0.0.0",
-  "description": "Checks an SQS queue and launches Federalist builds on ECS",
+  "private": true,
+  "description": "Checks an SQS queue and launches Federalist builds",
   "main": "app.js",
   "scripts": {
     "start": "node app",
-    "test": "`npm bin`/mocha --require test/env.js"
+    "test": "`yarn bin`/mocha --require test/env.js",
+    "eslint": "eslint ."
   },
   "author": "dhcole",
-  "license": "CC0",
+  "license": "CC0-1.0",
   "dependencies": {
     "aws-sdk": "^2.2.10",
     "cfenv": "^1.0.3",
@@ -20,6 +26,9 @@
   },
   "devDependencies": {
     "chai": "^3.5.0",
+    "eslint": "^3.19.0",
+    "eslint-config-airbnb-base": "^11.2.0",
+    "eslint-plugin-import": "^2.7.0",
     "mocha": "^3.1.0",
     "nock": "^8.1.0"
   },
