@@ -55,8 +55,13 @@ The SQS message body should be JSON that takes the form of an ECS task override 
 }
 ```
 
+Private configuration values should be in a cloud.gov user-provided service named `federalist-builder-env`:
+
+- `NEW_RELIC_LICENSE_KEY` the private New Relic license key
+
 Additional configuration is set up through environment variables:
 
+- `BUILD_TIMEOUT_SECONDS`: (required) number of seconds to let a build run before timing out
 - `BUILD_COMPLETE_CALLBACK_HOST` (required) the host that a build container should callback to when finished, e.g. `https://federalist-builder.18f.gov`
 - `BUILD_CONTAINER_DOCKER_IMAGE_NAME` (required) the name of the docker image that is used to run builds
 - `BUILD_SPACE_GUID` (required) the guid for the cloud.gov space where the build containers are located
@@ -66,7 +71,6 @@ Additional configuration is set up through environment variables:
 - `DEPLOY_USER_PASSWORD` (required) the password for the deploy user that starts builds in cloud.gov.
 - `LOG_LEVEL` the log level for [winston](https://github.com/winstonjs/winston#logging-levels). Defaults to "info".
 - `NEW_RELIC_APP_NAME` the name of the app in New Relic
-- `NEW_RELIC_LICENSE_KEY` the license key for the app in New Relic
 - `PORT` the port for the server that handles healthcheck pings and build callbacks
 - `SQS_URL` (required) the URL of the SQS queue to poll
 
