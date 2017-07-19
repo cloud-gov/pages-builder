@@ -1,7 +1,8 @@
 [![Build Status](https://travis-ci.org/18F/federalist-builder.svg?branch=master)](https://travis-ci.org/18F/federalist-builder)
+[![Code Climate](https://codeclimate.com/github/18F/federalist-builder/badges/gpa.svg)](https://codeclimate.com/github/18F/federalist-builder)
 [![Dependency Status](https://gemnasium.com/badges/github.com/18F/federalist-builder.svg)](https://gemnasium.com/github.com/18F/federalist-builder)
 
-# federalist-builder 
+# federalist-builder
 
 This application is used to launch build tasks for Federalist in containers on cloud.gov based on messages from an AWS SQS queue.
 
