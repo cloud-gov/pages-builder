@@ -2,13 +2,13 @@
 
 This application is used to launch build tasks for Federalist in containers on cloud.gov based on messages from an AWS SQS queue.
 
-##### The Build Scheduler
+## The Build Scheduler
 
-The Build Scheduler is the component of this app that recurively monitors SQS for new messages.
+The Build Scheduler is the component of this app that recursively monitors SQS for new messages.
 When a new messages is received, it checks the cluster to see if a container is available on which to run a build in response to the message.
 If a container is available, it tells the cluster to start the build.
 
-##### The Cluster
+## The Cluster
 
 The Cluster is responsible for being aware of what is going on in cloud.gov.
 It does the following:
@@ -21,7 +21,7 @@ It does the following:
 The Cluster regularly queries cloud.gov's API for apps running a [federalist-garden-build](https://github.com/18F/federalist-garden-build) container and keeps a list of them.
 
 When a build is started, it finds an available container and associates the build with the container.
-Then it uses the Cloud Foundy API to update the container's environment to match the environment specified by the build and restages the container's app.
+Then it uses the Cloud Foundry API to update the container's environment to match the environment specified by the build and restages the container's app.
 
 When a build is complete, the container will callback to an HTTP hook on this app with its `buildID`.
 When this happens, the cluster looks up the container running the build and dissociates the build from the container.
@@ -81,4 +81,3 @@ This project is in the worldwide [public domain](LICENSE.md). As stated in [CONT
 > This project is in the public domain within the United States, and copyright and related rights in the work worldwide are waived through the [CC0 1.0 Universal public domain dedication](https://creativecommons.org/publicdomain/zero/1.0/).
 >
 > All contributions to this project will be released under the CC0 dedication. By submitting a pull request, you are agreeing to comply with this waiver of copyright interest.
-# federalist-builder
