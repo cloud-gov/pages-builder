@@ -1,8 +1,6 @@
 const cfenv = require('cfenv');
 const winston = require('winston');
 
-const BuildScheduler = require('./src/build-scheduler');
-
 // Setup winston for logging
 winston.level = process.env.LOG_LEVEL || 'info';
 
@@ -14,6 +12,8 @@ if (process.env.NEW_RELIC_APP_NAME) {
     require('newrelic'); // eslint-disable-line global-require
   }
 }
+
+const BuildScheduler = require('./src/build-scheduler');
 
 // Start a BuildScheduler
 const buildScheduler = new BuildScheduler();
