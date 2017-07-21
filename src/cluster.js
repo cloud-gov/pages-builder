@@ -82,7 +82,7 @@ class Cluster {
       }).catch((error) => {
         winston.error(error);
       }).then(() => {
-        setTimeout(() => {
+        setTimeout(() => {  // eslint-disable-line scanjs-rules/call_setTimeout
           this._monitorCluster();
         }, 60 * 1000);
       });
@@ -105,7 +105,8 @@ class Cluster {
 
   _startBuildOnContainer(build, container) {
     container.build = build; // eslint-disable-line no-param-reassign
-    container.timeout = setTimeout(() => { // eslint-disable-line no-param-reassign
+    // eslint-disable-next-line no-param-reassign, scanjs-rules/call_setTimeout
+    container.timeout = setTimeout(() => {
       winston.warn('Build %s timed out', build.buildID);
       this._timeoutBuild(build);
     }, this._buildTimeoutMilliseconds());
