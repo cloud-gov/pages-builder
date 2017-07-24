@@ -9,7 +9,9 @@ instances: 1
 services:
 - federalist-ew-sqs-user
 - federalist-deploy-user
+- federalist-builder-env
 env:
+  NEW_RELIC_APP_NAME: "federalist-builder-staging"
   BUILD_TIMEOUT_SECONDS: 1200
   SQS_URL: "https://sqs.us-east-1.amazonaws.com/144433228153/federalist-builds-staging"
   BUILD_COMPLETE_CALLBACK_HOST: "https://federalist-builder-staging.fr.cloud.gov"
