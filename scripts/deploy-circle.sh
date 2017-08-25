@@ -2,15 +2,13 @@
 
 set -e
 
-if [ "$TRAVIS_BRANCH" == "master" ]
-then
+if [ "$CIRCLE_BRANCH" == "master" ]; then
   CF_USERNAME=$CF_USERNAME_PRODUCTION
   CF_PASSWORD=$CF_PASSWORD_PRODUCTION
   CF_SPACE="production"
   CF_APP="federalist-builder"
   CF_MANIFEST="manifest.yml"
-elif [ "$TRAVIS_BRANCH" == "staging" ]
-then
+elif [ "$CIRCLE_BRANCH" == "staging" ]; then
   CF_USERNAME=$CF_USERNAME_STAGING
   CF_PASSWORD=$CF_PASSWORD_STAGING
   CF_SPACE="staging"
@@ -19,6 +17,9 @@ then
 else
   exit
 fi
+
+CF_API=https://api.fr.cloud.gov
+CF_ORGANIZATION=gsa-18f-federalist
 
 wget https://s3.amazonaws.com/go-cli/releases/v6.23.1/cf-cli_amd64.deb -qO temp.deb && sudo dpkg -i temp.deb
 
