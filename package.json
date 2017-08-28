@@ -10,7 +10,7 @@
   "main": "app.js",
   "scripts": {
     "start": "node app",
-    "test": "`yarn bin`/mocha --require test/env.js",
+    "test": "nyc mocha --require test/env.js",
     "eslint": "eslint ."
   },
   "author": "dhcole",
@@ -32,10 +32,19 @@
     "eslint-plugin-no-unsanitized": "^2.0.1",
     "eslint-plugin-scanjs-rules": "^0.2.1",
     "mocha": "^3.1.0",
-    "nock": "^8.1.0"
+    "nock": "^8.1.0",
+    "nyc": "^11.1.0"
   },
   "engines": {
     "node": "~6.x.x",
     "npm": "~3.x.x"
+  },
+  "nyc": {
+    "exclude": [
+      "test/**/*.js"
+    ],
+    "reporter": [
+      "lcov"
+    ]
   }
 }
