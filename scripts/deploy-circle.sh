@@ -15,15 +15,20 @@ elif [ "$CIRCLE_BRANCH" == "staging" ]; then
   CF_APP="federalist-builder-staging"
   CF_MANIFEST="staging_manifest.yml"
 else
+  echo "Not on master or staging branch. Skipping deployment."
   exit
 fi
 
 CF_API=https://api.fr.cloud.gov
 CF_ORGANIZATION=gsa-18f-federalist
 
-wget https://s3.amazonaws.com/go-cli/releases/v6.23.1/cf-cli_amd64.deb -qO temp.deb && sudo dpkg -i temp.deb
+# install cf cli
+curl -L -o cf-cli_amd64.deb 'https://cli.run.pivotal.io/stable?release=debian64&source=github'
+sudo dpkg -i cf-cli_amd64.deb
+rm cf-cli_amd64.deb
 
-rm temp.deb
+# install autopilot
+cf install-plugin autopilot -f -r CF-Community
 
 cf api $CF_API
 cf login -u $CF_USERNAME -p $CF_PASSWORD -o $CF_ORGANIZATION -s $CF_SPACE
