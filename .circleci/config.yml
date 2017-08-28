@@ -4,17 +4,9 @@ jobs:
     docker:
       - image: circleci/node:6.11
         environment:
-          YARN_VERSION: 0.24.6-1
           CC_TEST_REPORTER_ID: 4c0674ab7fa1efa186ac5998f89136640d924fabcc0b99ed764bd9fc85043b97
     steps:
       - checkout
-      - run:
-          name: Install yarn
-          command: |
-            sudo apt-key adv --fetch-keys http://dl.yarnpkg.com/debian/pubkey.gpg
-            echo "deb http://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
-            sudo apt-get update -qq
-            sudo apt-get install -y -qq yarn=$YARN_VERSION
       - run:
           name: Install codeclimate reporter
           command: |
@@ -41,15 +33,5 @@ jobs:
           name: Report test coverage
           command: ./cc-test-reporter after-build --exit-code $? < coverage/lcov.info
       - deploy:
-          name: Deploy to staging if on staging branch
-          command: |
-            if [ "${CIRCLE_BRANCH}" == "staging" ]; then
-              ./scripts/deploy-circle.sh
-            fi
-      - deploy:
-          name: Deploy to master if on master branch
-          command: |
-            if [ "${CIRCLE_BRANCH}" == "master" ]; then
-              ./scripts/deploy-circle.sh
-            fi
-
+          name: Deploy to cloud.gov
+          command: ./scripts/deploy-circle.sh
