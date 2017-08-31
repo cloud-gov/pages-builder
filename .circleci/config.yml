@@ -31,7 +31,8 @@ jobs:
           command: yarn test
       - run:
           name: Report test coverage
-          command: ./cc-test-reporter after-build --exit-code $? < coverage/lcov.info
+          # Attempt to submit coverage. Use `|| true` to always succeed even if that submission fails.
+          command: ./cc-test-reporter after-build --exit-code $? < coverage/lcov.info || true
       - deploy:
           name: Deploy to cloud.gov
           command: ./scripts/deploy-circle.sh
