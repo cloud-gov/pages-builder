@@ -1,0 +1,38 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/node:6.11
+        environment:
+          CC_TEST_REPORTER_ID: 4c0674ab7fa1efa186ac5998f89136640d924fabcc0b99ed764bd9fc85043b97
+    steps:
+      - checkout
+      - run:
+          name: Install codeclimate reporter
+          command: |
+            curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+            chmod +x ./cc-test-reporter
+            ./cc-test-reporter before-build
+      - restore_cache:
+          key: dependency-cache-{{ checksum "yarn.lock" }}
+      - run:
+          name: Install dependencies
+          command: yarn --pure-lockfile
+      - save_cache:
+          key: dependency-cache-{{ checksum "yarn.lock" }}
+          paths:
+            - ./node_modules
+            - ~/.cache/yarn
+      - run:
+          name: Check lint
+          command: yarn eslint
+      - run:
+          name: Test
+          command: yarn test
+      - run:
+          name: Report test coverage
+          # Attempt to submit coverage. Use `|| true` to always succeed even if that submission fails.
+          command: ./cc-test-reporter after-build --exit-code $? < coverage/lcov.info || true
+      - deploy:
+          name: Deploy to cloud.gov
+          command: ./scripts/deploy-circle.sh
