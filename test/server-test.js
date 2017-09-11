@@ -1,5 +1,7 @@
 const expect = require('chai').expect;
+
 const server = require('../src/server');
+const mockTokenRequest = require('./nocks/cloud-foundry-oauth-token-nock');
 
 const mockCluster = () => ({ stopBuild: () => {} });
 
@@ -13,6 +15,36 @@ describe('server', () => {
         url: '/',
       }, (response) => {
         expect(response.statusCode).to.eq(200);
+        done();
+      });
+    });
+  });
+
+  describe('GET /healthcheck', () => {
+    it('should be ok when a valid access token can be retrieved', (done) => {
+      const testServer = server(mockCluster());
+      mockTokenRequest();
+
+      testServer.inject({
+        method: 'GET',
+        url: '/healthcheck',
+      }, (response) => {
+        expect(response.statusCode).to.eq(200);
+        expect(response.result).to.deep.equal({ ok: true });
+        done();
+      });
+    });
+
+    it('should not be ok when an access token cannot be retrieved', (done) => {
+      const testServer = server(mockCluster());
+      mockTokenRequest('badtoken');
+
+      testServer.inject({
+        method: 'GET',
+        url: '/healthcheck',
+      }, (response) => {
+        expect(response.statusCode).to.eq(200);
+        expect(response.result).to.deep.equal({ ok: false });
         done();
       });
     });
