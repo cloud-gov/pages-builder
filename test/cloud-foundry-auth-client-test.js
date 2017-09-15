@@ -1,10 +1,14 @@
 const expect = require('chai').expect;
 const jwt = require('jsonwebtoken');
 const nock = require('nock');
+
 const CloudFoundryAuthClient = require('../src/cloud-foundry-auth-client');
 const mockTokenRequest = require('./nocks/cloud-foundry-oauth-token-nock');
 
-const mockToken = (expiration = (Date.now() / 1000) + 600) => jwt.sign({ exp: expiration }, '123abc');
+const mockToken = (expiration = (Date.now() / 1000) + 600) => (
+  jwt.sign({ exp: expiration }, '123abc')
+);
+
 
 describe('CloudFoundryAuthClient', () => {
   describe('.accessToken()', () => {
