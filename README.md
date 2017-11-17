@@ -78,6 +78,17 @@ Additional configuration is set up through environment variables:
 - `PORT` the port for the server that handles healthcheck pings and build callbacks
 - `SQS_URL` (required) the URL of the SQS queue to poll
 
+## Running locally
+
+`federalist-builder` is not currently designed to be run locally. Due to its tight coupling with the build process and its dependence on the Cloud Foundry environment, running it locally has the potential to create a race condition between builds running in Cloud Foundry and builds that were scheduled locally.
+
+To locally test `federalist-builder`, you can run:
+
+```
+yarn
+yarn test
+```
+
 ## Public domain
 
 This project is in the worldwide [public domain](LICENSE.md). As stated in [CONTRIBUTING](CONTRIBUTING.md):
