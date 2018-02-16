@@ -57,7 +57,7 @@ describe('server', () => {
       });
     });
 
-    it('should not be ok if SQS attributes cannot be retreived', (done) => {
+    it('should not be ok if SQS attributes cannot be retrieved', (done) => {
       const error = { error: 'queue attributes unavailable' };
       const restoreAWS = awsMock.mock('SQS', 'getQueueAttributes', null, error);
       const testServer = server(mockCluster());
