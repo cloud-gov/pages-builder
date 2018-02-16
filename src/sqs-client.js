@@ -1,8 +1,31 @@
 const AWS = require('./aws');
 
+const QUEUE_ATTRIBUTES_FALLBACK = 'queue attributes unavailable';
+
 class SQSClient {
   constructor() {
     this._sqs = new AWS.SQS();
+  }
+
+  getQueueAttributes(/** attribute1, attribute2 ...n*/) {
+    const args = [].slice.call(arguments);
+
+    return new Promise((resolve, reject) => {
+      this._sqs.getQueueAttributes(
+        this._queueAttributesParams(args),
+        (error, data) => {
+          let output;
+
+          if (!error) {
+            output = data.Attributes;
+           } else {
+            output = { error: QUEUE_ATTRIBUTES_FALLBACK };
+          }
+
+          resolve(output);
+        }
+      );
+    });
   }
 
   receiveMessage() {
@@ -35,6 +58,13 @@ class SQSClient {
         }
       });
     });
+  }
+
+  _queueAttributesParams(attributes) {
+    return {
+      QueueUrl: this._sqsQueueURL(),
+      AttributeNames: [...attributes]
+    };
   }
 
   _sqsDeleteMessageParams(message) {
