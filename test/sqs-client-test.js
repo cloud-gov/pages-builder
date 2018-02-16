@@ -12,7 +12,26 @@ describe('SQSClient', () => {
     sqsClient = null;
   });
 
+  const sqsMethodStub = (method, expectedResponse, error = null) => {
+    const safeMethod = sqsClient._sqs[method];
+
+    sqsClient._sqs[method] = (params, callback) => {
+      callback(error, expectedResponse);
+    };
+
+    return () => { sqsClient._sqs[method] = safeMethod; };
+  };
+
   describe('.receiveMessage()', () => {
+    let receiveMessageStub;
+
+    afterEach(() => {
+      if (receiveMessageStub) {
+        receiveMessageStub();
+        receiveMessageStub = null;
+      }
+    });
+
     it('should call SQS.ReceiveMessage and responds with a message', (done) => {
       const message = {
         Body: JSON.stringify({
@@ -23,9 +42,7 @@ describe('SQSClient', () => {
         }),
       };
 
-      sqsClient._sqs.receiveMessage = (params, callback) => {
-        callback(null, { Messages: [message] });
-      };
+      receiveMessageStub = sqsMethodStub('receiveMessage', { Messages: [message] });
 
       sqsClient.receiveMessage().then((receivedMessage) => {
         expect(receivedMessage).to.deep.equal(message);
@@ -34,9 +51,7 @@ describe('SQSClient', () => {
     });
 
     it('should call SQS.ReceiveMessage and respond with undefined if there are no messages', (done) => {
-      sqsClient._sqs.receiveMessage = (params, callback) => {
-        callback(null, { Messages: [] });
-      };
+      receiveMessageStub = sqsMethodStub('receiveMessage', { Messages: [] });
 
       sqsClient.receiveMessage().then((receivedMessage) => {
         expect(receivedMessage).to.deep.be.undefined;
@@ -45,12 +60,13 @@ describe('SQSClient', () => {
     });
 
     it('should call SQS.ReceiveMessage and reject with an error if SQS responds with an error', (done) => {
-      sqsClient._sqs.receiveMessage = (params, callback) => {
-        callback(new Error('test error'), { Messages: [] });
-      };
+      const errorMessage = 'test error';
+      const messages = { Messages: [] };
+
+      receiveMessageStub = sqsMethodStub('receiveMessage', messages, new Error(errorMessage));
 
       sqsClient.receiveMessage().catch((error) => {
-        expect(error.message).to.equal('test error');
+        expect(error.message).to.equal(errorMessage);
         done();
       });
     });
