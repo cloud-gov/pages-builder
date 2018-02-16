@@ -22,6 +22,13 @@ describe('SQSClient', () => {
     return () => { sqsClient._sqs[method] = safeMethod; };
   };
 
+  const providesQueueUrl = (method, done) => {
+    sqsClient._sqs[method] = (params) => {
+      expect(params.QueueUrl).to.equal(process.env.SQS_URL);
+      done();
+    };
+  };
+
   describe('.receiveMessage()', () => {
     let receiveMessageStub;
 
@@ -72,11 +79,7 @@ describe('SQSClient', () => {
     });
 
     it('should call SQS.ReceiveMessage with the correct queue URL', (done) => {
-      sqsClient._sqs.receiveMessage = (params) => {
-        expect(params.QueueUrl).to.equal(process.env.SQS_URL);
-        done();
-      };
-
+      providesQueueUrl('receiveMessage', done);
       sqsClient.receiveMessage({});
     });
   });
@@ -107,22 +110,14 @@ describe('SQSClient', () => {
     });
 
     it('should call SQS.DeleteMessage with the correct queue URL', (done) => {
-      sqsClient._sqs.deleteMessage = (params) => {
-        expect(params.QueueUrl).to.equal(process.env.SQS_URL);
-        done();
-      };
-
+      providesQueueUrl('deleteMessage', done);
       sqsClient.deleteMessage({});
     });
   });
 
   describe('.getQueueAttributes', () => {
     it('calls function with the correct queue url', (done) => {
-      sqsClient._sqs.getQueueAttributes = (params) => {
-        expect(params.QueueUrl).to.equal(process.env.SQS_URL);
-        done();
-      };
-
+      providesQueueUrl('getQueueAttributes', done);
       sqsClient.getQueueAttributes('ApproximateNumberOfMessages');
     });
 
