@@ -9,5 +9,5 @@ module.exports = {
     return () => {
       AWS.restore(service, method);
     };
-  }
+  },
 };

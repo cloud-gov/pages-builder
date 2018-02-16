@@ -34,8 +34,10 @@ describe('server', () => {
         method: 'GET',
         url: '/healthcheck',
       }, (response) => {
+        const expected = Object.assign({}, { ok: true }, queueAttributes.Attributes);
+
         expect(response.statusCode).to.eq(200);
-        expect(response.result).to.deep.equal(Object.assign({}, { ok: true }, queueAttributes.Attributes));
+        expect(response.result).to.deep.equal(expected);
         restoreAWS();
         done();
       });

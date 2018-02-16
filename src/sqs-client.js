@@ -7,18 +7,16 @@ class SQSClient {
     this._sqs = new AWS.SQS();
   }
 
-  getQueueAttributes(/** attribute1, attribute2 ...n*/) {
-    const args = [].slice.call(arguments);
-
-    return new Promise((resolve, reject) => {
+  getQueueAttributes(...attributes) {
+    return new Promise((resolve) => {
       this._sqs.getQueueAttributes(
-        this._queueAttributesParams(args),
+        this._queueAttributesParams(...attributes),
         (error, data) => {
           let output;
 
           if (!error) {
             output = data.Attributes;
-           } else {
+          } else {
             output = { error: QUEUE_ATTRIBUTES_FALLBACK };
           }
 
@@ -63,7 +61,7 @@ class SQSClient {
   _queueAttributesParams(attributes) {
     return {
       QueueUrl: this._sqsQueueURL(),
-      AttributeNames: [...attributes]
+      AttributeNames: [...attributes],
     };
   }
 

@@ -100,7 +100,7 @@ describe('SQSClient', () => {
     });
   });
 
-  describe('.getQueueAttributes', (done) => {
+  describe('.getQueueAttributes', () => {
     it('calls function with the correct queue url', (done) => {
       sqsClient._sqs.getQueueAttributes = (params) => {
         expect(params.QueueUrl).to.equal(process.env.SQS_URL);
@@ -115,7 +115,7 @@ describe('SQSClient', () => {
         callback(true);
       };
 
-      sqsClient.getQueueAttributes().then((response) => {
+      sqsClient.getQueueAttributes('').then((response) => {
         expect(response).to.deep.equal({ error: 'queue attributes unavailable' });
         done();
       });
