@@ -7,10 +7,12 @@ class SQSClient {
     this._sqs = new AWS.SQS();
   }
 
-  getQueueAttributes(...attributes) {
+  getQueueAttributes(attributesArray) {
+    // attributesArray should be an array of SQS attribute names
+    // ref: https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_GetQueueAttributes.html
     return new Promise((resolve) => {
       this._sqs.getQueueAttributes(
-        this._queueAttributesParams(...attributes),
+        this._queueAttributesParams(attributesArray),
         (error, data) => {
           let output;
 
@@ -58,10 +60,10 @@ class SQSClient {
     });
   }
 
-  _queueAttributesParams(attributes) {
+  _queueAttributesParams(attributesArray) {
     return {
       QueueUrl: this._sqsQueueURL(),
-      AttributeNames: [...attributes],
+      AttributeNames: attributesArray,
     };
   }
 

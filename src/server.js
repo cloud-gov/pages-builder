@@ -33,7 +33,7 @@ function createServer(cluster) {
       // Array of promises returned from methods we want included in the healthcheck
       const checkPromises = [
         authClient.accessToken(), // make sure we can authenticate with cloud.gov
-        queueClient.getQueueAttributes(NUM_MESSAGES),
+        queueClient.getQueueAttributes([NUM_MESSAGES]),
       ];
 
       const replyOk = (attributes = {}) => reply(Object.assign({}, { ok: true }, attributes));
