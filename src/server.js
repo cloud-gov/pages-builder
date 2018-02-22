@@ -4,6 +4,7 @@ const CloudFoundryAuthClient = require('./cloud-foundry-auth-client');
 const SQSClient = require('./sqs-client');
 
 const NUM_MESSAGES = 'ApproximateNumberOfMessages';
+const NUM_MESSAGES_DELAYED = 'ApproximateNumberOfMessagesDelayed';
 
 function createServer(cluster) {
   const server = new Hapi.Server();
@@ -33,26 +34,29 @@ function createServer(cluster) {
       // Array of promises returned from methods we want included in the healthcheck
       const checkPromises = [
         authClient.accessToken(), // make sure we can authenticate with cloud.gov
-        queueClient.getQueueAttributes([NUM_MESSAGES]),
+        queueClient.getQueueAttributes([NUM_MESSAGES, NUM_MESSAGES_DELAYED]),
       ];
 
-      const replyOk = (attributes = {}) => reply(Object.assign({}, { ok: true }, attributes));
+      const replyOk = (queueAttributes = {}) => reply(
+        Object.assign({}, { ok: true }, { queueAttributes })
+      );
+
       const replyNotOk = (error = {}) => reply(Object.assign({}, { ok: false }, error));
 
       Promise.all(checkPromises)
-        .then(([token, attributes]) => {
+        .then(([token, queueAttributes]) => {
           let error;
 
           if (!token) {
             error = { reason: 'No cloud foundry token received' };
-          } else if (attributes.error) {
-            error = { reason: attributes.error };
+          } else if (queueAttributes.error) {
+            error = { reason: queueAttributes.error };
           }
 
           if (error) {
             replyNotOk(error);
           } else {
-            replyOk(attributes);
+            replyOk(queueAttributes);
           }
         })
         .catch((err) => {
