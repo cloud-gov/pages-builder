@@ -7,18 +7,42 @@ const CloudFoundryApiClient = require('../cloud-foundry-api-client');
 const ATTR_NUM_MESSAGES = 'ApproximateNumberOfMessages';
 const ATTR_NUM_MESSAGES_DELAYED = 'ApproximateNumberOfMessagesDelayed';
 
+
+function replyOk(reply, buildContainers, queueAttributes) {
+  reply({
+    ok: true,
+    buildContainers,
+    queueAttributes,
+  });
+}
+
+function replyNotOk(reply, reasons) {
+  reply({ ok: false, reasons });
+}
+
+function checkForErrors(token, queueAttributes, buildContainersState) {
+  const errorReasons = [];
+  if (!token) {
+    errorReasons.push('No cloud foundry token received.');
+  }
+
+  if (queueAttributes.error) {
+    errorReasons.push(queueAttributes.error);
+  }
+
+  if (buildContainersState.error) {
+    errorReasons.push(buildContainersState.error);
+  }
+
+  return errorReasons;
+}
+
+
+// Route handler for builder healthcheck
 function healthcheckHandler(request, reply) {
-  // Route handler for builder healthcheck
   const authClient = new CloudFoundryAuthClient();
   const queueClient = new SQSClient();
   const apiClient = new CloudFoundryApiClient();
-
-  // Helpers to create response object
-  const replyOk = (buildContainers, queueAttributes) => reply(
-    Object.assign({}, { ok: true }, { buildContainers, queueAttributes })
-  );
-
-  const replyNotOk = reasons => reply({ ok: false, reasons });
 
   // Array of promises returned from methods we want included in the healthcheck
   const checkPromises = [
@@ -29,28 +53,17 @@ function healthcheckHandler(request, reply) {
 
   Promise.all(checkPromises)
     .then(([token, queueAttributes, buildContainersState]) => {
-      const errorReasons = [];
-      if (!token) {
-        errorReasons.push('No cloud foundry token received.');
-      }
-
-      if (queueAttributes.error) {
-        errorReasons.push(queueAttributes.error);
-      }
-
-      if (buildContainersState.error) {
-        errorReasons.push(buildContainersState.error);
-      }
+      const errorReasons = checkForErrors(token, queueAttributes, buildContainersState);
 
       if (errorReasons.length) {
-        replyNotOk(errorReasons);
+        replyNotOk(reply, errorReasons);
       } else {
-        replyOk(buildContainersState, queueAttributes);
+        replyOk(reply, buildContainersState, queueAttributes);
       }
     })
     .catch((err) => {
-      winston.error('Healthcheck error', err);
-      replyNotOk([err.message]);
+      winston.error('Healthcheck error:', err);
+      replyNotOk(reply, [err.message]);
     });
 }
 
