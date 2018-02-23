@@ -116,9 +116,18 @@ describe('SQSClient', () => {
   });
 
   describe('.getQueueAttributes', () => {
+    it('calls SQS.getQueueAttributes with the requested attributes', (done) => {
+      sqsClient._sqs.getQueueAttributes = (params) => {
+        expect(params.AttributeNames).to.deep.equal(['aa', 'bb', 'cc']);
+        done();
+      };
+
+      sqsClient.getQueueAttributes(['aa', 'bb', 'cc']);
+    });
+
     it('calls function with the correct queue url', (done) => {
       providesQueueUrl('getQueueAttributes', done);
-      sqsClient.getQueueAttributes('ApproximateNumberOfMessages');
+      sqsClient.getQueueAttributes(['ApproximateNumberOfMessages']);
     });
 
     it('returns an error object when SQS is unavailable', (done) => {
@@ -126,7 +135,7 @@ describe('SQSClient', () => {
         callback(true);
       };
 
-      sqsClient.getQueueAttributes('').then((response) => {
+      sqsClient.getQueueAttributes(['boop']).then((response) => {
         expect(response).to.deep.equal({ error: 'queue attributes unavailable' });
         done();
       });
@@ -139,7 +148,7 @@ describe('SQSClient', () => {
         callback(false, expected);
       };
 
-      sqsClient.getQueueAttributes('ApproximateNumberOfMessages').then((response) => {
+      sqsClient.getQueueAttributes(['ApproximateNumberOfMessages']).then((response) => {
         expect(response).to.deep.equal(expected.Attributes);
         done();
       });

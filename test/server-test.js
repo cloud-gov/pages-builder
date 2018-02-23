@@ -23,7 +23,7 @@ describe('server', () => {
 
   describe('GET /healthcheck', () => {
     it('should be ok when a valid access token can be retrieved', (done) => {
-      const queueAttributes = { Attributes: { ApproximateNumberOfMessage: 2 } };
+      const queueAttributes = { Attributes: { ApproximateNumberOfMessages: 2 } };
       const restoreAWS = awsMock.mock('SQS', 'getQueueAttributes', queueAttributes);
 
       const testServer = server(mockCluster());
@@ -34,7 +34,10 @@ describe('server', () => {
         method: 'GET',
         url: '/healthcheck',
       }, (response) => {
-        const expected = Object.assign({}, { ok: true }, queueAttributes.Attributes);
+        const expected = {
+          ok: true,
+          queueAttributes: queueAttributes.Attributes,
+        };
 
         expect(response.statusCode).to.eq(200);
         expect(response.result).to.deep.equal(expected);
