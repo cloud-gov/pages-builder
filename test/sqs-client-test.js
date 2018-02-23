@@ -136,7 +136,7 @@ describe('SQSClient', () => {
       };
 
       sqsClient.getQueueAttributes(['boop']).then((response) => {
-        expect(response).to.deep.equal({ error: 'queue attributes unavailable' });
+        expect(response).to.deep.equal({ error: 'Queue attributes unavailable.' });
         done();
       });
     });

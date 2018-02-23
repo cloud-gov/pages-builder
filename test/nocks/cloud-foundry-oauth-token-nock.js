@@ -19,6 +19,10 @@ const mockTokenRequest = (token) => {
     return n.reply(401);
   }
 
+  if (token === 'emptytoken') {
+    return n.reply(200, { });
+  }
+
   return n.reply(200, {
     access_token: accessToken,
   });

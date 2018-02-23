@@ -1,9 +1,12 @@
 const crypto = require('crypto');
 const nock = require('nock');
 
+const randString = () => crypto.randomBytes(6).toString('hex');
+
 const expandResource = (resource) => {
-  const guid = resource.guid || crypto.randomBytes(6).toString('hex');
-  const name = resource.name || crypto.randomBytes(6).toString('hex');
+  const guid = resource.guid || randString();
+  const name = resource.name || randString();
+  const state = resource.state || randString();
 
   let dockerImage;
   if (Object.keys(resource).indexOf('dockerImage') >= 0) {
@@ -19,6 +22,7 @@ const expandResource = (resource) => {
     },
     entity: {
       name,
+      state,
       docker_image: dockerImage,
     },
   };

@@ -2,6 +2,10 @@ const request = require('request');
 const url = require('url');
 const CloudFoundryAuthClient = require('./cloud-foundry-auth-client');
 
+const STATE_STARTED = 'STARTED';
+
+const expectedNumBuildContainers = parseInt(process.env.EXPECTED_NUM_BUILD_CONTAINERS, 10);
+
 class CloudFoundryAPIClient {
   constructor() {
     this._authClient = new CloudFoundryAuthClient();
@@ -13,6 +17,29 @@ class CloudFoundryAPIClient {
         `/v2/spaces/${this._spaceGUID()}/apps`,
         token
       )).then(body => this._filterAppsResponse(JSON.parse(body)));
+  }
+
+  getBuildContainersState() {
+    return this.fetchBuildContainers()
+      .then((buildContainers) => {
+        const numBuildContainers = buildContainers.length;
+        const startedContainers = buildContainers.filter(bc => bc.state === STATE_STARTED);
+        const allStarted = startedContainers.length === expectedNumBuildContainers;
+
+        if (numBuildContainers < expectedNumBuildContainers) {
+          return { error: `Expected ${expectedNumBuildContainers} build containers but only ${numBuildContainers} found.` };
+        }
+
+        if (!allStarted) {
+          return { error: `Not all build containers are in the ${STATE_STARTED} state.` };
+        }
+
+        return {
+          expected: expectedNumBuildContainers,
+          found: numBuildContainers,
+          started: startedContainers.length,
+        };
+      });
   }
 
   updateBuildContainer(container, environment) {
@@ -44,6 +71,7 @@ class CloudFoundryAPIClient {
       url: appResponse.metadata.url,
       name: appResponse.entity.name,
       dockerImage: appResponse.entity.docker_image,
+      state: appResponse.entity.state,
     };
   }
 

@@ -46,6 +46,7 @@ describe('CloudFoundryAPIClient', () => {
         {
           guid: '123abc',
           name: 'builder-1',
+          state: 'STATE',
           dockerImage: 'example.com:5000/builder/1',
         },
       ]);
@@ -57,6 +58,7 @@ describe('CloudFoundryAPIClient', () => {
           guid: '123abc',
           url: '/v2/apps/123abc',
           name: 'builder-1',
+          state: 'STATE',
           dockerImage: 'example.com:5000/builder/1',
         }]);
         done();
@@ -81,6 +83,84 @@ describe('CloudFoundryAPIClient', () => {
       apiClient.updateBuildContainer(container, environment).then((response) => {
         const parsedResponse = JSON.parse(response);
         expect(parsedResponse.entity.environment_json).to.deep.equal(environment);
+        done();
+      });
+    });
+  });
+
+  describe('.getBuildContainersState()', () => {
+    // these tests rely on the EXPECTED_NUM_BUILD_CONTAINERS env var
+    // that is set in ./test/env.js
+    it('should resolve with the state of the build containers', (done) => {
+      mockTokenRequest();
+      mockListAppsRequest([
+        {
+          guid: '123abc',
+          name: 'builder-1',
+          state: 'STARTED',
+          dockerImage: 'example.com:5000/builder/1',
+        },
+        {
+          guid: '456def',
+          name: 'builder-2',
+          state: 'STARTED',
+          dockerImage: 'example.com:5000/builder/1',
+        },
+      ]);
+
+      const apiClient = new CloudFoundryAPIClient();
+      apiClient.getBuildContainersState().then((state) => {
+        expect(state).to.deep.equal({
+          expected: 2,
+          found: 2,
+          started: 2,
+        });
+        done();
+      });
+    });
+
+    it('should resolve with an error if there are too few build containers', (done) => {
+      mockTokenRequest();
+      mockListAppsRequest([
+        {
+          guid: '123abc',
+          name: 'builder-1',
+          state: 'STARTED',
+          dockerImage: 'example.com:5000/builder/1',
+        },
+      ]);
+
+      const apiClient = new CloudFoundryAPIClient();
+      apiClient.getBuildContainersState().then((state) => {
+        expect(state).to.deep.equal({
+          error: 'Expected 2 build containers but only 1 found.',
+        });
+        done();
+      });
+    });
+
+    it('should resolve with an error if not all containers are started', (done) => {
+      mockTokenRequest();
+      mockListAppsRequest([
+        {
+          guid: '123abc',
+          name: 'builder-1',
+          state: 'STOPPED',
+          dockerImage: 'example.com:5000/builder/1',
+        },
+        {
+          guid: '456def',
+          name: 'builder-2',
+          state: 'STARTED',
+          dockerImage: 'example.com:5000/builder/1',
+        },
+      ]);
+
+      const apiClient = new CloudFoundryAPIClient();
+      apiClient.getBuildContainersState().then((state) => {
+        expect(state).to.deep.equal({
+          error: 'Not all build containers are in the STARTED state.',
+        });
         done();
       });
     });
