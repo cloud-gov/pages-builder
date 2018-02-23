@@ -1,4 +1,6 @@
 const expect = require('chai').expect;
+const nock = require('nock');
+
 const server = require('../src/server');
 const mockTokenRequest = require('./nocks/cloud-foundry-oauth-token-nock');
 const mockListAppsRequest = require('./nocks/cloud-foundry-list-apps-nock');
@@ -8,6 +10,8 @@ const awsMock = require('./aws-mock');
 const mockCluster = () => ({ stopBuild: () => {} });
 
 describe('server', () => {
+  afterEach(() => nock.cleanAll());
+
   describe('GET /', () => {
     it('should respond with a 200', (done) => {
       const testServer = server(mockCluster());
@@ -73,19 +77,51 @@ describe('server', () => {
     it('should not be ok when an access token cannot be retrieved', (done) => {
       const testServer = server(mockCluster());
       mockTokenRequest('badtoken');
+      mockTokenRequest(); // nock another request for fetching build containers
+      mockGoodListAppsRequest();
+
+      const expectedResult = {
+        ok: false,
+        reasons: ['Received status code: 401'],
+      };
 
       testServer.inject({
         method: 'GET',
         url: '/healthcheck',
       }, (response) => {
         expect(response.statusCode).to.eq(200);
-        expect(Object.keys(response.result)).to.deep.equal(['ok', 'reasons']);
+        expect(response.result).to.deep.equal(expectedResult);
+        done();
+      });
+    });
+
+    it('should not be ok when an access token is non-existent', (done) => {
+      const testServer = server(mockCluster());
+      mockTokenRequest('emptytoken');
+      mockTokenRequest(); // nock another request for fetching build containers
+      mockGoodListAppsRequest();
+
+      const queueAttributes = { Attributes: { ApproximateNumberOfMessages: 2 } };
+      const restoreAWS = awsMock.mock('SQS', 'getQueueAttributes', queueAttributes);
+
+      const expectedResult = {
+        ok: false,
+        reasons: ['No cloud foundry token received.'],
+      };
+
+      testServer.inject({
+        method: 'GET',
+        url: '/healthcheck',
+      }, (response) => {
+        expect(response.statusCode).to.eq(200);
+        expect(response.result).to.deep.equal(expectedResult);
+        restoreAWS();
         done();
       });
     });
 
     it('should not be ok if SQS attributes cannot be retrieved', (done) => {
-      const error = { error: 'queue attributes unavailable' };
+      const error = { error: 'Queue attributes unavailable.' };
       const restoreAWS = awsMock.mock('SQS', 'getQueueAttributes', null, error);
       const testServer = server(mockCluster());
 
@@ -170,7 +206,7 @@ describe('server', () => {
     });
 
     it('should be able to report multiple error reasons', (done) => {
-      const error = { error: 'queue attributes unavailable' };
+      const error = { error: 'Queue attributes unavailable.' };
       const restoreAWS = awsMock.mock('SQS', 'getQueueAttributes', null, error);
       const testServer = server(mockCluster());
 
