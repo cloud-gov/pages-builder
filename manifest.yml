@@ -13,7 +13,7 @@ services:
 env:
   NEW_RELIC_APP_NAME: "federalist-builder-prod"
   BUILD_TIMEOUT_SECONDS: 1200
-  SQS_URL: "https://sqs.us-west-2.amazonaws.com/144433228153/federalist-builds-cloudgov"
+  SQS_URL: "https://sqs.us-east-1.amazonaws.com/144433228153/federalist-builds"
   BUILD_COMPLETE_CALLBACK_HOST: "https://federalist-builder.fr.cloud.gov"
   BUILD_CONTAINER_DOCKER_IMAGE_NAME: "federalist-registry.fr.cloud.gov/federalist-garden-build"
   BUILD_SPACE_GUID: "a1e19bd4-5066-40a7-8d53-fc9644c27e8e"
