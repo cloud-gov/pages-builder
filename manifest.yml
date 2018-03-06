@@ -19,3 +19,4 @@ env:
   BUILD_SPACE_GUID: "a1e19bd4-5066-40a7-8d53-fc9644c27e8e"
   CLOUD_FOUNDRY_API_HOST: "https://api.fr.cloud.gov"
   CLOUD_FOUNDRY_OAUTH_TOKEN_URL: "https://login.fr.cloud.gov/oauth/token"
+  EXPECTED_NUM_BUILD_CONTAINERS: 6

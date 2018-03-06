@@ -1,8 +1,44 @@
-const expect = require('chai').expect;
+const { expect } = require('chai');
 const SQSClient = require('../src/sqs-client');
 
 describe('SQSClient', () => {
+  let sqsClient;
+
+  beforeEach(() => {
+    sqsClient = new SQSClient();
+  });
+
+  afterEach(() => {
+    sqsClient = null;
+  });
+
+  const sqsMethodStub = (method, expectedResponse, error = null) => {
+    const safeMethod = sqsClient._sqs[method];
+
+    sqsClient._sqs[method] = (params, callback) => {
+      callback(error, expectedResponse);
+    };
+
+    return () => { sqsClient._sqs[method] = safeMethod; };
+  };
+
+  const providesQueueUrl = (method, done) => {
+    sqsClient._sqs[method] = (params) => {
+      expect(params.QueueUrl).to.equal(process.env.SQS_URL);
+      done();
+    };
+  };
+
   describe('.receiveMessage()', () => {
+    let receiveMessageStub;
+
+    afterEach(() => {
+      if (receiveMessageStub) {
+        receiveMessageStub();
+        receiveMessageStub = null;
+      }
+    });
+
     it('should call SQS.ReceiveMessage and responds with a message', (done) => {
       const message = {
         Body: JSON.stringify({
@@ -13,11 +49,7 @@ describe('SQSClient', () => {
         }),
       };
 
-      const sqsClient = new SQSClient();
-
-      sqsClient._sqs.receiveMessage = (params, callback) => {
-        callback(null, { Messages: [message] });
-      };
+      receiveMessageStub = sqsMethodStub('receiveMessage', { Messages: [message] });
 
       sqsClient.receiveMessage().then((receivedMessage) => {
         expect(receivedMessage).to.deep.equal(message);
@@ -26,11 +58,7 @@ describe('SQSClient', () => {
     });
 
     it('should call SQS.ReceiveMessage and respond with undefined if there are no messages', (done) => {
-      const sqsClient = new SQSClient();
-
-      sqsClient._sqs.receiveMessage = (params, callback) => {
-        callback(null, { Messages: [] });
-      };
+      receiveMessageStub = sqsMethodStub('receiveMessage', { Messages: [] });
 
       sqsClient.receiveMessage().then((receivedMessage) => {
         expect(receivedMessage).to.deep.be.undefined;
@@ -39,26 +67,19 @@ describe('SQSClient', () => {
     });
 
     it('should call SQS.ReceiveMessage and reject with an error if SQS responds with an error', (done) => {
-      const sqsClient = new SQSClient();
+      const errorMessage = 'test error';
+      const messages = { Messages: [] };
 
-      sqsClient._sqs.receiveMessage = (params, callback) => {
-        callback(new Error('test error'), { Messages: [] });
-      };
+      receiveMessageStub = sqsMethodStub('receiveMessage', messages, new Error(errorMessage));
 
       sqsClient.receiveMessage().catch((error) => {
-        expect(error.message).to.equal('test error');
+        expect(error.message).to.equal(errorMessage);
         done();
       });
     });
 
     it('should call SQS.ReceiveMessage with the correct queue URL', (done) => {
-      const sqsClient = new SQSClient();
-
-      sqsClient._sqs.receiveMessage = (params) => {
-        expect(params.QueueUrl).to.equal(process.env.SQS_URL);
-        done();
-      };
-
+      providesQueueUrl('receiveMessage', done);
       sqsClient.receiveMessage({});
     });
   });
@@ -69,8 +90,6 @@ describe('SQSClient', () => {
         ReceiptHandle: 'mocked-receipt-handle',
       };
 
-      const sqsClient = new SQSClient();
-
       sqsClient._sqs.deleteMessage = (params) => {
         expect(params.ReceiptHandle).to.equal('mocked-receipt-handle');
         done();
@@ -80,8 +99,6 @@ describe('SQSClient', () => {
     });
 
     it('should call SQS.DeleteMessage and reject with an error if SQS response with an error', (done) => {
-      const sqsClient = new SQSClient();
-
       sqsClient._sqs.deleteMessage = (params, callback) => {
         callback(new Error('test error'));
       };
@@ -93,14 +110,48 @@ describe('SQSClient', () => {
     });
 
     it('should call SQS.DeleteMessage with the correct queue URL', (done) => {
-      const sqsClient = new SQSClient();
+      providesQueueUrl('deleteMessage', done);
+      sqsClient.deleteMessage({});
+    });
+  });
 
-      sqsClient._sqs.deleteMessage = (params) => {
-        expect(params.QueueUrl).to.equal(process.env.SQS_URL);
+  describe('.getQueueAttributes', () => {
+    it('calls SQS.getQueueAttributes with the requested attributes', (done) => {
+      sqsClient._sqs.getQueueAttributes = (params) => {
+        expect(params.AttributeNames).to.deep.equal(['aa', 'bb', 'cc']);
         done();
       };
 
-      sqsClient.deleteMessage({});
+      sqsClient.getQueueAttributes(['aa', 'bb', 'cc']);
+    });
+
+    it('calls function with the correct queue url', (done) => {
+      providesQueueUrl('getQueueAttributes', done);
+      sqsClient.getQueueAttributes(['ApproximateNumberOfMessages']);
+    });
+
+    it('returns an error object when SQS is unavailable', (done) => {
+      sqsClient._sqs.getQueueAttributes = (params, callback) => {
+        callback(true);
+      };
+
+      sqsClient.getQueueAttributes(['boop']).then((response) => {
+        expect(response).to.deep.equal({ error: 'Queue attributes unavailable.' });
+        done();
+      });
+    });
+
+    it('returns an object of all requested attributes', (done) => {
+      const expected = { Attributes: { ApproximateNumberOfMessages: 1 } };
+
+      sqsClient._sqs.getQueueAttributes = (params, callback) => {
+        callback(false, expected);
+      };
+
+      sqsClient.getQueueAttributes(['ApproximateNumberOfMessages']).then((response) => {
+        expect(response).to.deep.equal(expected.Attributes);
+        done();
+      });
     });
   });
 });

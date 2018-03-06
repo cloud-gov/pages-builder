@@ -1,6 +1,7 @@
 const Hapi = require('hapi');
 const winston = require('winston');
-const CloudFoundryAuthClient = require('./cloud-foundry-auth-client');
+
+const healthcheckHandler = require('./healthcheck');
 
 function createServer(cluster) {
   const server = new Hapi.Server();
@@ -20,34 +21,10 @@ function createServer(cluster) {
   });
 
   server.route({
+    // Exposes an endpoint to report builder health
     method: 'GET',
     path: '/healthcheck',
-    handler: (request, reply) => {
-      // Exposes an endpoint to report on server health
-
-      const authClient = new CloudFoundryAuthClient();
-
-      // Array of promises returned from methods we want included in the healthcheck
-      const checkPromises = [
-        authClient.accessToken(), // make sure we can authenticate with cloud.gov
-      ];
-
-      const replyOk = () => reply({ ok: true });
-      const replyNotOk = () => reply({ ok: false });
-
-      Promise.all(checkPromises)
-        .then(([token]) => {
-          if (!token) {
-            replyNotOk();
-          } else {
-            replyOk();
-          }
-        })
-        .catch((err) => {
-          winston.error('Healthcheck error', err);
-          replyNotOk();
-        });
-    },
+    handler: healthcheckHandler,
   });
 
   server.route({

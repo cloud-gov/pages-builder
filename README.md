@@ -77,6 +77,7 @@ Additional configuration is set up through environment variables:
 - `NEW_RELIC_APP_NAME` the name of the app in New Relic
 - `PORT` the port for the server that handles healthcheck pings and build callbacks
 - `SQS_URL` (required) the URL of the SQS queue to poll
+- `EXPECTED_NUM_BUILD_CONTAINERS` (required) the expected number of build containers to be running
 
 ## Running locally
 
