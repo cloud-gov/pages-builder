@@ -16,7 +16,7 @@ if (process.env.NEW_RELIC_APP_NAME) {
 const sqsCredentials = cfenv.getAppEnv().getServiceCreds('federalist-staging-sqs-creds');
 
 Object.keys(sqsCredentials).reduce((memo, credName) => {
-  memo[credName] = sqsCredentials[credName];
+  memo[credName] = sqsCredentials[credName]; // eslint-disable-line no-param-reassign
   return memo;
 }, process.env);
 
