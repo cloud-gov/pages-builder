@@ -75,7 +75,7 @@ class SQSClient {
   }
 
   _sqsQueueURL() {
-    return process.env.SQS_URL;
+    return process.env.SQS_CREDS.sqs_url;
   }
 
   _sqsReceiveMessageParams() {

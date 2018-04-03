@@ -13,8 +13,8 @@ if (process.env.NEW_RELIC_APP_NAME) {
   }
 }
 
-const sqsCredentials = cfenv.getAppEnv().getServiceCreds('federalist-staging-sqs-creds');
-process.env.SQS_URL = sqsCredentials.sqs_url;
+//needs to be based on environment and not staging hardcoded perhaps add APP_ENV in env variables
+process.env.SQS_CREDS = cfenv.getAppEnv().getServiceCreds(`federalist-${process.env.APP_ENV}-sqs-creds`);
 
 const BuildScheduler = require('./src/build-scheduler');
 
