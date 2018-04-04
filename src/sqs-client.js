@@ -1,7 +1,7 @@
 const AWS = require('./aws');
 
 const QUEUE_ATTRIBUTES_FALLBACK = 'Queue attributes unavailable.';
-const SQS_URL = process.env.SQS_CREDS.sqs_url
+const SQS_URL = process.env.SQS_URL;
 
 class SQSClient {
   constructor() {

@@ -2,7 +2,7 @@ const AWS = require('aws-sdk');
 const cfenv = require('cfenv');
 
 const appEnv = cfenv.getAppEnv();
-const awsCredentials = process.env.SQS_CREDS;
+const awsCredentials = cfenv.getAppEnv().getServiceCreds(`federalist-${process.env.APP_ENV}-sqs-creds`);
 
 if (awsCredentials) {
   AWS.config.update({
