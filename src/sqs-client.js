@@ -1,6 +1,7 @@
 const AWS = require('./aws');
 
 const QUEUE_ATTRIBUTES_FALLBACK = 'Queue attributes unavailable.';
+const SQS_URL = process.env.SQS_CREDS.sqs_url
 
 class SQSClient {
   constructor() {
@@ -75,7 +76,7 @@ class SQSClient {
   }
 
   _sqsQueueURL() {
-    return process.env.SQS_CREDS.sqs_url;
+    return SQS_URL;
   }
 
   _sqsReceiveMessageParams() {
