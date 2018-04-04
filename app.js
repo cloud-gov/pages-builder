@@ -15,7 +15,6 @@ if (process.env.NEW_RELIC_APP_NAME) {
   }
 }
 
-//needs to be based on environment and not staging hardcoded perhaps add APP_ENV in env variables
 process.env.SQS_URL = appEnv.getServiceCreds(`federalist-${process.env.APP_ENV}-sqs-creds`).sqs_url;
 
 const BuildScheduler = require('./src/build-scheduler');
