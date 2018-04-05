@@ -20,3 +20,4 @@ env:
   CLOUD_FOUNDRY_OAUTH_TOKEN_URL: "https://login.fr.cloud.gov/oauth/token"
   LOG_LEVEL: "verbose"
   EXPECTED_NUM_BUILD_CONTAINERS: 2
+  APP_ENV: "staging"
