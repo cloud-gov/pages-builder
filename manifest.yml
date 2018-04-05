@@ -7,7 +7,7 @@ disk_quota: 512M
 memory: 128MB
 instances: 1
 services:
-- federalist-ew-sqs-user
+- federalist-production-sqs-creds
 - federalist-deploy-user
 - federalist-builder-env
 env:
