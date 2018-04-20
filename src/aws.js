@@ -1,14 +1,13 @@
 const AWS = require('aws-sdk');
 const cfenv = require('cfenv');
 
-const appEnv = cfenv.getAppEnv();
-const awsCredentials = appEnv.getServiceCreds('federalist-ew-sqs-user');
+const awsCredentials = cfenv.getAppEnv().getServiceCreds(`federalist-${process.env.APP_ENV}-sqs-creds`);
 
 if (awsCredentials) {
   AWS.config.update({
     accessKeyId: awsCredentials.access_key,
     secretAccessKey: awsCredentials.secret_key,
-    region: 'us-east-1',
+    region: awsCredentials.region,
   });
 }
 

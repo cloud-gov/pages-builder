@@ -7,7 +7,7 @@ disk_quota: 512M
 memory: 128MB
 instances: 1
 services:
-- federalist-ew-sqs-user
+- federalist-production-sqs-creds
 - federalist-deploy-user
 - federalist-builder-env
 env:
@@ -20,3 +20,4 @@ env:
   CLOUD_FOUNDRY_API_HOST: "https://api.fr.cloud.gov"
   CLOUD_FOUNDRY_OAUTH_TOKEN_URL: "https://login.fr.cloud.gov/oauth/token"
   EXPECTED_NUM_BUILD_CONTAINERS: 6
+  APP_ENV: "production"
