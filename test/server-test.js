@@ -4,6 +4,7 @@ const nock = require('nock');
 const server = require('../src/server');
 const mockTokenRequest = require('./nocks/cloud-foundry-oauth-token-nock');
 const mockListAppsRequest = require('./nocks/cloud-foundry-list-apps-nock');
+const mockListAppStatsRequest = require('./nocks/cloud-foundry-list-app-stats-nock');
 const awsMock = require('./aws-mock');
 
 
@@ -42,6 +43,8 @@ describe('server', () => {
           dockerImage: 'example.com:5000/builder/1',
         },
       ]);
+      mockListAppStatsRequest('123abc', { 0: { state: "RUNNING" }});
+      mockListAppStatsRequest('456def', { 0: { state: "RUNNING" }});
     };
 
     it('should be ok all is good', (done) => {
