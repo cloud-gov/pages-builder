@@ -16,23 +16,24 @@ describe('CloudFoundryAPIClient', () => {
   describe('.fetchAppStats()', () => {
     it('should return the instances for an app', (done) => {
       const guid = 'test-guid';
-      response = {
-          '0': { state: "RUNNING" },
-          '1': { state: "RUNNING" },
-          '2': { state: "FLAPPING" },
-        };
+      const response = {
+        0: { state: 'RUNNING' },
+        1: { state: 'RUNNING' },
+        2: { state: 'FLAPPING' },
+      };
       mockTokenRequest();
       mockListAppStatsRequest(guid, response);
 
       const apiClient = new CloudFoundryAPIClient();
       apiClient.fetchAppStats(guid).then((appInstances) => {
         expect(appInstances).to.deep.equal(JSON.stringify(response));
-        return apiClient._appInstanceStatesCount(JSON.parse(appInstances));
-      }).then(statesCount => {
-        expect(statesCount["RUNNING"]).to.deep.equal(2);
-        expect(statesCount["FLAPPING"]).to.deep.equal(1);
+        return apiClient._appInstanceStates(JSON.parse(appInstances));
+      }).then((statesCount) => {
+        expect(statesCount.RUNNING).to.deep.equal(2);
+        expect(statesCount.FLAPPING).to.deep.equal(1);
         done();
-      });
+      })
+      .catch(done);
     });
   });
 
@@ -132,8 +133,8 @@ describe('CloudFoundryAPIClient', () => {
         },
       ]);
 
-      mockListAppStatsRequest('123abc', { 0: { state: "RUNNING" }});
-      mockListAppStatsRequest('456def', { 0: { state: "RUNNING" }});
+      mockListAppStatsRequest('123abc', { 0: { state: 'RUNNING' } });
+      mockListAppStatsRequest('456def', { 0: { state: 'RUNNING' } });
 
       const apiClient = new CloudFoundryAPIClient();
       apiClient.getBuildContainersState().then((state) => {
@@ -156,7 +157,7 @@ describe('CloudFoundryAPIClient', () => {
           dockerImage: 'example.com:5000/builder/1',
         },
       ]);
-      mockListAppStatsRequest('123abc', { 0: { state: "RUNNING" }});
+      mockListAppStatsRequest('123abc', { 0: { state: 'RUNNING' } });
 
       const apiClient = new CloudFoundryAPIClient();
       apiClient.getBuildContainersState().then((state) => {
@@ -184,7 +185,7 @@ describe('CloudFoundryAPIClient', () => {
         },
       ]);
 
-      mockListAppStatsRequest('456def', { 0: { state: "RUNNING" }});
+      mockListAppStatsRequest('456def', { 0: { state: 'RUNNING' } });
 
       const apiClient = new CloudFoundryAPIClient();
       apiClient.getBuildContainersState().then((state) => {
@@ -212,20 +213,20 @@ describe('CloudFoundryAPIClient', () => {
         },
       ]);
 
-      mockListAppStatsRequest('123abc', { '0': { state: "RUNNING", }, });
+      mockListAppStatsRequest('123abc', { 0: { state: 'RUNNING' } });
 
       mockListAppStatsRequest('456def', {
-        '1': { state: "CRASHED", },
-        '0': { state: "RUNNING", }, 
+        1: { state: 'CRASHED' },
+        0: { state: 'RUNNING' },
       });
 
       const apiClient = new CloudFoundryAPIClient();
       apiClient.getBuildContainersState().then((state) => {
         expect(state).to.deep.equal({
-          error: "builder-2:\tNot all instances for are running. {\"RUNNING\":1,\"CRASHED\":1}",
+          error: 'builder-2:\tNot all instances for are running. {"RUNNING":1,"CRASHED":1}',
         });
         done();
-      })
+      });
     });
   });
 
@@ -246,16 +247,16 @@ describe('CloudFoundryAPIClient', () => {
       },
     ]);
 
-    mockListAppStatsRequest('123abc', { '0': { state: "RUNNING", }, });
+    mockListAppStatsRequest('123abc', { 0: { state: 'RUNNING' } });
 
     mockListAppStatsRequest('456def', {});
 
     const apiClient = new CloudFoundryAPIClient();
     apiClient.getBuildContainersState().then((state) => {
       expect(state).to.deep.equal({
-        error: "builder-2 has 0 running instances",
+        error: 'builder-2 has 0 running instances',
       });
       done();
-    })
+    });
   });
 });

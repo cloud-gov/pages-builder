@@ -26,35 +26,39 @@ class CloudFoundryAPIClient {
         token
       ));
   }
-  
+
   fetchAppInstanceStates(container) {
     return this.fetchAppStats(container.guid)
-    .then((appStats) => {
-      return { guid: container.guid, name: container.name, statesCount: this._appInstanceStatesCount(JSON.parse(appStats)) };
-    })
+      .then(stats =>
+        ({
+          guid: container.guid,
+          name: container.name,
+          states: this._appInstanceStates(JSON.parse(stats)),
+        })
+      );
   }
+
   fetchAllAppInstanceErrors(buildContainers) {
-    let instanceErrors = [];
-    let promises = [];
-    let statesCount;
-    let bc = {};
-    for(var i in buildContainers) {
+    const instanceErrors = [];
+    const promises = [];
+    let states;
+    let i;
+    for (i = 0; i < buildContainers.length; i += 1) {
       promises.push(this.fetchAppInstanceStates(buildContainers[i]));
     }
 
-    return Promise.all(promises)  
-    .then(instanceStates => {
-      for(var i in instanceStates) {
-        statesCount = instanceStates[i].statesCount;
-        if (statesCount["CRASHED"] || statesCount["DOWN"] || statesCount["FLAPPING"] || statesCount["UNKNOWN"]) {
-          instanceErrors.push(`${ instanceStates[i].name }:\tNot all instances for are running. ${ JSON.stringify(statesCount) }`);
-        } else if (Object.keys(statesCount).length == 0) {
-          instanceErrors.push(`${ instanceStates[i].name } has 0 running instances`);
+    return Promise.all(promises)
+    .then((instanceStates) => {
+      for (i = 0; i < instanceStates.length; i += 1) {
+        states = instanceStates[i].states;
+        if (states.CRASHED || states.DOWN || states.FLAPPING || states.UNKNOWN) {
+          instanceErrors.push(`${instanceStates[i].name}:\tNot all instances for are running. ${JSON.stringify(states)}`);
+        } else if (Object.keys(states).length === 0) {
+          instanceErrors.push(`${instanceStates[i].name} has 0 running instances`);
         }
       }
       return instanceErrors;
     });
-    
   }
 
   getBuildContainersState() {
@@ -82,7 +86,7 @@ class CloudFoundryAPIClient {
             found: numBuildContainers,
             started: startedContainers.length,
           };
-        });                
+        });
       });
   }
 
@@ -119,15 +123,16 @@ class CloudFoundryAPIClient {
     };
   }
 
-  _appInstanceStatesCount(statsResponse) {
-    const instances = Object.keys(statsResponse).map((i) => statsResponse[i]);
-    let statesCount = {}
-    for ( var i in instances) {
-      if (statesCount[instances[i]['state']]){
-        statesCount[instances[i]['state']]++;
+  _appInstanceStates(statsResponse) {
+    const instances = Object.keys(statsResponse).map(i => statsResponse[i]);
+    const statesCount = {};
+    let i;
+    for (i = 0; i < instances.length; i += 1) {
+      if (statesCount[instances[i].state]) {
+        statesCount[instances[i].state] += 1;
       } else {
-        statesCount[instances[i]['state']] = 1;
-      }      
+        statesCount[instances[i].state] = 1;
+      }
     }
     return statesCount;
   }

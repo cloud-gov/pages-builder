@@ -43,8 +43,8 @@ describe('server', () => {
           dockerImage: 'example.com:5000/builder/1',
         },
       ]);
-      mockListAppStatsRequest('123abc', { 0: { state: "RUNNING" }});
-      mockListAppStatsRequest('456def', { 0: { state: "RUNNING" }});
+      mockListAppStatsRequest('123abc', { 0: { state: 'RUNNING' } });
+      mockListAppStatsRequest('456def', { 0: { state: 'RUNNING' } });
     };
 
     it('should be ok all is good', (done) => {

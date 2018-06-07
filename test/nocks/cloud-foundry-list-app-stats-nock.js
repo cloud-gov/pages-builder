@@ -1,4 +1,3 @@
-const crypto = require('crypto');
 const nock = require('nock');
 
 const mockListAppStatsRequest = (guid, resources) => nock('https://api.example.com', {
@@ -7,7 +6,7 @@ const mockListAppStatsRequest = (guid, resources) => nock('https://api.example.c
   },
 }).get(
     `/v2/apps/${guid}/stats`
-  ).reply(200, 
+  ).reply(200,
     resources
   );
 

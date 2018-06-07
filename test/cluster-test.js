@@ -37,9 +37,9 @@ describe('Cluster', () => {
     it('should return the number of available containers', (done) => {
       mockTokenRequest();
       mockListAppsRequest(Array(10).fill({}));
-      
-      for(let i = 0; i < 10; i++) {
-        mockListAppStatsRequest('123abc', { 0: { state: "RUNNING" }});
+
+      for (let i = 0; i < 10; i += 1) {
+        mockListAppStatsRequest('123abc', { 0: { state: 'RUNNING' } });
       }
 
       const cluster = new Cluster();
@@ -129,7 +129,7 @@ describe('Cluster', () => {
     it('should stop the build after the timeout has been exceeded', (done) => {
       mockTokenRequest();
       mockListAppsRequest([{ guid: '123abc' }]);
-      mockListAppStatsRequest('123abc', { 0: { state: "RUNNING" }});
+      mockListAppStatsRequest('123abc', { 0: { state: 'RUNNING' } });
       mockUpdateAppRequest();
       mockRestageAppRequest();
 
