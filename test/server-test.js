@@ -163,7 +163,7 @@ describe('server', () => {
         const expected = {
           ok: false,
           reasons: [
-            'Expected 2 build containers but only 1 found.',
+            'Expected 2 build containers but only 1 found.\nNot all build containers are in the STARTED state.',
           ],
         };
 
@@ -186,10 +186,11 @@ describe('server', () => {
           state: 'SOME_OTHER_STATE',
         },
         {
+          guid: '123abc',
           state: 'STARTED',
         },
       ]);
-
+      mockListAppStatsRequest('123abc', { 0: { state: 'RUNNING' } });
       testServer.inject({
         method: 'GET',
         url: '/healthcheck',
@@ -214,7 +215,8 @@ describe('server', () => {
       const testServer = server(mockCluster());
 
       mockTokenRequest().persist();
-      mockListAppsRequest([{ name: 'builder-1' }]);
+      mockListAppsRequest([{ guid: '123abc', name: 'builder-1' }]);
+      mockListAppStatsRequest('123abc', { 0: { state: 'RUNNING' } });
 
       testServer.inject({
         method: 'GET',
@@ -224,7 +226,7 @@ describe('server', () => {
           ok: false,
           reasons: [
             error.error,
-            'Expected 2 build containers but only 1 found.',
+            'Expected 2 build containers but only 1 found.\nNot all build containers are in the STARTED state.',
           ],
         };
 

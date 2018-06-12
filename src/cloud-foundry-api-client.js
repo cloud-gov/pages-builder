@@ -58,32 +58,36 @@ class CloudFoundryAPIClient {
   }
 
   getBuildContainersState() {
+    let containerErrors = [];
+    let numBuildContainers;
+    let startedContainers;
+
     return this.fetchBuildContainers()
       .then((buildContainers) => {
-        const numBuildContainers = buildContainers.length;
-        const startedContainers = buildContainers.filter(bc => bc.state === STATE_STARTED);
-        const allStarted = startedContainers.length === expectedNumBuildContainers;
+        numBuildContainers = buildContainers.length;
+        startedContainers = buildContainers.filter(bc => bc.state === STATE_STARTED);
 
         if (numBuildContainers < expectedNumBuildContainers) {
-          return { error: `Expected ${expectedNumBuildContainers} build containers but only ${numBuildContainers} found.` };
+          containerErrors.push(`Expected ${expectedNumBuildContainers} build containers but only ${numBuildContainers} found.`);
         }
 
-        if (!allStarted) {
-          return { error: `Not all build containers are in the ${STATE_STARTED} state.` };
+        if (startedContainers.length !== expectedNumBuildContainers) {
+          containerErrors.push(`Not all build containers are in the ${STATE_STARTED} state.`);
         }
 
-        return this.fetchAllAppInstanceErrors(startedContainers)
-        .then((instanceErrors) => {
-          if (instanceErrors.length) {
-            return { error: instanceErrors.join('\n') };
-          }
-          return {
-            expected: expectedNumBuildContainers,
-            found: numBuildContainers,
-            started: startedContainers.length,
-          };
-        });
+        return this.fetchAllAppInstanceErrors(startedContainers);
+      }).then(instanceErrors => containerErrors.concat(instanceErrors))
+      .then((errors) => {
+        if (errors.length) {
+          return { error: errors.join('\n') };
+        }
+        return {
+          expected: expectedNumBuildContainers,
+          found: numBuildContainers,
+          started: startedContainers.length,
+        };
       });
+
   }
 
   updateBuildContainer(container, environment) {
