@@ -41,18 +41,18 @@ class CloudFoundryAPIClient {
   fetchAllAppInstanceErrors(buildContainers) {
     const instanceErrors = [];
     let states;
-    const promises = buildContainers.map(buildContainer => this.fetchAppInstanceStates(buildContainer));
+    const promises = buildContainers.map(container => this.fetchAppInstanceStates(container));
 
     return Promise.all(promises)
     .then((instanceStates) => {
-      instanceStates.forEach(function(instanceState) {
+      instanceStates.forEach(function checkStates(instanceState) {
         states = instanceState.states;
         if (states.CRASHED || states.DOWN || states.FLAPPING || states.UNKNOWN) {
           instanceErrors.push(`${instanceState.name}:\tNot all instances for are running. ${JSON.stringify(states)}`);
         } else if (Object.keys(states).length === 0) {
           instanceErrors.push(`${instanceState.name} has 0 running instances`);
         }
-      });      
+      });
       return instanceErrors;
     });
   }
@@ -122,8 +122,8 @@ class CloudFoundryAPIClient {
   _appInstanceStates(statsResponse) {
     const instances = Object.keys(statsResponse).map(i => statsResponse[i]);
     const statesCount = {};
-    let i;
-    instances.forEach(function(instance){
+
+    instances.forEach(function tallyStates(instance) {
       if (statesCount[instance.state]) {
         statesCount[instance.state] += 1;
       } else {
