@@ -40,23 +40,19 @@ class CloudFoundryAPIClient {
 
   fetchAllAppInstanceErrors(buildContainers) {
     const instanceErrors = [];
-    const promises = [];
     let states;
-    let i;
-    for (i = 0; i < buildContainers.length; i += 1) {
-      promises.push(this.fetchAppInstanceStates(buildContainers[i]));
-    }
+    const promises = buildContainers.map(buildContainer => this.fetchAppInstanceStates(buildContainer));
 
     return Promise.all(promises)
     .then((instanceStates) => {
-      for (i = 0; i < instanceStates.length; i += 1) {
-        states = instanceStates[i].states;
+      instanceStates.forEach(function(instanceState) {
+        states = instanceState.states;
         if (states.CRASHED || states.DOWN || states.FLAPPING || states.UNKNOWN) {
-          instanceErrors.push(`${instanceStates[i].name}:\tNot all instances for are running. ${JSON.stringify(states)}`);
+          instanceErrors.push(`${instanceState.name}:\tNot all instances for are running. ${JSON.stringify(states)}`);
         } else if (Object.keys(states).length === 0) {
-          instanceErrors.push(`${instanceStates[i].name} has 0 running instances`);
+          instanceErrors.push(`${instanceState.name} has 0 running instances`);
         }
-      }
+      });      
       return instanceErrors;
     });
   }
@@ -127,13 +123,13 @@ class CloudFoundryAPIClient {
     const instances = Object.keys(statsResponse).map(i => statsResponse[i]);
     const statesCount = {};
     let i;
-    for (i = 0; i < instances.length; i += 1) {
-      if (statesCount[instances[i].state]) {
-        statesCount[instances[i].state] += 1;
+    instances.forEach(function(instance){
+      if (statesCount[instance.state]) {
+        statesCount[instance.state] += 1;
       } else {
-        statesCount[instances[i].state] = 1;
+        statesCount[instance.state] = 1;
       }
-    }
+    });
     return statesCount;
   }
 
