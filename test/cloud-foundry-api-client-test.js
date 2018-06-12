@@ -162,7 +162,10 @@ describe('CloudFoundryAPIClient', () => {
       const apiClient = new CloudFoundryAPIClient();
       apiClient.getBuildContainersState().then((state) => {
         expect(state).to.deep.equal({
-          error: 'Expected 2 build containers but only 1 found.\nNot all build containers are in the STARTED state.',
+          error: [
+            'Expected 2 build containers but only 1 found.',
+            'Not all build containers are in the STARTED state.',
+            ].join('\n')
         });
         done();
       }).catch(done);

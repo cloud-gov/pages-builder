@@ -87,7 +87,6 @@ class CloudFoundryAPIClient {
           started: startedContainers.length,
         };
       });
-
   }
 
   updateBuildContainer(container, environment) {

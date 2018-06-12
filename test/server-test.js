@@ -163,7 +163,10 @@ describe('server', () => {
         const expected = {
           ok: false,
           reasons: [
-            'Expected 2 build containers but only 1 found.\nNot all build containers are in the STARTED state.',
+            [
+              'Expected 2 build containers but only 1 found.',
+              'Not all build containers are in the STARTED state.',
+            ].join('\n')
           ],
         };
 
@@ -226,7 +229,10 @@ describe('server', () => {
           ok: false,
           reasons: [
             error.error,
-            'Expected 2 build containers but only 1 found.\nNot all build containers are in the STARTED state.',
+            [
+              'Expected 2 build containers but only 1 found.',
+              'Not all build containers are in the STARTED state.',
+            ].join('\n')
           ],
         };
 
