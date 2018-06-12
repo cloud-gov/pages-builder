@@ -166,7 +166,7 @@ describe('server', () => {
             [
               'Expected 2 build containers but only 1 found.',
               'Not all build containers are in the STARTED state.',
-            ].join('\n')
+            ].join('\n'),
           ],
         };
 
@@ -232,7 +232,7 @@ describe('server', () => {
             [
               'Expected 2 build containers but only 1 found.',
               'Not all build containers are in the STARTED state.',
-            ].join('\n')
+            ].join('\n'),
           ],
         };
 
