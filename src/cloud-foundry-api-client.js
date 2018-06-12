@@ -58,7 +58,7 @@ class CloudFoundryAPIClient {
   }
 
   getBuildContainersState() {
-    let containerErrors = [];
+    const containerErrors = [];
     let numBuildContainers;
     let startedContainers;
 
