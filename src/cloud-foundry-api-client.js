@@ -19,21 +19,68 @@ class CloudFoundryAPIClient {
       )).then(body => this._filterAppsResponse(JSON.parse(body)));
   }
 
+  fetchAppStats(appGUID) {
+    return this._authClient.accessToken().then(token => this._request(
+        'GET',
+        `/v2/apps/${appGUID}/stats`,
+        token
+      ));
+  }
+
+  fetchAppInstanceStates(container) {
+    return this.fetchAppStats(container.guid)
+      .then(stats =>
+        ({
+          guid: container.guid,
+          name: container.name,
+          states: this._appInstanceStates(JSON.parse(stats)),
+        })
+      );
+  }
+
+  fetchAllAppInstanceErrors(buildContainers) {
+    const instanceErrors = [];
+    let states;
+    const promises = buildContainers.map(container => this.fetchAppInstanceStates(container));
+
+    return Promise.all(promises)
+    .then((instanceStates) => {
+      instanceStates.forEach((instanceState) => {
+        states = instanceState.states;
+        if (states.CRASHED || states.DOWN || states.FLAPPING || states.UNKNOWN) {
+          instanceErrors.push(`${instanceState.name}:\tNot all instances for are running. ${JSON.stringify(states)}`);
+        } else if (Object.keys(states).length === 0) {
+          instanceErrors.push(`${instanceState.name} has 0 running instances`);
+        }
+      });
+      return instanceErrors;
+    });
+  }
+
   getBuildContainersState() {
+    const containerErrors = [];
+    let numBuildContainers;
+    let startedContainers;
+
     return this.fetchBuildContainers()
       .then((buildContainers) => {
-        const numBuildContainers = buildContainers.length;
-        const startedContainers = buildContainers.filter(bc => bc.state === STATE_STARTED);
-        const allStarted = startedContainers.length === expectedNumBuildContainers;
+        numBuildContainers = buildContainers.length;
+        startedContainers = buildContainers.filter(bc => bc.state === STATE_STARTED);
 
         if (numBuildContainers < expectedNumBuildContainers) {
-          return { error: `Expected ${expectedNumBuildContainers} build containers but only ${numBuildContainers} found.` };
+          containerErrors.push(`Expected ${expectedNumBuildContainers} build containers but only ${numBuildContainers} found.`);
         }
 
-        if (!allStarted) {
-          return { error: `Not all build containers are in the ${STATE_STARTED} state.` };
+        if (startedContainers.length !== expectedNumBuildContainers) {
+          containerErrors.push(`Not all build containers are in the ${STATE_STARTED} state.`);
         }
 
+        return this.fetchAllAppInstanceErrors(startedContainers);
+      }).then(instanceErrors => containerErrors.concat(instanceErrors))
+      .then((errors) => {
+        if (errors.length) {
+          return { error: errors.join('\n') };
+        }
         return {
           expected: expectedNumBuildContainers,
           found: numBuildContainers,
@@ -73,6 +120,20 @@ class CloudFoundryAPIClient {
       dockerImage: appResponse.entity.docker_image,
       state: appResponse.entity.state,
     };
+  }
+
+  _appInstanceStates(statsResponse) {
+    const instances = Object.keys(statsResponse).map(i => statsResponse[i]);
+    const statesCount = {};
+
+    instances.forEach((instance) => {
+      if (statesCount[instance.state]) {
+        statesCount[instance.state] += 1;
+      } else {
+        statesCount[instance.state] = 1;
+      }
+    });
+    return statesCount;
   }
 
   _resolveAPIURL(path) {

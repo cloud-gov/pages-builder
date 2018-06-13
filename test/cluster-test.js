@@ -7,6 +7,7 @@ const Cluster = require('../src/cluster');
 const mockBuildLogCallback = require('./nocks/build-log-callback-nock');
 const mockBuildStatusCallback = require('./nocks/build-status-callback-nock');
 const mockListAppsRequest = require('./nocks/cloud-foundry-list-apps-nock');
+const mockListAppStatsRequest = require('./nocks/cloud-foundry-list-app-stats-nock');
 const mockRestageAppRequest = require('./nocks/cloud-foundry-restage-app-nock');
 const mockTokenRequest = require('./nocks/cloud-foundry-oauth-token-nock');
 const mockUpdateAppRequest = require('./nocks/cloud-foundry-update-app-nock');
@@ -36,6 +37,10 @@ describe('Cluster', () => {
     it('should return the number of available containers', (done) => {
       mockTokenRequest();
       mockListAppsRequest(Array(10).fill({}));
+
+      for (let i = 0; i < 10; i += 1) {
+        mockListAppStatsRequest('123abc', { 0: { state: 'RUNNING' } });
+      }
 
       const cluster = new Cluster();
       cluster.start();
@@ -123,7 +128,8 @@ describe('Cluster', () => {
 
     it('should stop the build after the timeout has been exceeded', (done) => {
       mockTokenRequest();
-      mockListAppsRequest([{}]);
+      mockListAppsRequest([{ guid: '123abc' }]);
+      mockListAppStatsRequest('123abc', { 0: { state: 'RUNNING' } });
       mockUpdateAppRequest();
       mockRestageAppRequest();
 

@@ -4,6 +4,7 @@ const nock = require('nock');
 const server = require('../src/server');
 const mockTokenRequest = require('./nocks/cloud-foundry-oauth-token-nock');
 const mockListAppsRequest = require('./nocks/cloud-foundry-list-apps-nock');
+const mockListAppStatsRequest = require('./nocks/cloud-foundry-list-app-stats-nock');
 const awsMock = require('./aws-mock');
 
 
@@ -42,6 +43,8 @@ describe('server', () => {
           dockerImage: 'example.com:5000/builder/1',
         },
       ]);
+      mockListAppStatsRequest('123abc', { 0: { state: 'RUNNING' } });
+      mockListAppStatsRequest('456def', { 0: { state: 'RUNNING' } });
     };
 
     it('should be ok all is good', (done) => {
@@ -160,7 +163,10 @@ describe('server', () => {
         const expected = {
           ok: false,
           reasons: [
-            'Expected 2 build containers but only 1 found.',
+            [
+              'Expected 2 build containers but only 1 found.',
+              'Not all build containers are in the STARTED state.',
+            ].join('\n'),
           ],
         };
 
@@ -183,10 +189,11 @@ describe('server', () => {
           state: 'SOME_OTHER_STATE',
         },
         {
+          guid: '123abc',
           state: 'STARTED',
         },
       ]);
-
+      mockListAppStatsRequest('123abc', { 0: { state: 'RUNNING' } });
       testServer.inject({
         method: 'GET',
         url: '/healthcheck',
@@ -211,7 +218,8 @@ describe('server', () => {
       const testServer = server(mockCluster());
 
       mockTokenRequest().persist();
-      mockListAppsRequest([{ name: 'builder-1' }]);
+      mockListAppsRequest([{ guid: '123abc', name: 'builder-1' }]);
+      mockListAppStatsRequest('123abc', { 0: { state: 'RUNNING' } });
 
       testServer.inject({
         method: 'GET',
@@ -221,7 +229,10 @@ describe('server', () => {
           ok: false,
           reasons: [
             error.error,
-            'Expected 2 build containers but only 1 found.',
+            [
+              'Expected 2 build containers but only 1 found.',
+              'Not all build containers are in the STARTED state.',
+            ].join('\n'),
           ],
         };
 
