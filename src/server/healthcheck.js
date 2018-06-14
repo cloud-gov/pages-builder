@@ -54,7 +54,6 @@ function healthcheckHandler(request, reply) {
   Promise.all(checkPromises)
     .then(([token, queueAttributes, buildContainersState]) => {
       const errorReasons = checkForErrors(token, queueAttributes, buildContainersState);
-
       if (errorReasons.length) {
         replyNotOk(reply, errorReasons);
       } else {
