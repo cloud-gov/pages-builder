@@ -10,6 +10,7 @@ services:
 - federalist-production-sqs-creds
 - federalist-deploy-user
 - federalist-builder-env
+- ci-deploy-user
 env:
   NEW_RELIC_APP_NAME: "federalist-builder-prod"
   BUILD_TIMEOUT_SECONDS: 1200
