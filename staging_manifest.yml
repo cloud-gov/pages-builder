@@ -10,6 +10,7 @@ services:
 - federalist-staging-sqs-creds
 - federalist-deploy-user
 - federalist-builder-env
+- ci-deploy-user
 env:
   NEW_RELIC_APP_NAME: "federalist-builder-staging"
   BUILD_TIMEOUT_SECONDS: 1200

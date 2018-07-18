@@ -9,6 +9,7 @@ process.env.BUILD_SPACE_GUID = '123abc-456def-789ghi';
 process.env.CLOUD_FOUNDRY_OAUTH_TOKEN_URL = 'https://login.example.com/oauth/token';
 process.env.DEPLOY_USER_USERNAME = 'deploy_user';
 process.env.DEPLOY_USER_PASSWORD = 'deploy_pass';
+process.env.SERVICE_KEY_CREATED = new Date(new Date() - (1 * 24 * 60 * 60 * 1000));
 
 // Docker
 process.env.BUILD_CONTAINER_DOCKER_IMAGE_NAME = 'example.com:5000/builder/1';

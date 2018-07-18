@@ -50,6 +50,7 @@ describe('server', () => {
     it('should be ok all is good', (done) => {
       const queueAttributes = { Attributes: { ApproximateNumberOfMessages: 2 } };
       const restoreAWS = awsMock.mock('SQS', 'getQueueAttributes', queueAttributes);
+      process.env.SERVICE_KEY_CREATED = new Date(new Date() - (1 * 24 * 60 * 60 * 1000));
 
       const testServer = server(mockCluster());
 
@@ -62,12 +63,16 @@ describe('server', () => {
       }, (response) => {
         const expected = {
           ok: true,
-          queueAttributes: queueAttributes.Attributes,
           buildContainers: {
             expected: 2,
             found: 2,
             started: 2,
           },
+          queueAttributes: queueAttributes.Attributes,
+          deployerCredentials: {
+            containerDeployer: {created_at: new Date(process.env.SERVICE_KEY_CREATED).toLocaleDateString(), expire_in_days: 88},
+            circleDeployer: { created_at: new Date(process.env.SERVICE_KEY_CREATED).toLocaleDateString(), expire_in_days: 88},
+          }
         };
 
         expect(response.statusCode).to.eq(200);
@@ -236,6 +241,91 @@ describe('server', () => {
           ],
         };
 
+        expect(response.statusCode).to.eq(200);
+        expect(response.result).to.deep.equal(expected);
+        restoreAWS();
+        done();
+      });
+    });
+
+    it('should false expired credentials', (done) => {
+      const queueAttributes = { Attributes: { ApproximateNumberOfMessages: 2 } };
+      const restoreAWS = awsMock.mock('SQS', 'getQueueAttributes', queueAttributes);
+      process.env.SERVICE_KEY_CREATED = new Date(new Date() - (90 * 24 * 60 * 60 * 1000));
+
+      const testServer = server(mockCluster());
+
+      mockTokenRequest().persist();
+      mockGoodListAppsRequest();
+
+      testServer.inject({
+        method: 'GET',
+        url: '/healthcheck',
+      }, (response) => {
+        const expected = {
+          ok: false,
+          reasons: [
+            "containerDeployer: credentials are expired!!!",
+            "circleDeployer: credentials are expired!!!"
+          ]
+        };
+
+        expect(response.statusCode).to.eq(200);
+        expect(response.result).to.deep.equal(expected);
+        restoreAWS();
+        done();
+      });
+    });
+
+    it('should false expired credentials in < 7 days', (done) => {
+      const queueAttributes = { Attributes: { ApproximateNumberOfMessages: 2 } };
+      const restoreAWS = awsMock.mock('SQS', 'getQueueAttributes', queueAttributes);
+      process.env.SERVICE_KEY_CREATED = new Date(new Date() - (85 * 24 * 60 * 60 * 1000));
+
+      const testServer = server(mockCluster());
+
+      mockTokenRequest().persist();
+      mockGoodListAppsRequest();
+
+      testServer.inject({
+        method: 'GET',
+        url: '/healthcheck',
+      }, (response) => {
+        const expected = {
+          ok: false,
+          reasons: [
+              "containerDeployer: expires in less than 7 days!!!",
+              "circleDeployer: expires in less than 7 days!!!"
+          ]
+        };
+        expect(response.statusCode).to.eq(200);
+        expect(response.result).to.deep.equal(expected);
+        restoreAWS();
+        done();
+      });
+    });
+
+    it('should false credentials created in future', (done) => {
+      const queueAttributes = { Attributes: { ApproximateNumberOfMessages: 2 } };
+      const restoreAWS = awsMock.mock('SQS', 'getQueueAttributes', queueAttributes);
+      process.env.SERVICE_KEY_CREATED = '3000-01-01';
+
+      const testServer = server(mockCluster());
+
+      mockTokenRequest().persist();
+      mockGoodListAppsRequest();
+
+      testServer.inject({
+        method: 'GET',
+        url: '/healthcheck',
+      }, (response) => {
+        const expected = {
+          ok: false,
+          reasons: [
+            "containerDeployer: credentials require attention!!!",
+            "circleDeployer: credentials require attention!!!"
+          ]
+        };
         expect(response.statusCode).to.eq(200);
         expect(response.result).to.deep.equal(expected);
         restoreAWS();
