@@ -32,25 +32,25 @@ class CloudFoundryAPIClient {
     return {
       containerDeployer: this.fetchDeployerStatus('federalist-deploy-user'),
       circleDeployer: this.fetchDeployerStatus('ci-deploy-user'),
-    }
+    };
   }
 
   fetchDeployerStatus(serviceName) {
-    let created_at = null;
+    let createdAt = null;
     const deployService = cfenv.getAppEnv().getServiceCreds(serviceName);
     if (deployService) {
-      created_at = deployService.SERVICE_KEY_CREATED;
+      createdAt = deployService.SERVICE_KEY_CREATED;
     } else {
-      created_at = process.env.SERVICE_KEY_CREATED;
+      createdAt = process.env.SERVICE_KEY_CREATED;
     }
 
-    if (created_at) {
+    if (createdAt) {
       return {
-        created_at: new Date(created_at).toLocaleDateString(),
-        expire_in_days: 90 - (Math.ceil(((new Date()) - (new Date(created_at))) / (1000.0 * 60 * 60 * 24)))
-      }
+        createdAt: new Date(createdAt).toLocaleDateString(),
+        expireInDays: 90 - Math.ceil((new Date() - new Date(createdAt)) / (1000 * 60 * 60 * 24)),
+      };
     }
-    return { error: `${serviceName} was not found!!!`}
+    return { error: `${serviceName} was not found!!!` };
   }
 
   fetchAppInstanceStates(container) {

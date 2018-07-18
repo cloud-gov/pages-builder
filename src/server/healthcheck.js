@@ -35,14 +35,14 @@ function checkForErrors(token, queueAttributes, buildContainersState, deployerSt
     errorReasons.push(buildContainersState.error);
   }
 
-  Object.keys(deployerStatuses).forEach(function(deployer) {
+  Object.keys(deployerStatuses).forEach((deployer) => {
     if (deployerStatuses[deployer].error) {
       errorReasons.push(deployerStatuses[deployer].error);
-    } else if (deployerStatuses[deployer].expire_in_days > 90) {
+    } else if (deployerStatuses[deployer].expireInDays > 90) {
       errorReasons.push(`${deployer}: credentials require attention!!!`);
-    } else if (deployerStatuses[deployer].expire_in_days <= 0) {
+    } else if (deployerStatuses[deployer].expireInDays <= 0) {
       errorReasons.push(`${deployer}: credentials are expired!!!`);
-    } else if (deployerStatuses[deployer].expire_in_days <= 7) {
+    } else if (deployerStatuses[deployer].expireInDays <= 7) {
       errorReasons.push(`${deployer}: expires in less than 7 days!!!`);
     }
   });
@@ -66,12 +66,12 @@ function healthcheckHandler(request, reply) {
   ];
 
   Promise.all(checkPromises)
-    .then(([token, queueAttributes, buildContainersState, deployerStatuses]) => {
-      const errorReasons = checkForErrors(token, queueAttributes, buildContainersState, deployerStatuses);
+    .then(([token, queueAttributes, buildContainersState, deployers]) => {
+      const errorReasons = checkForErrors(token, queueAttributes, buildContainersState, deployers);
       if (errorReasons.length) {
         replyNotOk(reply, errorReasons);
       } else {
-        replyOk(reply, buildContainersState, queueAttributes, deployerStatuses);
+        replyOk(reply, buildContainersState, queueAttributes, deployers);
       }
     })
     .catch((err) => {

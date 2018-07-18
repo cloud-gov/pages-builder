@@ -70,9 +70,15 @@ describe('server', () => {
           },
           queueAttributes: queueAttributes.Attributes,
           deployerCredentials: {
-            containerDeployer: {created_at: new Date(process.env.SERVICE_KEY_CREATED).toLocaleDateString(), expire_in_days: 88},
-            circleDeployer: { created_at: new Date(process.env.SERVICE_KEY_CREATED).toLocaleDateString(), expire_in_days: 88},
-          }
+            containerDeployer: {
+              createdAt: new Date(process.env.SERVICE_KEY_CREATED).toLocaleDateString(),
+              expireInDays: 88,
+            },
+            circleDeployer: {
+              createdAt: new Date(process.env.SERVICE_KEY_CREATED).toLocaleDateString(),
+              expireInDays: 88,
+            },
+          },
         };
 
         expect(response.statusCode).to.eq(200);
@@ -265,9 +271,9 @@ describe('server', () => {
         const expected = {
           ok: false,
           reasons: [
-            "containerDeployer: credentials are expired!!!",
-            "circleDeployer: credentials are expired!!!"
-          ]
+            'containerDeployer: credentials are expired!!!',
+            'circleDeployer: credentials are expired!!!',
+          ],
         };
 
         expect(response.statusCode).to.eq(200);
@@ -294,9 +300,9 @@ describe('server', () => {
         const expected = {
           ok: false,
           reasons: [
-              "containerDeployer: expires in less than 7 days!!!",
-              "circleDeployer: expires in less than 7 days!!!"
-          ]
+            'containerDeployer: expires in less than 7 days!!!',
+            'circleDeployer: expires in less than 7 days!!!',
+          ],
         };
         expect(response.statusCode).to.eq(200);
         expect(response.result).to.deep.equal(expected);
@@ -322,9 +328,9 @@ describe('server', () => {
         const expected = {
           ok: false,
           reasons: [
-            "containerDeployer: credentials require attention!!!",
-            "circleDeployer: credentials require attention!!!"
-          ]
+            'containerDeployer: credentials require attention!!!',
+            'circleDeployer: credentials require attention!!!',
+          ],
         };
         expect(response.statusCode).to.eq(200);
         expect(response.result).to.deep.equal(expected);
