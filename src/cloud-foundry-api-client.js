@@ -40,7 +40,7 @@ class CloudFoundryAPIClient {
     const deployService = cfenv.getAppEnv().getServiceCreds(serviceName);
     if (deployService) {
       createdAt = deployService.SERVICE_KEY_CREATED;
-    } else {
+    } else { //testing purpose only: for test cases to store/acces a date
       createdAt = process.env.SERVICE_KEY_CREATED;
     }
 
