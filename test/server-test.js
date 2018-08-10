@@ -283,7 +283,7 @@ describe('server', () => {
       });
     });
 
-    it('should false expired credentials in < 7 days', (done) => {
+    it('should false expired credentials in < 10 days', (done) => {
       const queueAttributes = { Attributes: { ApproximateNumberOfMessages: 2 } };
       const restoreAWS = awsMock.mock('SQS', 'getQueueAttributes', queueAttributes);
       process.env.SERVICE_KEY_CREATED = new Date(new Date() - (85 * 24 * 60 * 60 * 1000));
@@ -300,8 +300,8 @@ describe('server', () => {
         const expected = {
           ok: false,
           reasons: [
-            'containerDeployer: expires in less than 7 days!!!',
-            'circleDeployer: expires in less than 7 days!!!',
+            'containerDeployer: expires in less than 10 days!!!',
+            'circleDeployer: expires in less than 10 days!!!',
           ],
         };
         expect(response.statusCode).to.eq(200);
