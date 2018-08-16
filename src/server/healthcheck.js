@@ -43,7 +43,7 @@ function checkForErrors(token, queueAttributes, buildContainersState, deployerSt
     } else if (deployerStatuses[deployer].expireInDays <= 0) {
       errorReasons.push(`${deployer}: credentials are expired!!!`);
     } else if (deployerStatuses[deployer].expireInDays <= 10) {
-      errorReasons.push(`${deployer}: expires in less than 10 days!!!`);
+      errorReasons.push(`${deployer}: expires in ${deployerStatuses[deployer].expireInDays} days!!!`);
     }
   });
 
