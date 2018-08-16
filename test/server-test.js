@@ -300,8 +300,8 @@ describe('server', () => {
         const expected = {
           ok: false,
           reasons: [
-            'containerDeployer: expires in less than 10 days!!!',
-            'circleDeployer: expires in less than 10 days!!!',
+            'containerDeployer: expires in 4 days!!!',
+            'circleDeployer: expires in 4 days!!!',
           ],
         };
         expect(response.statusCode).to.eq(200);
