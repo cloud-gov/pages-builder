@@ -74,7 +74,15 @@ describe('server', () => {
               createdAt: new Date(process.env.SERVICE_KEY_CREATED).toLocaleDateString(),
               expireInDays: 88,
             },
-            circleDeployer: {
+            federalistCIDeployer: {
+              createdAt: new Date(process.env.SERVICE_KEY_CREATED).toLocaleDateString(),
+              expireInDays: 88,
+            },
+            federalistBuilderCIDeployer: {
+              createdAt: new Date(process.env.SERVICE_KEY_CREATED).toLocaleDateString(),
+              expireInDays: 88,
+            },
+            credentialsRotator: {
               createdAt: new Date(process.env.SERVICE_KEY_CREATED).toLocaleDateString(),
               expireInDays: 88,
             },
@@ -272,7 +280,9 @@ describe('server', () => {
           ok: false,
           reasons: [
             'containerDeployer: credentials are expired!!!',
-            'circleDeployer: credentials are expired!!!',
+            'federalistCIDeployer: credentials are expired!!!',
+            'federalistBuilderCIDeployer: credentials are expired!!!',
+            'credentialsRotator: credentials are expired!!!',
           ],
         };
 
@@ -301,7 +311,9 @@ describe('server', () => {
           ok: false,
           reasons: [
             'containerDeployer: expires in 4 days!!!',
-            'circleDeployer: expires in 4 days!!!',
+            'federalistCIDeployer: expires in 4 days!!!',
+            'federalistBuilderCIDeployer: expires in 4 days!!!',
+            'credentialsRotator: expires in 4 days!!!',
           ],
         };
         expect(response.statusCode).to.eq(200);
@@ -329,7 +341,9 @@ describe('server', () => {
           ok: false,
           reasons: [
             'containerDeployer: credentials require attention!!!',
-            'circleDeployer: credentials require attention!!!',
+            'federalistCIDeployer: credentials require attention!!!',
+            'federalistBuilderCIDeployer: credentials require attention!!!',
+            'credentialsRotator: credentials require attention!!!',
           ],
         };
         expect(response.statusCode).to.eq(200);
