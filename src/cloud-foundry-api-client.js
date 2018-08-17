@@ -31,7 +31,9 @@ class CloudFoundryAPIClient {
   fetchDeployerStatuses() {
     return {
       containerDeployer: this.fetchDeployerStatus('federalist-deploy-user'),
-      circleDeployer: this.fetchDeployerStatus('ci-deploy-user'),
+      federalistCIDeployer: this.fetchDeployerStatus('ci-deploy-federalist-user'),
+      federalistBuilderCIDeployer: this.fetchDeployerStatus('ci-deploy-federalist-builder-user'),
+      credentialsRotator: this.fetchDeployerStatus('credentials-rotator-user'),
     };
   }
 
