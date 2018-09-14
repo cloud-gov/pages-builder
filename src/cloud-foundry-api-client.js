@@ -28,33 +28,6 @@ class CloudFoundryAPIClient {
       ));
   }
 
-  fetchDeployerStatuses() {
-    return {
-      containerDeployer: this.fetchDeployerStatus('federalist-deploy-user'),
-      federalistCIDeployer: this.fetchDeployerStatus('ci-deploy-federalist-user'),
-      federalistBuilderCIDeployer: this.fetchDeployerStatus('ci-deploy-federalist-builder-user'),
-      credentialsRotator: this.fetchDeployerStatus('credentials-rotator-user'),
-    };
-  }
-
-  fetchDeployerStatus(serviceName) {
-    let createdAt = null;
-    const deployService = cfenv.getAppEnv().getServiceCreds(serviceName);
-    if (deployService) {
-      createdAt = deployService.SERVICE_KEY_CREATED;
-    } else { // testing purpose only: for test cases to store/acces a date
-      createdAt = process.env.SERVICE_KEY_CREATED;
-    }
-
-    if (createdAt) {
-      return {
-        createdAt: new Date(createdAt).toLocaleDateString(),
-        expireInDays: 90 - Math.ceil((new Date() - new Date(createdAt)) / (1000 * 60 * 60 * 24)),
-      };
-    }
-    return { error: `${serviceName} was not found!!!` };
-  }
-
   fetchAppInstanceStates(container) {
     return this.fetchAppStats(container.guid)
       .then(stats =>
