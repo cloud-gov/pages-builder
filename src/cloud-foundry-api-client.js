@@ -1,7 +1,6 @@
 const request = require('request');
 const url = require('url');
 const CloudFoundryAuthClient = require('./cloud-foundry-auth-client');
-const cfenv = require('cfenv');
 
 const STATE_STARTED = 'STARTED';
 
