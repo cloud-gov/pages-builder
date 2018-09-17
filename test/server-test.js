@@ -69,24 +69,6 @@ describe('server', () => {
             started: 2,
           },
           queueAttributes: queueAttributes.Attributes,
-          deployerCredentials: {
-            containerDeployer: {
-              createdAt: new Date(process.env.SERVICE_KEY_CREATED).toLocaleDateString(),
-              expireInDays: 88,
-            },
-            federalistCIDeployer: {
-              createdAt: new Date(process.env.SERVICE_KEY_CREATED).toLocaleDateString(),
-              expireInDays: 88,
-            },
-            federalistBuilderCIDeployer: {
-              createdAt: new Date(process.env.SERVICE_KEY_CREATED).toLocaleDateString(),
-              expireInDays: 88,
-            },
-            credentialsRotator: {
-              createdAt: new Date(process.env.SERVICE_KEY_CREATED).toLocaleDateString(),
-              expireInDays: 88,
-            },
-          },
         };
 
         expect(response.statusCode).to.eq(200);
@@ -255,97 +237,6 @@ describe('server', () => {
           ],
         };
 
-        expect(response.statusCode).to.eq(200);
-        expect(response.result).to.deep.equal(expected);
-        restoreAWS();
-        done();
-      });
-    });
-
-    it('should false expired credentials', (done) => {
-      const queueAttributes = { Attributes: { ApproximateNumberOfMessages: 2 } };
-      const restoreAWS = awsMock.mock('SQS', 'getQueueAttributes', queueAttributes);
-      process.env.SERVICE_KEY_CREATED = new Date(new Date() - (90 * 24 * 60 * 60 * 1000));
-
-      const testServer = server(mockCluster());
-
-      mockTokenRequest().persist();
-      mockGoodListAppsRequest();
-
-      testServer.inject({
-        method: 'GET',
-        url: '/healthcheck',
-      }, (response) => {
-        const expected = {
-          ok: false,
-          reasons: [
-            'containerDeployer: credentials are expired!!!',
-            'federalistCIDeployer: credentials are expired!!!',
-            'federalistBuilderCIDeployer: credentials are expired!!!',
-            'credentialsRotator: credentials are expired!!!',
-          ],
-        };
-
-        expect(response.statusCode).to.eq(200);
-        expect(response.result).to.deep.equal(expected);
-        restoreAWS();
-        done();
-      });
-    });
-
-    it('should false expired credentials in < 10 days', (done) => {
-      const queueAttributes = { Attributes: { ApproximateNumberOfMessages: 2 } };
-      const restoreAWS = awsMock.mock('SQS', 'getQueueAttributes', queueAttributes);
-      process.env.SERVICE_KEY_CREATED = new Date(new Date() - (85 * 24 * 60 * 60 * 1000));
-
-      const testServer = server(mockCluster());
-
-      mockTokenRequest().persist();
-      mockGoodListAppsRequest();
-
-      testServer.inject({
-        method: 'GET',
-        url: '/healthcheck',
-      }, (response) => {
-        const expected = {
-          ok: false,
-          reasons: [
-            'containerDeployer: expires in 4 days!!!',
-            'federalistCIDeployer: expires in 4 days!!!',
-            'federalistBuilderCIDeployer: expires in 4 days!!!',
-            'credentialsRotator: expires in 4 days!!!',
-          ],
-        };
-        expect(response.statusCode).to.eq(200);
-        expect(response.result).to.deep.equal(expected);
-        restoreAWS();
-        done();
-      });
-    });
-
-    it('should false credentials created in future', (done) => {
-      const queueAttributes = { Attributes: { ApproximateNumberOfMessages: 2 } };
-      const restoreAWS = awsMock.mock('SQS', 'getQueueAttributes', queueAttributes);
-      process.env.SERVICE_KEY_CREATED = '3000-01-01';
-
-      const testServer = server(mockCluster());
-
-      mockTokenRequest().persist();
-      mockGoodListAppsRequest();
-
-      testServer.inject({
-        method: 'GET',
-        url: '/healthcheck',
-      }, (response) => {
-        const expected = {
-          ok: false,
-          reasons: [
-            'containerDeployer: credentials require attention!!!',
-            'federalistCIDeployer: credentials require attention!!!',
-            'federalistBuilderCIDeployer: credentials require attention!!!',
-            'credentialsRotator: credentials require attention!!!',
-          ],
-        };
         expect(response.statusCode).to.eq(200);
         expect(response.result).to.deep.equal(expected);
         restoreAWS();
