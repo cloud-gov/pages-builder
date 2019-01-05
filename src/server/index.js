@@ -4,19 +4,18 @@ const winston = require('winston');
 const healthcheckHandler = require('./healthcheck');
 
 function createServer(cluster) {
-  const server = new Hapi.Server();
-
-  server.connection({ port: process.env.PORT || 8080 });
+  const server = new Hapi.Server({ port: process.env.PORT || 8080 });
 
   server.route({
     method: 'GET',
     path: '/',
-    handler: (request, reply) => {
-      const response = reply('Server running');
+    handler: (request, h) => {
+      const response = h.response('Server running');
       response.type('text/plain');
-      response.statusCode = 200;
+      response.code(200);
 
       winston.info('GET %s - 200', request.url.path);
+      return response;
     },
   });
 
@@ -30,18 +29,19 @@ function createServer(cluster) {
   server.route({
     method: 'DELETE',
     path: '/builds/{buildID}/callback',
-    handler: (request, reply) => {
+    handler: (request, h) => {
       try {
         cluster.stopBuild(request.params.buildID);
       } catch (error) {
         winston.error(`Error stopping build${request}`, error);
       }
 
-      const response = reply('Callback registered');
+      const response = h.response('Callback registered');
       response.type('text/plain');
-      response.statusCode = 200;
+      response.code(200);
 
       winston.info('GET %s - 200', request.url.path);
+      return response;
     },
   });
 
