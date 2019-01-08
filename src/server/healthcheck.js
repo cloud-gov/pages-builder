@@ -8,16 +8,16 @@ const ATTR_NUM_MESSAGES = 'ApproximateNumberOfMessages';
 const ATTR_NUM_MESSAGES_DELAYED = 'ApproximateNumberOfMessagesDelayed';
 
 
-function replyOk(reply, buildContainers, queueAttributes) {
-  reply({
+function replyOk(buildContainers, queueAttributes) {
+  return {
     ok: true,
     buildContainers,
     queueAttributes,
-  });
+  };
 }
 
-function replyNotOk(reply, reasons) {
-  reply({ ok: false, reasons });
+function replyNotOk(reasons) {
+  return { ok: false, reasons };
 }
 
 function checkForErrors(token, queueAttributes, buildContainersState) {
@@ -38,7 +38,7 @@ function checkForErrors(token, queueAttributes, buildContainersState) {
 
 
 // Route handler for builder healthcheck
-function healthcheckHandler(request, reply) {
+function healthcheckHandler(request, h) {
   const authClient = new CloudFoundryAuthClient();
   const queueClient = new SQSClient();
   const apiClient = new CloudFoundryApiClient();
@@ -50,19 +50,21 @@ function healthcheckHandler(request, reply) {
     apiClient.getBuildContainersState(),
   ];
 
-  Promise.all(checkPromises)
+  let reply;
+  return Promise.all(checkPromises)
     .then(([token, queueAttributes, buildContainersState]) => {
       const errorReasons = checkForErrors(token, queueAttributes, buildContainersState);
       if (errorReasons.length) {
-        replyNotOk(reply, errorReasons);
+        reply = replyNotOk(errorReasons);
       } else {
-        replyOk(reply, buildContainersState, queueAttributes);
+        reply = replyOk(buildContainersState, queueAttributes);
       }
     })
     .catch((err) => {
       winston.error('Healthcheck error:', err);
-      replyNotOk(reply, [err.message]);
-    });
+      reply = replyNotOk([err.message]);
+    })
+    .then(() => h.response(reply));
 }
 
 module.exports = healthcheckHandler;

@@ -20,7 +20,8 @@ describe('server', () => {
       testServer.inject({
         method: 'GET',
         url: '/',
-      }, (response) => {
+      })
+      .then((response) => {
         expect(response.statusCode).to.eq(200);
         done();
       });
@@ -60,7 +61,8 @@ describe('server', () => {
       testServer.inject({
         method: 'GET',
         url: '/healthcheck',
-      }, (response) => {
+      })
+      .then((response) => {
         const expected = {
           ok: true,
           buildContainers: {
@@ -92,11 +94,13 @@ describe('server', () => {
       testServer.inject({
         method: 'GET',
         url: '/healthcheck',
-      }, (response) => {
+      })
+      .then((response) => {
         expect(response.statusCode).to.eq(200);
         expect(response.result).to.deep.equal(expectedResult);
         done();
-      });
+      })
+      .catch(done);
     });
 
     it('should not be ok when an access token is non-existent', (done) => {
@@ -116,7 +120,7 @@ describe('server', () => {
       testServer.inject({
         method: 'GET',
         url: '/healthcheck',
-      }, (response) => {
+      }).then((response) => {
         expect(response.statusCode).to.eq(200);
         expect(response.result).to.deep.equal(expectedResult);
         restoreAWS();
@@ -135,7 +139,8 @@ describe('server', () => {
       testServer.inject({
         method: 'GET',
         url: '/healthcheck',
-      }, (response) => {
+      })
+      .then((response) => {
         const expected = {
           ok: false,
           reasons: [error.error],
@@ -160,7 +165,8 @@ describe('server', () => {
       testServer.inject({
         method: 'GET',
         url: '/healthcheck',
-      }, (response) => {
+      })
+      .then((response) => {
         const expected = {
           ok: false,
           reasons: [
@@ -198,7 +204,8 @@ describe('server', () => {
       testServer.inject({
         method: 'GET',
         url: '/healthcheck',
-      }, (response) => {
+      })
+      .then((response) => {
         const expected = {
           ok: false,
           reasons: [
@@ -225,7 +232,8 @@ describe('server', () => {
       testServer.inject({
         method: 'GET',
         url: '/healthcheck',
-      }, (response) => {
+      })
+      .then((response) => {
         const expected = {
           ok: false,
           reasons: [
@@ -252,7 +260,8 @@ describe('server', () => {
       testServer.inject({
         method: 'DELETE',
         url: '/builds/123abc/callback',
-      }, (response) => {
+      })
+      .then((response) => {
         expect(response.statusCode).to.eq(200);
         done();
       });
@@ -271,7 +280,8 @@ describe('server', () => {
       testServer.inject({
         method: 'DELETE',
         url: '/builds/123abc/callback',
-      }, () => {
+      })
+      .then(() => {
         expect(stopBuildArg).to.eq('123abc');
         done();
       });

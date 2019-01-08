@@ -18,9 +18,9 @@
   "dependencies": {
     "aws-sdk": "^2.2.10",
     "cfenv": "^1.0.3",
-    "hapi": "16.6.2",
-    "jsonwebtoken": "^7.1.9",
-    "newrelic": "^2.0.0",
+    "hapi": "17.8",
+    "jsonwebtoken": "^8.4",
+    "newrelic": "^4.13",
     "request": "^2.75.0",
     "winston": "^2.2.0"
   },
