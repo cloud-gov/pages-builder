@@ -15,7 +15,7 @@ services:
 - ci-deploy-federalist-user
 env:
   NEW_RELIC_APP_NAME: "federalist-builder-staging"
-  BUILD_TIMEOUT_SECONDS: 1200
+  BUILD_TIMEOUT_SECONDS: 2700 # 45 * 60 seconds = 45 minutes
   BUILD_COMPLETE_CALLBACK_HOST: "https://federalist-builder-staging.fr.cloud.gov"
   BUILD_CONTAINER_DOCKER_IMAGE_NAME: "federalist-registry-staging.fr.cloud.gov/federalist-garden-build"
   BUILD_SPACE_GUID: "af7be42d-47d6-4b4d-a15a-7098c7695c43"
