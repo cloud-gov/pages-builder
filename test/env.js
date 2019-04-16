@@ -3,7 +3,7 @@ process.env.SQS_URL = 'https://sqs.us-east-1.amazonaws.com/123abc/456def';
 
 // Cloud Foundry API
 process.env.CLOUD_FOUNDRY_API_HOST = 'https://api.example.com';
-process.env.BUILD_SPACE_GUID = '123abc-456def-789ghi';
+process.env.CF_SPACE_GUID = '123abc-456def-789ghi';
 
 // Cloud Foundry Auth
 process.env.CLOUD_FOUNDRY_OAUTH_TOKEN_URL = 'https://login.example.com/oauth/token';

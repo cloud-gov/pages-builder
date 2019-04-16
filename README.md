@@ -68,7 +68,6 @@ Additional configuration is set up through environment variables:
 - `BUILD_TIMEOUT_SECONDS`: (required) number of seconds to let a build run before timing out
 - `BUILD_COMPLETE_CALLBACK_HOST` (required) the host that a build container should callback to when finished, e.g. `https://federalist-builder.18f.gov`
 - `BUILD_CONTAINER_DOCKER_IMAGE_NAME` (required) the name of the docker image that is used to run builds
-- `BUILD_SPACE_GUID` (required) the guid for the cloud.gov space where the build containers are located
 - `CLOUD_FOUNDRY_API_HOST` (required) the host for the Cloud Foundry API endpoint, e.g. `https://api.fr.cloud.gov`
 - `CLOUD_FOUNDRY_OAUTH_TOKEN_URL` (required) the OAuth2 token URL for Cloud Foundry, e.g. `https://login.fr.cloud.gov`
 - `DEPLOY_USER_USERNAME` (required) the username for the deploy user that starts builds in cloud.gov.

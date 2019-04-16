@@ -1,5 +1,6 @@
 const request = require('request');
 const url = require('url');
+const cfenv = require('cfenv');
 const CloudFoundryAuthClient = require('./cloud-foundry-auth-client');
 
 const STATE_STARTED = 'STARTED';
@@ -166,7 +167,14 @@ class CloudFoundryAPIClient {
   }
 
   _spaceGUID() {
-    return process.env.BUILD_SPACE_GUID;
+    const appEnv = cfenv.getAppEnv();
+    const cfSpaceGuid = appEnv.getServiceCreds(`federalist-${process.env.APP_ENV}-space`);
+
+    if (cfSpaceGuid) {
+      return cfSpaceGuid.guid;
+    }
+
+    return process.env.CF_SPACE_GUID;
   }
 }
 

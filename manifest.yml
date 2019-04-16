@@ -13,13 +13,13 @@ services:
 - credentials-rotator-user
 - ci-deploy-federalist-builder-user
 - ci-deploy-federalist-user
+- federalist-production-space
 env:
   NEW_RELIC_APP_NAME: "federalist-builder-prod"
   BUILD_TIMEOUT_SECONDS: 2700 # 45 * 60 seconds = 45 minutes
   SQS_URL: "https://sqs.us-east-1.amazonaws.com/144433228153/federalist-builds"
   BUILD_COMPLETE_CALLBACK_HOST: "https://federalist-builder.fr.cloud.gov"
   BUILD_CONTAINER_DOCKER_IMAGE_NAME: "federalist-registry.fr.cloud.gov/federalist-garden-build"
-  BUILD_SPACE_GUID: "a1e19bd4-5066-40a7-8d53-fc9644c27e8e"
   CLOUD_FOUNDRY_API_HOST: "https://api.fr.cloud.gov"
   CLOUD_FOUNDRY_OAUTH_TOKEN_URL: "https://login.fr.cloud.gov/oauth/token"
   EXPECTED_NUM_BUILD_CONTAINERS: 6
