@@ -1,4 +1,4 @@
-const expect = require('chai').expect;
+const { expect } = require('chai');
 const nock = require('nock');
 
 const server = require('../src/server');
@@ -21,10 +21,10 @@ describe('server', () => {
         method: 'GET',
         url: '/',
       })
-      .then((response) => {
-        expect(response.statusCode).to.eq(200);
-        done();
-      });
+        .then((response) => {
+          expect(response.statusCode).to.eq(200);
+          done();
+        });
     });
   });
 
@@ -62,22 +62,22 @@ describe('server', () => {
         method: 'GET',
         url: '/healthcheck',
       })
-      .then((response) => {
-        const expected = {
-          ok: true,
-          buildContainers: {
-            expected: 2,
-            found: 2,
-            started: 2,
-          },
-          queueAttributes: queueAttributes.Attributes,
-        };
+        .then((response) => {
+          const expected = {
+            ok: true,
+            buildContainers: {
+              expected: 2,
+              found: 2,
+              started: 2,
+            },
+            queueAttributes: queueAttributes.Attributes,
+          };
 
-        expect(response.statusCode).to.eq(200);
-        expect(response.result).to.deep.equal(expected);
-        restoreAWS();
-        done();
-      });
+          expect(response.statusCode).to.eq(200);
+          expect(response.result).to.deep.equal(expected);
+          restoreAWS();
+          done();
+        });
     });
 
     it('should not be ok when an access token cannot be retrieved', (done) => {
@@ -95,12 +95,12 @@ describe('server', () => {
         method: 'GET',
         url: '/healthcheck',
       })
-      .then((response) => {
-        expect(response.statusCode).to.eq(200);
-        expect(response.result).to.deep.equal(expectedResult);
-        done();
-      })
-      .catch(done);
+        .then((response) => {
+          expect(response.statusCode).to.eq(200);
+          expect(response.result).to.deep.equal(expectedResult);
+          done();
+        })
+        .catch(done);
     });
 
     it('should not be ok when an access token is non-existent', (done) => {
@@ -140,17 +140,17 @@ describe('server', () => {
         method: 'GET',
         url: '/healthcheck',
       })
-      .then((response) => {
-        const expected = {
-          ok: false,
-          reasons: [error.error],
-        };
+        .then((response) => {
+          const expected = {
+            ok: false,
+            reasons: [error.error],
+          };
 
-        expect(response.statusCode).to.eq(200);
-        expect(response.result).to.deep.equal(expected);
-        restoreAWS();
-        done();
-      });
+          expect(response.statusCode).to.eq(200);
+          expect(response.result).to.deep.equal(expected);
+          restoreAWS();
+          done();
+        });
     });
 
     it('should not be ok if there are not enough build containers', (done) => {
@@ -166,22 +166,22 @@ describe('server', () => {
         method: 'GET',
         url: '/healthcheck',
       })
-      .then((response) => {
-        const expected = {
-          ok: false,
-          reasons: [
-            [
-              'Expected 2 build containers but only 1 found.',
-              'Not all build containers are in the STARTED state.',
-            ].join('\n'),
-          ],
-        };
+        .then((response) => {
+          const expected = {
+            ok: false,
+            reasons: [
+              [
+                'Expected 2 build containers but only 1 found.',
+                'Not all build containers are in the STARTED state.',
+              ].join('\n'),
+            ],
+          };
 
-        expect(response.statusCode).to.eq(200);
-        expect(response.result).to.deep.equal(expected);
-        restoreAWS();
-        done();
-      });
+          expect(response.statusCode).to.eq(200);
+          expect(response.result).to.deep.equal(expected);
+          restoreAWS();
+          done();
+        });
     });
 
     it('should not be ok if any container is not STARTED', (done) => {
@@ -205,19 +205,19 @@ describe('server', () => {
         method: 'GET',
         url: '/healthcheck',
       })
-      .then((response) => {
-        const expected = {
-          ok: false,
-          reasons: [
-            'Not all build containers are in the STARTED state.',
-          ],
-        };
+        .then((response) => {
+          const expected = {
+            ok: false,
+            reasons: [
+              'Not all build containers are in the STARTED state.',
+            ],
+          };
 
-        expect(response.statusCode).to.eq(200);
-        expect(response.result).to.deep.equal(expected);
-        restoreAWS();
-        done();
-      });
+          expect(response.statusCode).to.eq(200);
+          expect(response.result).to.deep.equal(expected);
+          restoreAWS();
+          done();
+        });
     });
 
     it('should be able to report multiple error reasons', (done) => {
@@ -233,23 +233,23 @@ describe('server', () => {
         method: 'GET',
         url: '/healthcheck',
       })
-      .then((response) => {
-        const expected = {
-          ok: false,
-          reasons: [
-            error.error,
-            [
-              'Expected 2 build containers but only 1 found.',
-              'Not all build containers are in the STARTED state.',
-            ].join('\n'),
-          ],
-        };
+        .then((response) => {
+          const expected = {
+            ok: false,
+            reasons: [
+              error.error,
+              [
+                'Expected 2 build containers but only 1 found.',
+                'Not all build containers are in the STARTED state.',
+              ].join('\n'),
+            ],
+          };
 
-        expect(response.statusCode).to.eq(200);
-        expect(response.result).to.deep.equal(expected);
-        restoreAWS();
-        done();
-      });
+          expect(response.statusCode).to.eq(200);
+          expect(response.result).to.deep.equal(expected);
+          restoreAWS();
+          done();
+        });
     });
   });
 
@@ -261,10 +261,10 @@ describe('server', () => {
         method: 'DELETE',
         url: '/builds/123abc/callback',
       })
-      .then((response) => {
-        expect(response.statusCode).to.eq(200);
-        done();
-      });
+        .then((response) => {
+          expect(response.statusCode).to.eq(200);
+          done();
+        });
     });
 
     it('should call stopBuild(buildID) on the cluster', (done) => {
@@ -281,10 +281,10 @@ describe('server', () => {
         method: 'DELETE',
         url: '/builds/123abc/callback',
       })
-      .then(() => {
-        expect(stopBuildArg).to.eq('123abc');
-        done();
-      });
+        .then(() => {
+          expect(stopBuildArg).to.eq('123abc');
+          done();
+        });
     });
   });
 });
