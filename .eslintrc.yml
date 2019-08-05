@@ -13,4 +13,19 @@ parserOptions:
   ecmaVersion: 2018
 plugins:
   - react
-rules: {}
+rules: {
+  'no-underscore-dangle': [0],
+  'react/jsx-filename-extension': [0],
+  "import/no-extraneous-dependencies": ["error", {"devDependencies": ["**/test/**/*.js"]}],
+  'class-methods-use-this': [0],
+  'no-throw-literal': [0],
+  'comma-dangle': ['error',
+    {
+      arrays: 'always-multiline',
+      objects: 'always-multiline',
+      imports: 'always-multiline',
+      exports: 'always-multiline',
+      functions: 'never',
+    },
+  ],
+}
