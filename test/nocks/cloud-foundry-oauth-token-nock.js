@@ -6,7 +6,7 @@ const mockTokenRequest = (token) => {
 
   const n = nock('https://login.example.com', {
     reqheaders: {
-      authorization: `Basic ${Buffer('cf:').toString('Base64')}`,
+      authorization: `Basic ${Buffer.from('cf:').toString('Base64')}`,
     },
   }).post('/oauth/token', {
     grant_type: 'password',

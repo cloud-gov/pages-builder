@@ -1,4 +1,4 @@
-const expect = require('chai').expect;
+const { expect } = require('chai');
 const nock = require('nock');
 
 const CloudFoundryAPIClient = require('../src/cloud-foundry-api-client');
@@ -33,7 +33,7 @@ describe('CloudFoundryAPIClient', () => {
         expect(statesCount.FLAPPING).to.deep.equal(1);
         done();
       })
-      .catch(done);
+        .catch(done);
     });
   });
 

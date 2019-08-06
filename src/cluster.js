@@ -82,7 +82,7 @@ class Cluster {
       }).catch((error) => {
         winston.error(error);
       }).then(() => {
-        setTimeout(() => {  // eslint-disable-line scanjs-rules/call_setTimeout
+        setTimeout(() => { // eslint-disable-line scanjs-rules/call_setTimeout
           this._monitorCluster();
         }, 60 * 1000);
       });

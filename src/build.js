@@ -20,9 +20,9 @@ class Build {
 
   _generateBuildID() {
     return crypto.randomBytes(48).toString('base64')
-                  .replace(/\+/g, '-')
-                  .replace(/\//g, '_')
-                  .replace(/=/g, '');
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=/g, '');
   }
 
   _resolveContainerEnvironment(buildID, sqsMessage) {
@@ -31,7 +31,8 @@ class Build {
     const environment = environmentOverrides.reduce(
       (env, environmentOverride) => Object.assign(env, {
         [environmentOverride.name]: environmentOverride.value,
-      }), {});
+      }), {}
+    );
 
     environment.FEDERALIST_BUILDER_CALLBACK = this._buildCallbackURL(buildID);
 

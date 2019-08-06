@@ -33,10 +33,10 @@ const mockListAppsRequest = resources => nock('https://api.example.com', {
     authorization: /Bearer .+/,
   },
 }).get(
-    '/v2/spaces/123abc-456def-789ghi/apps'
-  ).reply(200, {
-    resources: resources.map(expandResource),
-  });
+  '/v2/spaces/123abc-456def-789ghi/apps'
+).reply(200, {
+  resources: resources.map(expandResource),
+});
 
 
 module.exports = mockListAppsRequest;

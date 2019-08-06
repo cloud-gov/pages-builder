@@ -1,4 +1,4 @@
-const expect = require('chai').expect;
+const { expect } = require('chai');
 const nock = require('nock');
 const url = require('url');
 const mockBuildLogCallback = require('./nocks/build-log-callback-nock');

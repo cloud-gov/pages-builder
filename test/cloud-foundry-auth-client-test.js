@@ -1,4 +1,4 @@
-const expect = require('chai').expect;
+const { expect } = require('chai');
 const jwt = require('jsonwebtoken');
 const nock = require('nock');
 

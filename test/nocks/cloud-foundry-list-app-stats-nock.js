@@ -5,10 +5,9 @@ const mockListAppStatsRequest = (guid, resources) => nock('https://api.example.c
     authorization: /Bearer .+/,
   },
 }).get(
-    `/v2/apps/${guid}/stats`
-  ).reply(200,
-    resources
-  );
+  `/v2/apps/${guid}/stats`
+).reply(200,
+  resources);
 
 
 module.exports = mockListAppStatsRequest;
