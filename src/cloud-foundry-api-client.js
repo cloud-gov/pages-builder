@@ -13,29 +13,27 @@ class CloudFoundryAPIClient {
 
   fetchBuildContainers() {
     return this._authClient.accessToken().then(token => this._request(
-        'GET',
-        `/v2/spaces/${this._spaceGUID()}/apps`,
-        token
-      )).then(body => this._filterAppsResponse(JSON.parse(body)));
+      'GET',
+      `/v2/spaces/${this._spaceGUID()}/apps`,
+      token
+    )).then(body => this._filterAppsResponse(JSON.parse(body)));
   }
 
   fetchAppStats(appGUID) {
     return this._authClient.accessToken().then(token => this._request(
-        'GET',
-        `/v2/apps/${appGUID}/stats`,
-        token
-      ));
+      'GET',
+      `/v2/apps/${appGUID}/stats`,
+      token
+    ));
   }
 
   fetchAppInstanceStates(container) {
     return this.fetchAppStats(container.guid)
-      .then(stats =>
-        ({
-          guid: container.guid,
-          name: container.name,
-          states: this._appInstanceStates(JSON.parse(stats)),
-        })
-      );
+      .then(stats => ({
+        guid: container.guid,
+        name: container.name,
+        states: this._appInstanceStates(JSON.parse(stats)),
+      }));
   }
 
   fetchAllAppInstanceErrors(buildContainers) {
@@ -44,17 +42,17 @@ class CloudFoundryAPIClient {
     const promises = buildContainers.map(container => this.fetchAppInstanceStates(container));
 
     return Promise.all(promises)
-    .then((instanceStates) => {
-      instanceStates.forEach((instanceState) => {
-        states = instanceState.states;
-        if (states.CRASHED || states.DOWN || states.FLAPPING || states.UNKNOWN) {
-          instanceErrors.push(`${instanceState.name}:\tNot all instances for are running. ${JSON.stringify(states)}`);
-        } else if (Object.keys(states).length === 0) {
-          instanceErrors.push(`${instanceState.name} has 0 running instances`);
-        }
+      .then((instanceStates) => {
+        instanceStates.forEach((instanceState) => {
+          states = instanceState.states;
+          if (states.CRASHED || states.DOWN || states.FLAPPING || states.UNKNOWN) {
+            instanceErrors.push(`${instanceState.name}:\tNot all instances for are running. ${JSON.stringify(states)}`);
+          } else if (Object.keys(states).length === 0) {
+            instanceErrors.push(`${instanceState.name} has 0 running instances`);
+          }
+        });
+        return instanceErrors;
       });
-      return instanceErrors;
-    });
   }
 
   getBuildContainersState() {
@@ -91,15 +89,15 @@ class CloudFoundryAPIClient {
 
   updateBuildContainer(container, environment) {
     return this._authClient.accessToken().then(token => this._request(
-        'PUT',
-        container.url,
-        token,
-        { environment_json: environment }
-      )).then(() => this._authClient.accessToken()).then(token => this._request(
-        'POST',
-        `${container.url}/restage`,
-        token
-      ));
+      'PUT',
+      container.url,
+      token,
+      { environment_json: environment }
+    )).then(() => this._authClient.accessToken()).then(token => this._request(
+      'POST',
+      `${container.url}/restage`,
+      token
+    ));
   }
 
   _buildContainerImageName() {

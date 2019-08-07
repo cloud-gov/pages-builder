@@ -1,4 +1,4 @@
-const expect = require('chai').expect;
+const { expect } = require('chai');
 const BuildScheduler = require('../src/build-scheduler');
 
 const mockedSQSReceiveMessage = (params, callback) => callback(null, {
