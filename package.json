@@ -10,7 +10,7 @@
   "main": "app.js",
   "scripts": {
     "start": "node app",
-    "test": "nyc mocha --require test/env.js",
+    "test": "nyc mocha --require test/env.js --exit",
     "eslint": "eslint ."
   },
   "author": "dhcole",
@@ -32,7 +32,7 @@
     "eslint-plugin-import": "^2.18.2",
     "eslint-plugin-jsx-a11y": "^6.2.3",
     "eslint-plugin-react": "^7.14.3",
-    "mocha": "^3.1.0",
+    "mocha": "^6.2.0",
     "nock": "^10.0.6",
     "nyc": "^14.1.1"
   },
