@@ -48,7 +48,7 @@ class BuildTimeoutReporter {
     winston.verbose(`Sending timeout status request for ${this._build.buildID}`);
     return this._request('POST', url, {
       message: Buffer.from('The build timed out').toString('base64'),
-      status: '1',
+      status: 'error',
     });
   }
 }

@@ -6,7 +6,7 @@ const mockBuildStatusCallback = (url) => {
 
   return nock(`${url.protocol}//${url.hostname}`)
     .post(url.path, {
-      status: '1',
+      status: 'error',
       message: encodedTimeoutMessage,
     })
     .reply(200);
