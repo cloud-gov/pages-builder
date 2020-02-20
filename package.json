@@ -16,28 +16,26 @@
   "author": "dhcole",
   "license": "CC0-1.0",
   "dependencies": {
+    "@hapi/hapi": "^19.1.1",
     "aws-sdk": "^2.2.10",
-    "cfenv": "^1.0.3",
-    "hapi": "17.8",
+    "cfenv": "^1.2.2",
     "jsonwebtoken": "^8.4",
-    "newrelic": "^4.13",
-    "request": "^2.75.0",
-    "winston": "^2.2.0"
+    "newrelic": "^6.4.0",
+    "request": "^2.88.2",
+    "winston": "^3.2.1"
   },
   "devDependencies": {
     "aws-sdk-mock": "^1.7.0",
-    "chai": "^3.5.0",
-    "eslint": "^5.16.0",
-    "eslint-config-airbnb": "^17.1.1",
-    "eslint-plugin-import": "^2.18.2",
-    "eslint-plugin-jsx-a11y": "^6.2.3",
-    "eslint-plugin-react": "^7.14.3",
-    "mocha": "^6.2.0",
-    "nock": "^10.0.6",
-    "nyc": "^14.1.1"
+    "chai": "^4.2.0",
+    "eslint": "^6.8.0",
+    "eslint-config-airbnb": "^18.0.1",
+    "eslint-plugin-import": "^2.20.1",
+    "mocha": "^7.0.1",
+    "nock": "^12.0.1",
+    "nyc": "^15.0.0"
   },
   "engines": {
-    "node": "10.x.x",
+    "node": "12.x.x",
     "npm": "6.x.x"
   },
   "nyc": {
