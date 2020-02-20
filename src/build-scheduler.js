@@ -25,7 +25,7 @@ class BuildScheduler {
       winston.error(error);
     }).then(() => {
       if (this.running) {
-        setImmediate(() => { // eslint-disable-line scanjs-rules/call_setImmediate
+        setImmediate(() => {
           this._run();
         });
       }

@@ -8,20 +8,22 @@ const mockedSQSReceiveMessage = (params, callback) => callback(null, {
 const mockedSQSDeleteMessage = (params, callback) => callback();
 
 const mockSQS = (buildScheduler, sqs) => {
-  buildScheduler._sqsClient._sqs = Object.assign({ // eslint-disable-line no-param-reassign
+  buildScheduler._sqsClient._sqs = { // eslint-disable-line no-param-reassign
     receiveMessage: mockedSQSReceiveMessage,
     deleteMessage: mockedSQSDeleteMessage,
-  }, sqs);
+    ...sqs,
+  };
 };
 
 const mockCluster = (buildScheduler, cluster) => {
-  buildScheduler._cluster = Object.assign({ // eslint-disable-line no-param-reassign
+  buildScheduler._cluster = { // eslint-disable-line no-param-reassign
     countAvailableContainers: () => 0,
     start: () => undefined,
     startBuild: () => Promise.resolve(),
     stop: () => undefined,
     stopBuild: () => undefined,
-  }, cluster);
+    ...cluster,
+  };
 };
 
 describe('BuildScheduler', () => {

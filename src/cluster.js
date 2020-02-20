@@ -1,3 +1,4 @@
+/* eslint-disable max-classes-per-file */
 const winston = require('winston');
 const BuildTimeoutReporter = require('./build-timeout-reporter');
 const CloudFoundryAPIClient = require('./cloud-foundry-api-client');
@@ -18,7 +19,7 @@ class Cluster {
   }
 
   countAvailableContainers() {
-    return this._containers.filter(container => !container.build).length;
+    return this._containers.filter((container) => !container.build).length;
   }
 
   start() {
@@ -61,17 +62,17 @@ class Cluster {
   }
 
   _firstAvailableContainer() {
-    return this._containers.find(container => !container.build);
+    return this._containers.find((container) => !container.build);
   }
 
   _findBuildContainer(buildID) {
-    return this._containers.find(container => (
+    return this._containers.find((container) => (
       container.build && container.build.buildID === buildID
     ));
   }
 
   _findContainer(guid) {
-    return this._containers.find(container => container.guid === guid);
+    return this._containers.find((container) => container.guid === guid);
   }
 
   _monitorCluster() {
@@ -82,7 +83,7 @@ class Cluster {
       }).catch((error) => {
         winston.error(error);
       }).then(() => {
-        setTimeout(() => { // eslint-disable-line scanjs-rules/call_setTimeout
+        setTimeout(() => {
           this._monitorCluster();
         }, 60 * 1000);
       });
@@ -105,7 +106,7 @@ class Cluster {
 
   _startBuildOnContainer(build, container) {
     container.build = build; // eslint-disable-line no-param-reassign
-    // eslint-disable-next-line no-param-reassign, scanjs-rules/call_setTimeout
+    // eslint-disable-next-line no-param-reassign
     container.timeout = setTimeout(() => {
       winston.warn('Build %s timed out', build.buildID);
       this._timeoutBuild(build);
