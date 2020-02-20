@@ -118,6 +118,9 @@ describe('Cluster', () => {
         cluster.startBuild({
           buildID: '123abc',
           containerEnvironment: {},
+        }).catch(() => {
+          // This promise rejects, but we're not testing this right now
+          // Adding the catch to make sure all promise rejections are handled
         });
         setTimeout(() => {
           expect(cluster.countAvailableContainers()).to.eq(1);

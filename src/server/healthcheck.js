@@ -1,4 +1,4 @@
-const winston = require('winston');
+const logger = require('../logger');
 
 const CloudFoundryAuthClient = require('../cloud-foundry-auth-client');
 const SQSClient = require('../sqs-client');
@@ -61,7 +61,7 @@ function healthcheckHandler(request, h) {
       }
     })
     .catch((err) => {
-      winston.error('Healthcheck error:', err);
+      logger.error('Healthcheck error:', err);
       reply = replyNotOk([err.message]);
     })
     .then(() => h.response(reply));

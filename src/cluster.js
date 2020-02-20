@@ -1,7 +1,7 @@
 /* eslint-disable max-classes-per-file */
-const winston = require('winston');
 const BuildTimeoutReporter = require('./build-timeout-reporter');
 const CloudFoundryAPIClient = require('./cloud-foundry-api-client');
+const logger = require('./logger');
 const server = require('./server');
 
 class NoContainersAvailableError extends Error {
@@ -33,7 +33,7 @@ class Cluster {
 
     if (container) {
       return this._startBuildOnContainer(build, container).then(() => {
-        winston.info('Staged build %s on container %s', build.buildID, container.name);
+        logger.info('Staged build %s on container %s', build.buildID, container.name);
       });
     }
     return Promise.reject(new NoContainersAvailableError());
@@ -45,14 +45,14 @@ class Cluster {
   }
 
   stopBuild(buildID) {
-    winston.info('Stopping build', buildID);
+    logger.info('Stopping build', buildID);
 
     const container = this._findBuildContainer(buildID);
     if (container) {
       clearTimeout(container.timeout);
       container.build = undefined;
     } else {
-      winston.warn('Unable to stop build %s. Container not found.', buildID);
+      logger.warn('Unable to stop build %s. Container not found.', buildID);
     }
   }
 
@@ -79,9 +79,9 @@ class Cluster {
     if (this._monitoringCluster) {
       this._apiClient.fetchBuildContainers().then((containers) => {
         this._resolveNewContainers(containers);
-        winston.info('Cluster monitor: %s container(s) present', this._containers.length);
+        logger.info('Cluster monitor: %s container(s) present', this._containers.length);
       }).catch((error) => {
-        winston.error(error);
+        logger.error(error);
       }).then(() => {
         setTimeout(() => {
           this._monitorCluster();
@@ -108,7 +108,7 @@ class Cluster {
     container.build = build; // eslint-disable-line no-param-reassign
     // eslint-disable-next-line no-param-reassign
     container.timeout = setTimeout(() => {
-      winston.warn('Build %s timed out', build.buildID);
+      logger.warn('Build %s timed out', build.buildID);
       this._timeoutBuild(build);
     }, this._buildTimeoutMilliseconds());
     return this._apiClient.updateBuildContainer(

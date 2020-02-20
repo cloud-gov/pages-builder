@@ -19,7 +19,5 @@ process.env.EXPECTED_NUM_BUILD_CONTAINERS = '2';
 process.env.PORT = 3000;
 process.env.BUILD_COMPLETE_CALLBACK_HOST = 'https://example.com';
 
-// Winston
-const winston = require('winston');
-
-winston.level = 'error';
+// Logging
+process.env.LOG_LEVEL = 'crit';
