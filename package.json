@@ -19,7 +19,7 @@
     "@hapi/hapi": "^19.1.1",
     "aws-sdk": "^2.2.10",
     "cfenv": "^1.2.2",
-    "jsonwebtoken": "^8.4",
+    "jsonwebtoken": "^8.5.1",
     "newrelic": "^6.4.0",
     "request": "^2.88.2",
     "winston": "^3.2.1"

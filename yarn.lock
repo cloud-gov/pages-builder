@@ -630,7 +630,22 @@ aws-sdk-mock@^1.7.0:
     sinon "^1.17.3"
     traverse "^0.6.6"
 
-aws-sdk@^2.2.10, aws-sdk@^2.3.0:
+aws-sdk@^2.2.10:
+  version "2.623.0"
+  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.623.0.tgz#c03f91d813727f0931d9b36d904764291e44aa5f"
+  integrity sha512-tncfZvqupRD3DLQM+8ZYgDwH7OjjIxLanzmUPsOw1GpJW3xqTzRYyja4drywSpnR4roSVUpBPE2H2/iMOXtepQ==
+  dependencies:
+    buffer "4.9.1"
+    events "1.1.1"
+    ieee754 "1.1.13"
+    jmespath "0.15.0"
+    querystring "0.2.0"
+    sax "1.2.1"
+    url "0.10.3"
+    uuid "3.3.2"
+    xml2js "0.4.19"
+
+aws-sdk@^2.3.0:
   version "2.622.0"
   resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.622.0.tgz#8f006f082c32ad6fc11df9bbecfd55c8d8c9a5c2"
   integrity sha512-CV5RZjoh2PZ/wALQXx932dTYukPTZXZmfjlRTJqNibRhyN36/E1KwkX1va1CROii2AnfnxjzV7OqymH0TgKlUg==
@@ -1960,7 +1975,7 @@ json5@^2.1.0:
   dependencies:
     minimist "^1.2.0"
 
-jsonwebtoken@^8.4:
+jsonwebtoken@^8.5.1:
   version "8.5.1"
   resolved "https://registry.yarnpkg.com/jsonwebtoken/-/jsonwebtoken-8.5.1.tgz#00e71e0b8df54c2121a1f26137df2280673bcc0d"
   integrity sha512-XjwVfRS6jTMsqYs0EsuJ4LGxXV14zQybNd4L2r0UvbVnSF9Af8x7p5MzbJ90Ioz/9TI41/hTCvznF/loiSzn8w==
