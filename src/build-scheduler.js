@@ -1,7 +1,7 @@
-const winston = require('winston');
 const Build = require('./build');
 const Cluster = require('./cluster');
 const SQSClient = require('./sqs-client');
+const logger = require('./logger');
 
 class BuildScheduler {
   constructor() {
@@ -22,10 +22,10 @@ class BuildScheduler {
 
   _run() {
     this._findAndScheduleNewBuild().catch((error) => {
-      winston.error(error);
+      logger.error(error);
     }).then(() => {
       if (this.running) {
-        setImmediate(() => { // eslint-disable-line scanjs-rules/call_setImmediate
+        setImmediate(() => {
           this._run();
         });
       }
@@ -33,12 +33,12 @@ class BuildScheduler {
   }
 
   _attemptToStartBuild(build) {
-    winston.verbose('Attempting to start build');
+    logger.verbose('Attempting to start build');
 
     if (this._cluster.countAvailableContainers() > 0) {
       return this._startBuildAndDeleteMessage(build);
     }
-    winston.info(
+    logger.info(
       'No containers available. Stopping build %s and waiting',
       build.buildID
     );
@@ -46,7 +46,7 @@ class BuildScheduler {
   }
 
   _findAndScheduleNewBuild() {
-    winston.verbose('Receiving message');
+    logger.verbose('Receiving message');
 
     return this._sqsClient.receiveMessage().then((message) => {
       if (message) {
@@ -54,7 +54,7 @@ class BuildScheduler {
         const owner = build.containerEnvironment.OWNER;
         const repo = build.containerEnvironment.REPOSITORY;
         const branch = build.containerEnvironment.BRANCH;
-        winston.info('New build %s/%s/%s - %s', owner, repo, branch, build.buildID);
+        logger.info('New build %s/%s/%s - %s', owner, repo, branch, build.buildID);
 
         return this._attemptToStartBuild(build);
       }
@@ -63,7 +63,7 @@ class BuildScheduler {
   }
 
   _startBuildAndDeleteMessage(build) {
-    winston.verbose('Starting build');
+    logger.verbose('Starting build');
 
     return this._cluster.startBuild(build)
       .then(() => this._sqsClient.deleteMessage(build.sqsMessage));

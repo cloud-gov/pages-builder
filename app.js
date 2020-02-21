@@ -1,8 +1,5 @@
 const cfenv = require('cfenv');
-const winston = require('winston');
-
-// Setup winston for logging
-winston.level = process.env.LOG_LEVEL || 'info';
+const logger = require('./src/logger');
 
 const appEnv = cfenv.getAppEnv();
 
@@ -10,7 +7,7 @@ const appEnv = cfenv.getAppEnv();
 if (process.env.NEW_RELIC_APP_NAME) {
   const creds = appEnv.getServiceCreds('federalist-builder-env');
   if (creds.NEW_RELIC_LICENSE_KEY) {
-    winston.info(`Activating New Relic: ${process.env.NEW_RELIC_APP_NAME}`);
+    logger.info(`Activating New Relic: ${process.env.NEW_RELIC_APP_NAME}`);
     require('newrelic'); // eslint-disable-line global-require
   }
 }

@@ -118,6 +118,9 @@ describe('Cluster', () => {
         cluster.startBuild({
           buildID: '123abc',
           containerEnvironment: {},
+        }).catch(() => {
+          // This promise rejects, but we're not testing this right now
+          // Adding the catch to make sure all promise rejections are handled
         });
         setTimeout(() => {
           expect(cluster.countAvailableContainers()).to.eq(1);
@@ -206,7 +209,7 @@ describe('Cluster', () => {
 
       cluster.stopBuild('456def');
 
-      const container = cluster._containers.find(c => c.guid === '123abc');
+      const container = cluster._containers.find((c) => c.guid === '123abc');
 
       expect(container).to.be.a('object');
       expect(container.build).to.be.undefined;

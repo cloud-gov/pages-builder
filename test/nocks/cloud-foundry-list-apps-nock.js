@@ -28,7 +28,7 @@ const expandResource = (resource) => {
   };
 };
 
-const mockListAppsRequest = resources => nock('https://api.example.com', {
+const mockListAppsRequest = (resources) => nock('https://api.example.com', {
   reqheaders: {
     authorization: /Bearer .+/,
   },

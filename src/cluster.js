@@ -1,6 +1,7 @@
-const winston = require('winston');
+/* eslint-disable max-classes-per-file */
 const BuildTimeoutReporter = require('./build-timeout-reporter');
 const CloudFoundryAPIClient = require('./cloud-foundry-api-client');
+const logger = require('./logger');
 const server = require('./server');
 
 class NoContainersAvailableError extends Error {
@@ -18,7 +19,7 @@ class Cluster {
   }
 
   countAvailableContainers() {
-    return this._containers.filter(container => !container.build).length;
+    return this._containers.filter((container) => !container.build).length;
   }
 
   start() {
@@ -32,7 +33,7 @@ class Cluster {
 
     if (container) {
       return this._startBuildOnContainer(build, container).then(() => {
-        winston.info('Staged build %s on container %s', build.buildID, container.name);
+        logger.info('Staged build %s on container %s', build.buildID, container.name);
       });
     }
     return Promise.reject(new NoContainersAvailableError());
@@ -44,14 +45,14 @@ class Cluster {
   }
 
   stopBuild(buildID) {
-    winston.info('Stopping build', buildID);
+    logger.info('Stopping build', buildID);
 
     const container = this._findBuildContainer(buildID);
     if (container) {
       clearTimeout(container.timeout);
       container.build = undefined;
     } else {
-      winston.warn('Unable to stop build %s. Container not found.', buildID);
+      logger.warn('Unable to stop build %s. Container not found.', buildID);
     }
   }
 
@@ -61,28 +62,28 @@ class Cluster {
   }
 
   _firstAvailableContainer() {
-    return this._containers.find(container => !container.build);
+    return this._containers.find((container) => !container.build);
   }
 
   _findBuildContainer(buildID) {
-    return this._containers.find(container => (
+    return this._containers.find((container) => (
       container.build && container.build.buildID === buildID
     ));
   }
 
   _findContainer(guid) {
-    return this._containers.find(container => container.guid === guid);
+    return this._containers.find((container) => container.guid === guid);
   }
 
   _monitorCluster() {
     if (this._monitoringCluster) {
       this._apiClient.fetchBuildContainers().then((containers) => {
         this._resolveNewContainers(containers);
-        winston.info('Cluster monitor: %s container(s) present', this._containers.length);
+        logger.info('Cluster monitor: %s container(s) present', this._containers.length);
       }).catch((error) => {
-        winston.error(error);
+        logger.error(error);
       }).then(() => {
-        setTimeout(() => { // eslint-disable-line scanjs-rules/call_setTimeout
+        setTimeout(() => {
           this._monitorCluster();
         }, 60 * 1000);
       });
@@ -105,9 +106,9 @@ class Cluster {
 
   _startBuildOnContainer(build, container) {
     container.build = build; // eslint-disable-line no-param-reassign
-    // eslint-disable-next-line no-param-reassign, scanjs-rules/call_setTimeout
+    // eslint-disable-next-line no-param-reassign
     container.timeout = setTimeout(() => {
-      winston.warn('Build %s timed out', build.buildID);
+      logger.warn('Build %s timed out', build.buildID);
       this._timeoutBuild(build);
     }, this._buildTimeoutMilliseconds());
     return this._apiClient.updateBuildContainer(

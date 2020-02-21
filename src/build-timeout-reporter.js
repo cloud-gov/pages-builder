@@ -1,5 +1,5 @@
 const request = require('request');
-const winston = require('winston');
+const logger = require('./logger');
 
 class BuildTimeoutReporter {
   constructor(build) {
@@ -11,7 +11,7 @@ class BuildTimeoutReporter {
       this._sendBuildLogRequest(),
       this._sendBuildStatusRequest(),
     ]).catch((err) => {
-      winston.error('Error reporting build timeout:', err);
+      logger.error('Error reporting build timeout:', err);
     });
   }
 
@@ -36,7 +36,7 @@ class BuildTimeoutReporter {
 
   _sendBuildLogRequest() {
     const url = this._build.containerEnvironment.LOG_CALLBACK;
-    winston.verbose(`Sending timeout log request for ${this._build.buildID}`);
+    logger.verbose(`Sending timeout log request for ${this._build.buildID}`);
     return this._request('POST', url, {
       output: Buffer.from('The build timed out').toString('base64'),
       source: 'Build scheduler',
@@ -45,7 +45,7 @@ class BuildTimeoutReporter {
 
   _sendBuildStatusRequest() {
     const url = this._build.containerEnvironment.STATUS_CALLBACK;
-    winston.verbose(`Sending timeout status request for ${this._build.buildID}`);
+    logger.verbose(`Sending timeout status request for ${this._build.buildID}`);
     return this._request('POST', url, {
       message: Buffer.from('The build timed out').toString('base64'),
       status: 'error',
