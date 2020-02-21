@@ -26,8 +26,8 @@ describe('CloudFoundryAPIClient', () => {
 
       const apiClient = new CloudFoundryAPIClient();
       apiClient.fetchAppStats(guid).then((appInstances) => {
-        expect(appInstances).to.deep.equal(JSON.stringify(response));
-        return apiClient._appInstanceStates(JSON.parse(appInstances));
+        expect(appInstances).to.deep.equal(response);
+        return apiClient._appInstanceStates(appInstances);
       }).then((statesCount) => {
         expect(statesCount.RUNNING).to.deep.equal(2);
         expect(statesCount.FLAPPING).to.deep.equal(1);
@@ -106,8 +106,7 @@ describe('CloudFoundryAPIClient', () => {
 
       const apiClient = new CloudFoundryAPIClient();
       apiClient.updateBuildContainer(container, environment).then((response) => {
-        const parsedResponse = JSON.parse(response);
-        expect(parsedResponse.entity.environment_json).to.deep.equal(environment);
+        expect(response.entity.environment_json).to.deep.equal(environment);
         done();
       });
     });

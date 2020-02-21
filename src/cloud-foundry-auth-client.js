@@ -1,6 +1,7 @@
 const cfenv = require('cfenv');
 const jwt = require('jsonwebtoken');
-const request = require('request');
+const axios = require('axios');
+const qs = require('querystring');
 
 class CloudFoundryAuthClient {
   constructor() {
@@ -40,30 +41,22 @@ class CloudFoundryAuthClient {
   }
 
   _sendNewTokenRequest() {
-    return new Promise((resolve, reject) => {
-      request.post({
-        url: this._tokenEndpoint(),
+    return axios.post(
+      this._tokenEndpoint(),
+      qs.stringify({
+        grant_type: 'password',
+        username: this._username,
+        password: this._password,
+        response_type: 'token',
+      }),
+      {
         auth: {
           username: 'cf',
           password: '',
         },
-        form: {
-          grant_type: 'password',
-          username: this._username,
-          password: this._password,
-          response_type: 'token',
-        },
-      }, (error, response, body) => {
-        if (error) {
-          reject(error);
-        } else if (response.statusCode > 399) {
-          const errorMessage = `Received status code: ${response.statusCode}`;
-          reject(new Error(body || errorMessage));
-        } else {
-          resolve(JSON.parse(body).access_token);
-        }
-      });
-    });
+      }
+    )
+      .then(response => response.data.access_token);
   }
 
   _tokenEndpoint() {

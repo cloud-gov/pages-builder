@@ -3,7 +3,7 @@ const SQSClient = require('../src/sqs-client');
 
 const queueURL = 'QUEUE_URL';
 
-const mockSQS = (sqs) => ({
+const mockSQS = sqs => ({
   getQueueAttributes: (params, cb) => cb(null, { Attributes: {} }),
   receiveMessage: (params, cb) => cb(null, { Messages: [] }),
   deleteMessage: (params, cb) => cb(null),
