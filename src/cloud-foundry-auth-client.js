@@ -56,7 +56,7 @@ class CloudFoundryAuthClient {
         },
       }
     )
-      .then((response) => response.data.access_token);
+      .then(response => response.data.access_token);
   }
 
   _tokenEndpoint() {

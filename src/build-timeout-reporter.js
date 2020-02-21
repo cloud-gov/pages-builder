@@ -17,23 +17,6 @@ class BuildTimeoutReporter {
 
   _request(url, json) {
     return axios.post(url, json);
-
-    // return new Promise((resolve, reject) => {
-    //   request({
-    //     method: method.toUpperCase(),
-    //     url,
-    //     json,
-    //   }, (error, response, body) => {
-    //     if (error) {
-    //       reject(error);
-    //     } else if (response.statusCode > 399) {
-    //       const errorMessage = `Received status code: ${response.statusCode}`;
-    //       reject(new Error(body || errorMessage));
-    //     } else {
-    //       resolve(body);
-    //     }
-    //   });
-    // });
   }
 
   _sendBuildLogRequest() {

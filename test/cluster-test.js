@@ -205,7 +205,7 @@ describe('Cluster', () => {
 
       cluster.stopBuild('456def');
 
-      const container = cluster._containers.find((c) => c.guid === '123abc');
+      const container = cluster._containers.find(c => c.guid === '123abc');
 
       expect(container).to.be.a('object');
       expect(container.build).to.be.undefined;
