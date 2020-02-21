@@ -17,7 +17,7 @@ const mockSQS = (buildScheduler, sqs) => {
 
 const mockCluster = (buildScheduler, cluster) => {
   buildScheduler._cluster = { // eslint-disable-line no-param-reassign
-    countAvailableContainers: () => 0,
+    canStartBuild: () => false,
     start: () => undefined,
     startBuild: () => Promise.resolve(),
     stop: () => undefined,
@@ -59,7 +59,7 @@ describe('BuildScheduler', () => {
     const cluster = {};
 
     let hasStartedBuild = false;
-    cluster.countAvailableContainers = () => 1;
+    cluster.canStartBuild = () => true;
     cluster.startBuild = (build) => {
       expect(build).not.to.be.undefined;
       expect(build.containerEnvironment).to.have.property(
@@ -114,7 +114,7 @@ describe('BuildScheduler', () => {
 
     let runningBuildCount = 0;
     const maxBuildCount = 10;
-    cluster.countAvailableContainers = () => maxBuildCount - runningBuildCount;
+    cluster.canStartBuild = () => maxBuildCount - runningBuildCount > 0;
     cluster.startBuild = () => {
       runningBuildCount += 1;
       return Promise.resolve();
@@ -167,7 +167,7 @@ describe('BuildScheduler', () => {
     const cluster = {};
 
     let hasAttemptedToStartedBuild = false;
-    cluster.countAvailableContainers = () => 1;
+    cluster.canStartBuild = () => true;
     cluster.startBuild = () => {
       hasAttemptedToStartedBuild = true;
       return Promise.reject(new Error('Test error'));

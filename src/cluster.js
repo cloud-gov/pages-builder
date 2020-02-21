@@ -18,8 +18,8 @@ class Cluster {
     this._server = server(this);
   }
 
-  countAvailableContainers() {
-    return this._containers.filter((container) => !container.build).length;
+  canStartBuild() {
+    return this._countAvailableContainers() > 0;
   }
 
   start() {
@@ -59,6 +59,10 @@ class Cluster {
   _buildTimeoutMilliseconds() {
     const timeoutSeconds = parseInt(process.env.BUILD_TIMEOUT_SECONDS, 10) || 21 * 60;
     return timeoutSeconds * 1000;
+  }
+
+  _countAvailableContainers() {
+    return this._containers.filter((container) => !container.build).length;
   }
 
   _firstAvailableContainer() {

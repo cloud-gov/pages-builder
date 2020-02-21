@@ -35,7 +35,7 @@ class BuildScheduler {
   _attemptToStartBuild(build) {
     logger.verbose('Attempting to start build');
 
-    if (this._cluster.countAvailableContainers() > 0) {
+    if (this._cluster.canStartBuild()) {
       return this._startBuildAndDeleteMessage(build);
     }
     logger.info(
