@@ -12,11 +12,6 @@ const mockRestageAppRequest = require('./nocks/cloud-foundry-restage-app-nock');
 const mockTokenRequest = require('./nocks/cloud-foundry-oauth-token-nock');
 const mockUpdateAppRequest = require('./nocks/cloud-foundry-update-app-nock');
 
-
-const mockServer = (cluster) => {
-  cluster._server.start = () => {}; // eslint-disable-line no-param-reassign
-};
-
 function mockContainers(num) {
   mockListAppsRequest(Array(num).fill({}));
 
@@ -49,7 +44,6 @@ describe('Cluster', () => {
       mockContainers(numContainers);
 
       const cluster = new Cluster();
-      mockServer(cluster);
       cluster.start();
 
       setTimeout(() => {
@@ -68,7 +62,6 @@ describe('Cluster', () => {
       const mockedRestageRequest = mockRestageAppRequest();
 
       const cluster = new Cluster();
-      mockServer(cluster);
       cluster.start();
 
       setTimeout(() => {
@@ -91,7 +84,6 @@ describe('Cluster', () => {
       mockRestageAppRequest();
 
       const cluster = new Cluster();
-      mockServer(cluster);
       cluster.start();
 
       setTimeout(() => {
@@ -117,7 +109,6 @@ describe('Cluster', () => {
       ).reply(500);
 
       const cluster = new Cluster();
-      mockServer(cluster);
       cluster.start();
 
       setTimeout(() => {
@@ -150,7 +141,6 @@ describe('Cluster', () => {
         expect(buildID).to.equal('123abc');
         done();
       };
-      mockServer(cluster);
       cluster.start();
 
       setTimeout(() => {
@@ -173,7 +163,6 @@ describe('Cluster', () => {
       process.env.BUILD_TIMEOUT_SECONDS = -1;
 
       const cluster = new Cluster();
-      mockServer(cluster);
       cluster.start();
 
       setTimeout(() => {
@@ -254,7 +243,6 @@ describe('Cluster', () => {
       mockContainers(1);
 
       const cluster = new Cluster();
-      mockServer(cluster);
       cluster.start();
 
       setTimeout(() => {
@@ -268,7 +256,6 @@ describe('Cluster', () => {
       mockContainers(0);
 
       const cluster = new Cluster();
-      mockServer(cluster);
       cluster.start();
 
       setTimeout(() => {

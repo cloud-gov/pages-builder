@@ -2,20 +2,21 @@ const { expect } = require('chai');
 const nock = require('nock');
 
 const server = require('../src/server');
+const SQSClient = require('../src/sqs-client');
 const mockTokenRequest = require('./nocks/cloud-foundry-oauth-token-nock');
 const mockListAppsRequest = require('./nocks/cloud-foundry-list-apps-nock');
 const mockListAppStatsRequest = require('./nocks/cloud-foundry-list-app-stats-nock');
-const awsMock = require('./aws-mock');
 
 
 const mockCluster = () => ({ stopBuild: () => {} });
+const mockBuildQueue = (sqs = {}) => new SQSClient(sqs, 'QUEUE_URL');
 
 describe('server', () => {
   afterEach(() => nock.cleanAll());
 
   describe('GET /', () => {
     it('should respond with a 200', (done) => {
-      const testServer = server(mockCluster());
+      const testServer = server(mockCluster(), mockBuildQueue());
 
       testServer.inject({
         method: 'GET',
@@ -50,10 +51,11 @@ describe('server', () => {
 
     it('should be ok all is good', (done) => {
       const queueAttributes = { Attributes: { ApproximateNumberOfMessages: 2 } };
-      const restoreAWS = awsMock.mock('SQS', 'getQueueAttributes', queueAttributes);
       process.env.SERVICE_KEY_CREATED = new Date(new Date() - (1 * 24 * 60 * 60 * 1000));
 
-      const testServer = server(mockCluster());
+      const testServer = server(mockCluster(), mockBuildQueue({
+        getQueueAttributes: (_, cb) => cb(null, queueAttributes),
+      }));
 
       mockTokenRequest().persist();
       mockGoodListAppsRequest();
@@ -75,13 +77,14 @@ describe('server', () => {
 
           expect(response.statusCode).to.eq(200);
           expect(response.result).to.deep.equal(expected);
-          restoreAWS();
           done();
         });
     });
 
     it('should not be ok when an access token cannot be retrieved', (done) => {
-      const testServer = server(mockCluster());
+      const testServer = server(mockCluster(), mockBuildQueue({
+        getQueueAttributes: (_, cb) => cb(null, {}),
+      }));
       mockTokenRequest('badtoken');
       mockTokenRequest(); // nock another request for fetching build containers
       mockGoodListAppsRequest();
@@ -104,13 +107,13 @@ describe('server', () => {
     });
 
     it('should not be ok when an access token is non-existent', (done) => {
-      const testServer = server(mockCluster());
+      const queueAttributes = { Attributes: { ApproximateNumberOfMessages: 2 } };
+      const testServer = server(mockCluster(), mockBuildQueue({
+        getQueueAttributes: (_, cb) => cb(null, queueAttributes),
+      }));
       mockTokenRequest('emptytoken');
       mockTokenRequest(); // nock another request for fetching build containers
       mockGoodListAppsRequest();
-
-      const queueAttributes = { Attributes: { ApproximateNumberOfMessages: 2 } };
-      const restoreAWS = awsMock.mock('SQS', 'getQueueAttributes', queueAttributes);
 
       const expectedResult = {
         ok: false,
@@ -123,15 +126,15 @@ describe('server', () => {
       }).then((response) => {
         expect(response.statusCode).to.eq(200);
         expect(response.result).to.deep.equal(expectedResult);
-        restoreAWS();
         done();
       });
     });
 
     it('should not be ok if SQS attributes cannot be retrieved', (done) => {
       const error = { error: 'Queue attributes unavailable.' };
-      const restoreAWS = awsMock.mock('SQS', 'getQueueAttributes', null, error);
-      const testServer = server(mockCluster());
+      const testServer = server(mockCluster(), mockBuildQueue({
+        getQueueAttributes: (_, cb) => cb(error),
+      }));
 
       mockTokenRequest().persist();
       mockGoodListAppsRequest();
@@ -148,16 +151,16 @@ describe('server', () => {
 
           expect(response.statusCode).to.eq(200);
           expect(response.result).to.deep.equal(expected);
-          restoreAWS();
           done();
         });
     });
 
     it('should not be ok if there are not enough build containers', (done) => {
       const queueAttributes = { Attributes: { ApproximateNumberOfMessages: 2 } };
-      const restoreAWS = awsMock.mock('SQS', 'getQueueAttributes', queueAttributes);
 
-      const testServer = server(mockCluster());
+      const testServer = server(mockCluster(), mockBuildQueue({
+        getQueueAttributes: (_, cb) => cb(null, queueAttributes),
+      }));
 
       mockTokenRequest().persist();
       mockListAppsRequest([{ name: 'builder-1' }]);
@@ -179,16 +182,16 @@ describe('server', () => {
 
           expect(response.statusCode).to.eq(200);
           expect(response.result).to.deep.equal(expected);
-          restoreAWS();
           done();
         });
     });
 
     it('should not be ok if any container is not STARTED', (done) => {
       const queueAttributes = { Attributes: { ApproximateNumberOfMessages: 2 } };
-      const restoreAWS = awsMock.mock('SQS', 'getQueueAttributes', queueAttributes);
 
-      const testServer = server(mockCluster());
+      const testServer = server(mockCluster(), mockBuildQueue({
+        getQueueAttributes: (_, cb) => cb(null, queueAttributes),
+      }));
 
       mockTokenRequest().persist();
       mockListAppsRequest([
@@ -215,15 +218,15 @@ describe('server', () => {
 
           expect(response.statusCode).to.eq(200);
           expect(response.result).to.deep.equal(expected);
-          restoreAWS();
           done();
         });
     });
 
     it('should be able to report multiple error reasons', (done) => {
       const error = { error: 'Queue attributes unavailable.' };
-      const restoreAWS = awsMock.mock('SQS', 'getQueueAttributes', null, error);
-      const testServer = server(mockCluster());
+      const testServer = server(mockCluster(), mockBuildQueue({
+        getQueueAttributes: (_, cb) => cb(error),
+      }));
 
       mockTokenRequest().persist();
       mockListAppsRequest([{ guid: '123abc', name: 'builder-1' }]);
@@ -247,7 +250,6 @@ describe('server', () => {
 
           expect(response.statusCode).to.eq(200);
           expect(response.result).to.deep.equal(expected);
-          restoreAWS();
           done();
         });
     });
@@ -255,7 +257,7 @@ describe('server', () => {
 
   describe('DELETE /builds/{buildID}/callback', () => {
     it('should respond with a 200', (done) => {
-      const testServer = server(mockCluster());
+      const testServer = server(mockCluster(), mockBuildQueue());
 
       testServer.inject({
         method: 'DELETE',
@@ -275,7 +277,7 @@ describe('server', () => {
         },
       };
 
-      const testServer = server(cluster);
+      const testServer = server(cluster, mockBuildQueue());
 
       testServer.inject({
         method: 'DELETE',

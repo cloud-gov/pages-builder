@@ -25,7 +25,6 @@
     "winston": "^3.2.1"
   },
   "devDependencies": {
-    "aws-sdk-mock": "^5.0.0",
     "chai": "^4.2.0",
     "eslint": "^6.8.0",
     "eslint-config-airbnb-base": "^14.0.0",
