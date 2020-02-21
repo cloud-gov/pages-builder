@@ -1,22 +1,23 @@
 const Build = require('./build');
-const Cluster = require('./cluster');
-const SQSClient = require('./sqs-client');
 const logger = require('./logger');
 
 class BuildScheduler {
-  constructor() {
-    this._cluster = new Cluster();
-    this._sqsClient = new SQSClient();
+  constructor(builderPool, buildQueue, server) {
+    this._builderPool = builderPool;
+    this._buildQueue = buildQueue;
+    this._server = server;
   }
 
   start() {
-    this._cluster.start();
+    this._server.start();
+    this._builderPool.start();
     this.running = true;
     this._run();
   }
 
   stop() {
-    this._cluster.stop();
+    this._server.stop();
+    this._builderPool.stop();
     this.running = false;
   }
 
@@ -35,7 +36,7 @@ class BuildScheduler {
   _attemptToStartBuild(build) {
     logger.verbose('Attempting to start build');
 
-    if (this._cluster.countAvailableContainers() > 0) {
+    if (this._builderPool.canStartBuild()) {
       return this._startBuildAndDeleteMessage(build);
     }
     logger.info(
@@ -48,7 +49,7 @@ class BuildScheduler {
   _findAndScheduleNewBuild() {
     logger.verbose('Receiving message');
 
-    return this._sqsClient.receiveMessage().then((message) => {
+    return this._buildQueue.receiveMessage().then((message) => {
       if (message) {
         const build = new Build(message);
         const owner = build.containerEnvironment.OWNER;
@@ -65,8 +66,8 @@ class BuildScheduler {
   _startBuildAndDeleteMessage(build) {
     logger.verbose('Starting build');
 
-    return this._cluster.startBuild(build)
-      .then(() => this._sqsClient.deleteMessage(build.sqsMessage));
+    return this._builderPool.startBuild(build)
+      .then(() => this._buildQueue.deleteMessage(build.sqsMessage));
   }
 }
 

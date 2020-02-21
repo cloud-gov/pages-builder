@@ -1,11 +1,9 @@
-const AWS = require('./aws');
-
 const QUEUE_ATTRIBUTES_FALLBACK = 'Queue attributes unavailable.';
-const { SQS_URL } = process.env;
 
 class SQSClient {
-  constructor() {
-    this._sqs = new AWS.SQS();
+  constructor(sqs, queueURL) {
+    this._sqs = sqs;
+    this._sqsQueueURL = queueURL;
   }
 
   getQueueAttributes(attributesArray) {
@@ -63,25 +61,21 @@ class SQSClient {
 
   _queueAttributesParams(attributesArray) {
     return {
-      QueueUrl: this._sqsQueueURL(),
+      QueueUrl: this._sqsQueueURL,
       AttributeNames: attributesArray,
     };
   }
 
   _sqsDeleteMessageParams(message) {
     return {
-      QueueUrl: this._sqsQueueURL(),
+      QueueUrl: this._sqsQueueURL,
       ReceiptHandle: message.ReceiptHandle,
     };
   }
 
-  _sqsQueueURL() {
-    return SQS_URL;
-  }
-
   _sqsReceiveMessageParams() {
     return {
-      QueueUrl: this._sqsQueueURL(),
+      QueueUrl: this._sqsQueueURL,
       MaxNumberOfMessages: 1,
       WaitTimeSeconds: 20,
     };

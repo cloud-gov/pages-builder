@@ -1,9 +1,9 @@
 const Hapi = require('@hapi/hapi');
 const logger = require('../logger');
 
-const healthcheckHandler = require('./healthcheck');
+const createHealthcheckHandler = require('./healthcheck');
 
-function createServer(cluster) {
+function createServer(builderPool, buildQueue) {
   const server = new Hapi.Server({ port: process.env.PORT || 8080 });
 
   server.route({
@@ -23,7 +23,7 @@ function createServer(cluster) {
     // Exposes an endpoint to report builder health
     method: 'GET',
     path: '/healthcheck',
-    handler: healthcheckHandler,
+    handler: createHealthcheckHandler(buildQueue),
   });
 
   server.route({
@@ -31,7 +31,7 @@ function createServer(cluster) {
     path: '/builds/{buildID}/callback',
     handler: (request, h) => {
       try {
-        cluster.stopBuild(request.params.buildID);
+        builderPool.stopBuild(request.params.buildID);
       } catch (error) {
         logger.error(`Error stopping build${request}`, error);
       }

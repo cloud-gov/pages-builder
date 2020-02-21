@@ -12,10 +12,13 @@ const mockRestageAppRequest = require('./nocks/cloud-foundry-restage-app-nock');
 const mockTokenRequest = require('./nocks/cloud-foundry-oauth-token-nock');
 const mockUpdateAppRequest = require('./nocks/cloud-foundry-update-app-nock');
 
+function mockContainers(num) {
+  mockListAppsRequest(Array(num).fill({}));
 
-const mockServer = (cluster) => {
-  cluster._server.start = () => {}; // eslint-disable-line no-param-reassign
-};
+  for (let i = 0; i < num; i += 1) {
+    mockListAppStatsRequest('123abc', { 0: { state: 'RUNNING' } });
+  }
+}
 
 describe('Cluster', () => {
   const logCallbackURL = url.parse('https://www.example.gov/log');
@@ -33,20 +36,18 @@ describe('Cluster', () => {
     nock.cleanAll();
   });
 
-  describe('.countAvailableContainers()', () => {
+  describe('._countAvailableContainers()', () => {
     it('should return the number of available containers', (done) => {
-      mockTokenRequest();
-      mockListAppsRequest(Array(10).fill({}));
+      const numContainers = 10;
 
-      for (let i = 0; i < 10; i += 1) {
-        mockListAppStatsRequest('123abc', { 0: { state: 'RUNNING' } });
-      }
+      mockTokenRequest();
+      mockContainers(numContainers);
 
       const cluster = new Cluster();
       cluster.start();
 
       setTimeout(() => {
-        expect(cluster.countAvailableContainers()).to.eq(10);
+        expect(cluster._countAvailableContainers()).to.eq(numContainers);
         done();
       }, 50);
     });
@@ -61,7 +62,6 @@ describe('Cluster', () => {
       const mockedRestageRequest = mockRestageAppRequest();
 
       const cluster = new Cluster();
-      mockServer(cluster);
       cluster.start();
 
       setTimeout(() => {
@@ -84,17 +84,16 @@ describe('Cluster', () => {
       mockRestageAppRequest();
 
       const cluster = new Cluster();
-      mockServer(cluster);
       cluster.start();
 
       setTimeout(() => {
-        expect(cluster.countAvailableContainers()).to.eq(1);
+        expect(cluster._countAvailableContainers()).to.eq(1);
         cluster.startBuild({
           buildID: '123abc',
           containerEnvironment: {},
         });
         setTimeout(() => {
-          expect(cluster.countAvailableContainers()).to.eq(0);
+          expect(cluster._countAvailableContainers()).to.eq(0);
           done();
         }, 50);
       }, 50);
@@ -110,11 +109,10 @@ describe('Cluster', () => {
       ).reply(500);
 
       const cluster = new Cluster();
-      mockServer(cluster);
       cluster.start();
 
       setTimeout(() => {
-        expect(cluster.countAvailableContainers()).to.eq(1);
+        expect(cluster._countAvailableContainers()).to.eq(1);
         cluster.startBuild({
           buildID: '123abc',
           containerEnvironment: {},
@@ -123,7 +121,7 @@ describe('Cluster', () => {
           // Adding the catch to make sure all promise rejections are handled
         });
         setTimeout(() => {
-          expect(cluster.countAvailableContainers()).to.eq(1);
+          expect(cluster._countAvailableContainers()).to.eq(1);
           done();
         }, 50);
       }, 50);
@@ -143,7 +141,6 @@ describe('Cluster', () => {
         expect(buildID).to.equal('123abc');
         done();
       };
-      mockServer(cluster);
       cluster.start();
 
       setTimeout(() => {
@@ -166,7 +163,6 @@ describe('Cluster', () => {
       process.env.BUILD_TIMEOUT_SECONDS = -1;
 
       const cluster = new Cluster();
-      mockServer(cluster);
       cluster.start();
 
       setTimeout(() => {
@@ -238,6 +234,34 @@ describe('Cluster', () => {
         expect(statusCallbackNock.isDone()).to.be.false;
         done();
       }, 200);
+    });
+  });
+
+  describe('.canStartBuild()', () => {
+    it('returns true if there are available containers', (done) => {
+      mockTokenRequest();
+      mockContainers(1);
+
+      const cluster = new Cluster();
+      cluster.start();
+
+      setTimeout(() => {
+        expect(cluster.canStartBuild()).to.be.true;
+        done();
+      }, 50);
+    });
+
+    it('returns false if there are no available containers', (done) => {
+      mockTokenRequest();
+      mockContainers(0);
+
+      const cluster = new Cluster();
+      cluster.start();
+
+      setTimeout(() => {
+        expect(cluster.canStartBuild()).to.be.false;
+        done();
+      }, 50);
     });
   });
 });

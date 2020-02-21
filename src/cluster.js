@@ -2,7 +2,6 @@
 const BuildTimeoutReporter = require('./build-timeout-reporter');
 const CloudFoundryAPIClient = require('./cloud-foundry-api-client');
 const logger = require('./logger');
-const server = require('./server');
 
 class NoContainersAvailableError extends Error {
   constructor() {
@@ -15,15 +14,13 @@ class Cluster {
     this._containers = [];
     this._monitoringCluster = false;
     this._apiClient = new CloudFoundryAPIClient();
-    this._server = server(this);
   }
 
-  countAvailableContainers() {
-    return this._containers.filter((container) => !container.build).length;
+  canStartBuild() {
+    return this._countAvailableContainers() > 0;
   }
 
   start() {
-    this._server.start();
     this._monitoringCluster = true;
     this._monitorCluster();
   }
@@ -40,7 +37,6 @@ class Cluster {
   }
 
   stop() {
-    this._server.stop();
     this._monitoringCluster = false;
   }
 
@@ -59,6 +55,10 @@ class Cluster {
   _buildTimeoutMilliseconds() {
     const timeoutSeconds = parseInt(process.env.BUILD_TIMEOUT_SECONDS, 10) || 21 * 60;
     return timeoutSeconds * 1000;
+  }
+
+  _countAvailableContainers() {
+    return this._containers.filter((container) => !container.build).length;
   }
 
   _firstAvailableContainer() {
