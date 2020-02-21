@@ -1,4 +1,4 @@
-const request = require('request');
+const axios = require('axios');
 const logger = require('./logger');
 
 class BuildTimeoutReporter {
@@ -15,29 +15,31 @@ class BuildTimeoutReporter {
     });
   }
 
-  _request(method, url, json) {
-    return new Promise((resolve, reject) => {
-      request({
-        method: method.toUpperCase(),
-        url,
-        json,
-      }, (error, response, body) => {
-        if (error) {
-          reject(error);
-        } else if (response.statusCode > 399) {
-          const errorMessage = `Received status code: ${response.statusCode}`;
-          reject(new Error(body || errorMessage));
-        } else {
-          resolve(body);
-        }
-      });
-    });
+  _request(url, json) {
+    return axios.post(url, json);
+
+    // return new Promise((resolve, reject) => {
+    //   request({
+    //     method: method.toUpperCase(),
+    //     url,
+    //     json,
+    //   }, (error, response, body) => {
+    //     if (error) {
+    //       reject(error);
+    //     } else if (response.statusCode > 399) {
+    //       const errorMessage = `Received status code: ${response.statusCode}`;
+    //       reject(new Error(body || errorMessage));
+    //     } else {
+    //       resolve(body);
+    //     }
+    //   });
+    // });
   }
 
   _sendBuildLogRequest() {
     const url = this._build.containerEnvironment.LOG_CALLBACK;
     logger.verbose(`Sending timeout log request for ${this._build.buildID}`);
-    return this._request('POST', url, {
+    return this._request(url, {
       output: Buffer.from('The build timed out').toString('base64'),
       source: 'Build scheduler',
     });
@@ -46,7 +48,7 @@ class BuildTimeoutReporter {
   _sendBuildStatusRequest() {
     const url = this._build.containerEnvironment.STATUS_CALLBACK;
     logger.verbose(`Sending timeout status request for ${this._build.buildID}`);
-    return this._request('POST', url, {
+    return this._request(url, {
       message: Buffer.from('The build timed out').toString('base64'),
       status: 'error',
     });

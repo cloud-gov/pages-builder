@@ -1,4 +1,4 @@
-const request = require('request');
+const axios = require('axios');
 const url = require('url');
 const CloudFoundryAuthClient = require('./cloud-foundry-auth-client');
 
@@ -16,7 +16,7 @@ class CloudFoundryAPIClient {
       'GET',
       `/v2/spaces/${this._spaceGUID()}/apps`,
       token
-    )).then((body) => this._filterAppsResponse(JSON.parse(body)));
+    )).then((body) => this._filterAppsResponse(body));
   }
 
   fetchAppStats(appGUID) {
@@ -32,7 +32,7 @@ class CloudFoundryAPIClient {
       .then((stats) => ({
         guid: container.guid,
         name: container.name,
-        states: this._appInstanceStates(JSON.parse(stats)),
+        states: this._appInstanceStates(stats),
       }));
   }
 
@@ -142,25 +142,14 @@ class CloudFoundryAPIClient {
   }
 
   _request(method, path, accessToken, json) {
-    return new Promise((resolve, reject) => {
-      request({
-        method: method.toUpperCase(),
-        url: this._resolveAPIURL(path),
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-        json,
-      }, (error, response, body) => {
-        if (error) {
-          reject(error);
-        } else if (response.statusCode > 399) {
-          const errorMessage = `Received status code: ${response.statusCode}`;
-          reject(new Error(body || errorMessage));
-        } else {
-          resolve(body);
-        }
-      });
-    });
+    return axios({
+      method: method.toUpperCase(),
+      url: this._resolveAPIURL(path),
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      data: json,
+    }).then((response) => response.data);
   }
 
   _spaceGUID() {
