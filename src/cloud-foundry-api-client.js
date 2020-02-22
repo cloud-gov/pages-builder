@@ -55,6 +55,20 @@ class CloudFoundryAPIClient {
       });
   }
 
+  fetchActiveTasksForApp(appGUID) {
+    const params = 'states=PENDING,RUNNING,CANCELING';
+    return this._authRequest('GET', `/v3/apps/${appGUID}/tasks?${params}`)
+      .then(data => data.resources);
+  }
+
+  startTaskForApp(task, appGUID) {
+    return this._authRequest('POST', `/v3/apps/${appGUID}/tasks`, task);
+  }
+
+  stopTask(taskGUID) {
+    return this._authRequest('POST', `/v3/tasks/${taskGUID}/actions/cancel`);
+  }
+
   getBuildContainersState() {
     const containerErrors = [];
     let numBuildContainers;
@@ -150,6 +164,11 @@ class CloudFoundryAPIClient {
       },
       data: json,
     }).then(response => response.data);
+  }
+
+  _authRequest(method, path, json) {
+    return this._authClient.accessToken()
+      .then(token => this._request(method, path, token, json));
   }
 
   _spaceGUID() {

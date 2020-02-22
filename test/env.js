@@ -1,3 +1,9 @@
+// Setup Chai
+const chai = require('chai');
+const chaiAsPromised = require('chai-as-promised');
+
+chai.use(chaiAsPromised);
+
 // AWS Services
 process.env.SQS_URL = 'https://sqs.us-east-1.amazonaws.com/123abc/456def';
 

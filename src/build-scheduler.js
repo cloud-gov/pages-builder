@@ -33,17 +33,17 @@ class BuildScheduler {
     });
   }
 
-  _attemptToStartBuild(build) {
+  async _attemptToStartBuild(build) {
     logger.verbose('Attempting to start build');
 
-    if (this._builderPool.canStartBuild()) {
+    if (await this._builderPool.canStartBuild()) {
       return this._startBuildAndDeleteMessage(build);
     }
     logger.info(
-      'No containers available. Stopping build %s and waiting',
+      'No resources available for build %s, waiting...',
       build.buildID
     );
-    return null;
+    return Promise.resolve(null);
   }
 
   _findAndScheduleNewBuild() {

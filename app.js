@@ -1,14 +1,14 @@
 const cfenv = require('cfenv');
 const AWS = require('./src/aws');
 const BuildScheduler = require('./src/build-scheduler');
-const Cluster = require('./src/cluster');
+const CFApplicationPool = require('./src/cf-application-pool');
 const logger = require('./src/logger');
 const createServer = require('./src/server');
 const SQSClient = require('./src/sqs-client');
 
 const appEnv = cfenv.getAppEnv();
 
-const { APP_ENV, NEW_RELIC_APP_NAME } = process.env;
+const { APP_ENV, NEW_RELIC_APP_NAME, BUILD_TIMEOUT_SECONDS } = process.env;
 
 // If settings present, start New Relic
 if (NEW_RELIC_APP_NAME) {
@@ -20,8 +20,9 @@ if (NEW_RELIC_APP_NAME) {
 }
 
 const queueURL = appEnv.getServiceCreds(`federalist-${APP_ENV}-sqs-creds`).sqs_url;
+const buildTimeoutMils = 1000 * (parseInt(BUILD_TIMEOUT_SECONDS, 10) || 21 * 60);
 
-const builderPool = new Cluster();
+const builderPool = new CFApplicationPool(buildTimeoutMils);
 const buildQueue = new SQSClient(new AWS.SQS(), queueURL);
 const server = createServer(builderPool, buildQueue);
 
