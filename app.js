@@ -1,14 +1,18 @@
-const cfenv = require('cfenv');
+const appEnv = require('./env');
 const AWS = require('./src/aws');
 const BuildScheduler = require('./src/build-scheduler');
-const CFApplicationPool = require('./src/cf-application-pool');
 const logger = require('./src/logger');
 const createServer = require('./src/server');
 const SQSClient = require('./src/sqs-client');
 
-const appEnv = cfenv.getAppEnv();
-
-const { APP_ENV, NEW_RELIC_APP_NAME, BUILD_TIMEOUT_SECONDS } = process.env;
+const {
+  APP_ENV,
+  NEW_RELIC_APP_NAME,
+  BUILD_TIMEOUT_SECONDS,
+  BUILDER_POOL_TYPE,
+  TASK_POOL_APP_NAME,
+  TASK_POOL_APP_COMMAND,
+} = process.env;
 
 // If settings present, start New Relic
 if (NEW_RELIC_APP_NAME) {
@@ -20,9 +24,15 @@ if (NEW_RELIC_APP_NAME) {
 }
 
 const queueURL = appEnv.getServiceCreds(`federalist-${APP_ENV}-sqs-creds`).sqs_url;
-const buildTimeoutMils = 1000 * (parseInt(BUILD_TIMEOUT_SECONDS, 10) || 21 * 60);
+const buildTimeout = 1000 * (parseInt(BUILD_TIMEOUT_SECONDS, 10) || 21 * 60); // milliseconds
 
-const builderPool = new CFApplicationPool(buildTimeoutMils);
+// eslint-disable-next-line no-use-before-define
+const BuilderPool = getBuilderPool(BUILDER_POOL_TYPE);
+const builderPool = new BuilderPool({
+  buildTimeout,
+  taskAppName: TASK_POOL_APP_NAME,
+  taskAppCommand: TASK_POOL_APP_COMMAND,
+});
 const buildQueue = new SQSClient(new AWS.SQS(), queueURL);
 const server = createServer(builderPool, buildQueue);
 
@@ -31,4 +41,18 @@ const buildScheduler = new BuildScheduler(
   buildQueue,
   server
 );
+
+process.on('unhandledRejection', (err) => {
+  logger.error(err);
+  process.exit(1);
+});
+
 buildScheduler.start();
+
+function getBuilderPool(type) {
+  /* eslint-disable global-require */
+  return type === 'task'
+    ? require('./src/cf-task-pool')
+    : require('./src/cf-application-pool');
+  /* eslint-enable global-require */
+}

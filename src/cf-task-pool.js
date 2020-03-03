@@ -2,30 +2,37 @@
 const BuildTimeoutReporter = require('./build-timeout-reporter');
 const CloudFoundryAPIClient = require('./cloud-foundry-api-client');
 const logger = require('./logger');
+const appEnv = require('../env');
 
 class TaskStartError extends Error {}
 
 class CFTaskPool {
-  constructor(buildTimeoutMilliseconds, appGUID) {
-    this._buildTimeoutMilliseconds = buildTimeoutMilliseconds;
-    this._appGUID = appGUID;
-    this._builds = {};
+  constructor({ buildTimeout, taskAppName, taskAppCommand }) {
     this._apiClient = new CloudFoundryAPIClient();
+    this._buildTimeout = buildTimeout;
+    this._taskAppName = taskAppName;
+    this._taskAppCommand = taskAppCommand;
+
     this._maxMemory = 10240;
     this._maxDisk = 10240;
     this._defaultMemory = 1024;
     this._defaultDisk = 2048;
+
+    this._builds = {};
+    this._taskAppGUID = null;
   }
 
   canStartBuild() {
     return this._hasAvailableMemory();
   }
 
-  start() {}
+  start() {
+    return this._setTaskAppGUID(this._taskAppName);
+  }
 
   startBuild(build) {
     const buildTask = this._buildTask(build);
-    return this._apiClient.startTaskForApp(buildTask, this._appGUID)
+    return this._apiClient.startTaskForApp(buildTask, this._taskAppGUID)
       .then((task) => {
         logger.info('Started build %s in task %s guid %s', build.buildID, task.name, task.guid);
         this._builds[build.buildID] = {
@@ -36,7 +43,9 @@ class CFTaskPool {
       .catch(error => new TaskStartError(error.message));
   }
 
-  stop() {}
+  stop() {
+    return true;
+  }
 
   stopBuild(buildID) {
     logger.info('Stopping build', buildID);
@@ -49,23 +58,39 @@ class CFTaskPool {
       });
   }
 
+  _setTaskAppGUID(taskAppName) {
+    return this._apiClient.fetchAppByName(taskAppName)
+      .then((app) => {
+        if (!app) {
+          throw new Error(`Unable to find application with name: ${taskAppName}`);
+        }
+        this._taskAppGUID = app.guid;
+        return true;
+      });
+  }
+
   _buildTask(build) {
+    const { containerEnvironment: e } = build;
+
+    e.BUILDER_CALLBACK = appEnv.url;
+    e.STATUS_CALLBACK = appEnv.url;
+
     return {
-      name: `build-${build.buildID}`,
+      name: `build-${e.BUILD_ID}`,
       disk_in_mb: 2048,
       memory_in_mb: 2048,
-      command: 'python main.py areeeeeegs....',
+      command: `${this._taskAppCommand} ${JSON.stringify(e)}`,
     };
   }
 
   _createBuildTimeout(build) {
     return setTimeout(
-      () => this._timeoutBuild(build), this._buildTimeoutMilliseconds
+      () => this._timeoutBuild(build), this._buildTimeout
     );
   }
 
   async _hasAvailableMemory() {
-    const tasks = await this._apiClient.fetchActiveTasksForApp(this._appGUID);
+    const tasks = await this._apiClient.fetchActiveTasksForApp(this._taskAppGUID);
     const { memory, disk } = tasks.reduce((usage, task) => {
       /* eslint-disable no-param-reassign */
       usage.memory += task.memory_in_mb;

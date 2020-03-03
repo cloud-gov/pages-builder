@@ -1,12 +1,19 @@
-const cfenv = require('cfenv');
 const jwt = require('jsonwebtoken');
 const axios = require('axios');
 const qs = require('querystring');
+const appEnv = require('../env');
 
 class CloudFoundryAuthClient {
   constructor() {
-    this._username = this._cloudFoundryCredentials().DEPLOY_USER_USERNAME;
-    this._password = this._cloudFoundryCredentials().DEPLOY_USER_PASSWORD;
+    const {
+      DEPLOY_USER_USERNAME,
+      DEPLOY_USER_PASSWORD,
+      username,
+      password,
+    } = this._cloudFoundryCredentials();
+
+    this._username = DEPLOY_USER_USERNAME || username;
+    this._password = DEPLOY_USER_PASSWORD || password;
     this._token = '';
   }
 
@@ -21,7 +28,6 @@ class CloudFoundryAuthClient {
   }
 
   _cloudFoundryCredentials() {
-    const appEnv = cfenv.getAppEnv();
     const cloudFoundryCredentials = appEnv.getServiceCreds('federalist-deploy-user');
 
     if (cloudFoundryCredentials) {

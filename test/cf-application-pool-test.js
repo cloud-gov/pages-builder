@@ -235,7 +235,7 @@ describe('CFApplicationPool', () => {
     });
   });
 
-  describe.only('.canStartBuild()', () => {
+  describe('.canStartBuild()', () => {
     it('returns true if there are available containers', async () => {
       mockTokenRequest();
       mockContainers(1);

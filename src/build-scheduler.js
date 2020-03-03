@@ -47,10 +47,11 @@ class BuildScheduler {
   }
 
   _findAndScheduleNewBuild() {
-    logger.verbose('Receiving message');
+    logger.verbose('Waiting for message');
 
     return this._buildQueue.receiveMessage().then((message) => {
       if (message) {
+        logger.verbose('Received message');
         const build = new Build(message);
         const owner = build.containerEnvironment.OWNER;
         const repo = build.containerEnvironment.REPOSITORY;

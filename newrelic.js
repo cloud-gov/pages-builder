@@ -1,6 +1,6 @@
-const cfenv = require('cfenv');
+const appEnv = require('./env');
 
-const creds = cfenv.getAppEnv().getServiceCreds('federalist-builder-env');
+const creds = appEnv.getServiceCreds('federalist-builder-env');
 
 /**
  * New Relic agent configuration.

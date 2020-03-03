@@ -55,6 +55,13 @@ class CloudFoundryAPIClient {
       });
   }
 
+  // Assumes credentials only have access to the current space
+  fetchAppByName(appName) {
+    const params = `names=${appName}`;
+    return this._authRequest('GET', `/v3/apps?${params}`)
+      .then(data => data.resources.find(app => app.name === appName));
+  }
+
   fetchActiveTasksForApp(appGUID) {
     const params = 'states=PENDING,RUNNING,CANCELING';
     return this._authRequest('GET', `/v3/apps/${appGUID}/tasks?${params}`)
