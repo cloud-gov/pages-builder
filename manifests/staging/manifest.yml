@@ -1,0 +1,26 @@
+---
+applications:
+- name: federalist-builder-staging
+  domain: fr.cloud.gov
+  hostname: federalist-builder-staging
+  disk_quota: 512M
+  memory: 128MB
+  instances: 1
+  services:
+  - federalist-staging-sqs-creds
+  - federalist-deploy-user
+  - federalist-builder-env
+  - credentials-rotator-user
+  - ci-deploy-federalist-builder-user
+  - ci-deploy-federalist-user
+  env:
+    NEW_RELIC_APP_NAME: "federalist-builder-staging"
+    BUILD_TIMEOUT_SECONDS: 2700 # 45 * 60 seconds = 45 minutes
+    BUILD_COMPLETE_CALLBACK_HOST: "https://federalist-builder-staging.fr.cloud.gov"
+    BUILD_CONTAINER_DOCKER_IMAGE_NAME: "federalist-registry-staging.fr.cloud.gov/federalist-garden-build"
+    BUILD_SPACE_GUID: "af7be42d-47d6-4b4d-a15a-7098c7695c43"
+    CLOUD_FOUNDRY_API_HOST: "https://api.fr.cloud.gov"
+    CLOUD_FOUNDRY_OAUTH_TOKEN_URL: "https://login.fr.cloud.gov/oauth/token"
+    LOG_LEVEL: "verbose"
+    EXPECTED_NUM_BUILD_CONTAINERS: 2
+    APP_ENV: "staging"
