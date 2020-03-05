@@ -12,19 +12,22 @@ class CloudFoundryAPIClient {
   }
 
   fetchBuildContainers() {
-    return this._authClient.accessToken().then(token => this._request(
-      'GET',
-      `/v2/spaces/${this._spaceGUID()}/apps`,
-      token
-    )).then(body => this._filterAppsResponse(body));
+    return this._authClient.accessToken()
+      .then(token => this._request(
+        'GET',
+        `/v2/spaces/${this._spaceGUID()}/apps`,
+        token
+      ))
+      .then(body => this._filterAppsResponse(body));
   }
 
   fetchAppStats(appGUID) {
-    return this._authClient.accessToken().then(token => this._request(
-      'GET',
-      `/v2/apps/${appGUID}/stats`,
-      token
-    ));
+    return this._authClient.accessToken()
+      .then(token => this._request(
+        'GET',
+        `/v2/apps/${appGUID}/stats`,
+        token
+      ));
   }
 
   fetchAppInstanceStates(container) {
@@ -74,7 +77,8 @@ class CloudFoundryAPIClient {
         }
 
         return this.fetchAllAppInstanceErrors(startedContainers);
-      }).then(instanceErrors => containerErrors.concat(instanceErrors))
+      })
+      .then(instanceErrors => containerErrors.concat(instanceErrors))
       .then((errors) => {
         if (errors.length) {
           return { error: errors.join('\n') };
@@ -88,16 +92,18 @@ class CloudFoundryAPIClient {
   }
 
   updateBuildContainer(container, environment) {
-    return this._authClient.accessToken().then(token => this._request(
-      'PUT',
-      container.url,
-      token,
-      { environment_json: environment }
-    )).then(() => this._authClient.accessToken()).then(token => this._request(
-      'POST',
-      `${container.url}/restage`,
-      token
-    ));
+    return this._authClient.accessToken()
+      .then(token => this._request(
+        'PUT',
+        container.url,
+        token,
+        { environment_json: environment }
+      ))
+      .then(() => this._authClient.accessToken()).then(token => this._request(
+        'POST',
+        `${container.url}/restage`,
+        token
+      ));
   }
 
   _buildContainerImageName() {
@@ -149,7 +155,8 @@ class CloudFoundryAPIClient {
         Authorization: `Bearer ${accessToken}`,
       },
       data: json,
-    }).then(response => response.data);
+    })
+      .then(response => response.data);
   }
 
   _spaceGUID() {
