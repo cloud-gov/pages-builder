@@ -18,8 +18,8 @@ const sqsCreds = appEnv.getServiceCreds(`federalist-${spaceName}-sqs-creds`);
 // Some helpful attributes
 appEnv.cloudFoundryOAuthTokenUrl = CLOUD_FOUNDRY_OAUTH_TOKEN_URL;
 appEnv.cloudFoundryCreds = {
-  username: cfCreds.DEPLOY_USER_USERNAME,
-  password: cfCreds.DEPLOY_USER_PASSWORD,
+  username: cfCreds.DEPLOY_USER_USERNAME || cfCreds.username,
+  password: cfCreds.DEPLOY_USER_PASSWORD || cfCreds.password,
 };
 appEnv.cloudFoundryApiHost = cfApiHost;
 
