@@ -1,4 +1,4 @@
-const appEnv = require('./env');
+const { newRelicConfig } = require('./env');
 const logger = require('./src/logger');
 
 /**
@@ -9,8 +9,6 @@ const logger = require('./src/logger');
  * See node_modules/lib/config.defaults.js in the agent distribution for a more complete
  * description of configuration variables and their potential values.
  */
-const newRelicConfig = appEnv.newRelicConfig;
-
 logger.info(`Activating New Relic: ${newRelicConfig.app_name}`);
 
 exports.config = {

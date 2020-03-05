@@ -1,5 +1,6 @@
 const request = require('request');
 const url = require('url');
+const appEnv = require('../env');
 const CloudFoundryAuthClient = require('./cloud-foundry-auth-client');
 
 const STATE_STARTED = 'STARTED';
@@ -14,7 +15,7 @@ class CloudFoundryAPIClient {
   fetchBuildContainers() {
     return this._authClient.accessToken().then((token) => this._request(
       'GET',
-      `/v2/spaces/${this._spaceGUID()}/apps`,
+      `/v2/spaces/${appEnv.spaceGUID}/apps`,
       token
     )).then((body) => this._filterAppsResponse(JSON.parse(body)));
   }
@@ -135,10 +136,7 @@ class CloudFoundryAPIClient {
   }
 
   _resolveAPIURL(path) {
-    return url.resolve(
-      process.env.CLOUD_FOUNDRY_API_HOST,
-      path
-    );
+    return url.resolve(appEnv.cloudFoundryApiHost, path);
   }
 
   _request(method, path, accessToken, json) {
@@ -161,10 +159,6 @@ class CloudFoundryAPIClient {
         }
       });
     });
-  }
-
-  _spaceGUID() {
-    return process.env.BUILD_SPACE_GUID;
   }
 }
 
