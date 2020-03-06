@@ -58,21 +58,21 @@ class Cluster {
   }
 
   _countAvailableContainers() {
-    return this._containers.filter((container) => !container.build).length;
+    return this._containers.filter(container => !container.build).length;
   }
 
   _firstAvailableContainer() {
-    return this._containers.find((container) => !container.build);
+    return this._containers.find(container => !container.build);
   }
 
   _findBuildContainer(buildID) {
-    return this._containers.find((container) => (
+    return this._containers.find(container => (
       container.build && container.build.buildID === buildID
     ));
   }
 
   _findContainer(guid) {
-    return this._containers.find((container) => container.guid === guid);
+    return this._containers.find(container => container.guid === guid);
   }
 
   _monitorCluster() {

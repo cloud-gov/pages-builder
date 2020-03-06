@@ -19,10 +19,10 @@
   "dependencies": {
     "@hapi/hapi": "^19.1.1",
     "aws-sdk": "^2.623.0",
+    "axios": "^0.19.2",
     "cfenv": "^1.2.2",
     "jsonwebtoken": "^8.5.1",
     "newrelic": "^6.4.0",
-    "request": "^2.88.2",
     "winston": "^3.2.1"
   },
   "devDependencies": {

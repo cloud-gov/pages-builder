@@ -27,4 +27,5 @@ rules: {
   }, {
     "enforceForRenamedProperties": false
   }],
-}
+  'arrow-parens': [2, 'as-needed', { 'requireForBlockBody': true }]
+  }
