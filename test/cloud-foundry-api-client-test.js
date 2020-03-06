@@ -25,14 +25,16 @@ describe('CloudFoundryAPIClient', () => {
       mockListAppStatsRequest(guid, response);
 
       const apiClient = new CloudFoundryAPIClient();
-      apiClient.fetchAppStats(guid).then((appInstances) => {
-        expect(appInstances).to.deep.equal(JSON.stringify(response));
-        return apiClient._appInstanceStates(JSON.parse(appInstances));
-      }).then((statesCount) => {
-        expect(statesCount.RUNNING).to.deep.equal(2);
-        expect(statesCount.FLAPPING).to.deep.equal(1);
-        done();
-      })
+      apiClient.fetchAppStats(guid)
+        .then((appInstances) => {
+          expect(appInstances).to.deep.equal(response);
+          return apiClient._appInstanceStates(appInstances);
+        })
+        .then((statesCount) => {
+          expect(statesCount.RUNNING).to.deep.equal(2);
+          expect(statesCount.FLAPPING).to.deep.equal(1);
+          done();
+        })
         .catch(done);
     });
   });
@@ -43,10 +45,11 @@ describe('CloudFoundryAPIClient', () => {
       mockListAppsRequest([]);
 
       const apiClient = new CloudFoundryAPIClient();
-      apiClient.fetchBuildContainers().then((containers) => {
-        expect(containers).to.deep.equal([]);
-        done();
-      });
+      apiClient.fetchBuildContainers()
+        .then((containers) => {
+          expect(containers).to.deep.equal([]);
+          done();
+        });
     });
 
     it('should resolve with an empty array if there are no containers running the build image', (done) => {
@@ -57,10 +60,11 @@ describe('CloudFoundryAPIClient', () => {
       ]);
 
       const apiClient = new CloudFoundryAPIClient();
-      apiClient.fetchBuildContainers().then((containers) => {
-        expect(containers).to.deep.equal([]);
-        done();
-      });
+      apiClient.fetchBuildContainers()
+        .then((containers) => {
+          expect(containers).to.deep.equal([]);
+          done();
+        });
     });
 
     it('should resolve with filtered containers running the build image', (done) => {
@@ -77,17 +81,18 @@ describe('CloudFoundryAPIClient', () => {
       ]);
 
       const apiClient = new CloudFoundryAPIClient();
-      apiClient.fetchBuildContainers().then((containers) => {
-        expect(containers).to.have.length(1);
-        expect(containers).to.deep.equal([{
-          guid: '123abc',
-          url: '/v2/apps/123abc',
-          name: 'builder-1',
-          state: 'STATE',
-          dockerImage: 'example.com:5000/builder/1',
-        }]);
-        done();
-      });
+      apiClient.fetchBuildContainers()
+        .then((containers) => {
+          expect(containers).to.have.length(1);
+          expect(containers).to.deep.equal([{
+            guid: '123abc',
+            url: '/v2/apps/123abc',
+            name: 'builder-1',
+            state: 'STATE',
+            dockerImage: 'example.com:5000/builder/1',
+          }]);
+          done();
+        });
     });
   });
 
@@ -105,11 +110,11 @@ describe('CloudFoundryAPIClient', () => {
       mockRestageAppRequest(guid, environment);
 
       const apiClient = new CloudFoundryAPIClient();
-      apiClient.updateBuildContainer(container, environment).then((response) => {
-        const parsedResponse = JSON.parse(response);
-        expect(parsedResponse.entity.environment_json).to.deep.equal(environment);
-        done();
-      });
+      apiClient.updateBuildContainer(container, environment)
+        .then((response) => {
+          expect(response.entity.environment_json).to.deep.equal(environment);
+          done();
+        });
     });
   });
 
@@ -137,14 +142,16 @@ describe('CloudFoundryAPIClient', () => {
       mockListAppStatsRequest('456def', { 0: { state: 'RUNNING' } });
 
       const apiClient = new CloudFoundryAPIClient();
-      apiClient.getBuildContainersState().then((state) => {
-        expect(state).to.deep.equal({
-          expected: 2,
-          found: 2,
-          started: 2,
-        });
-        done();
-      }).catch(done);
+      apiClient.getBuildContainersState()
+        .then((state) => {
+          expect(state).to.deep.equal({
+            expected: 2,
+            found: 2,
+            started: 2,
+          });
+          done();
+        })
+        .catch(done);
     });
 
     it('should resolve with an error if there are too few build containers', (done) => {
@@ -160,15 +167,17 @@ describe('CloudFoundryAPIClient', () => {
       mockListAppStatsRequest('123abc', { 0: { state: 'RUNNING' } });
 
       const apiClient = new CloudFoundryAPIClient();
-      apiClient.getBuildContainersState().then((state) => {
-        expect(state).to.deep.equal({
-          error: [
-            'Expected 2 build containers but only 1 found.',
-            'Not all build containers are in the STARTED state.',
-          ].join('\n'),
-        });
-        done();
-      }).catch(done);
+      apiClient.getBuildContainersState()
+        .then((state) => {
+          expect(state).to.deep.equal({
+            error: [
+              'Expected 2 build containers but only 1 found.',
+              'Not all build containers are in the STARTED state.',
+            ].join('\n'),
+          });
+          done();
+        })
+        .catch(done);
     });
 
     it('should resolve with an error if not all containers are started', (done) => {
@@ -191,12 +200,13 @@ describe('CloudFoundryAPIClient', () => {
       mockListAppStatsRequest('456def', { 0: { state: 'RUNNING' } });
 
       const apiClient = new CloudFoundryAPIClient();
-      apiClient.getBuildContainersState().then((state) => {
-        expect(state).to.deep.equal({
-          error: 'Not all build containers are in the STARTED state.',
+      apiClient.getBuildContainersState()
+        .then((state) => {
+          expect(state).to.deep.equal({
+            error: 'Not all build containers are in the STARTED state.',
+          });
+          done();
         });
-        done();
-      });
     });
 
     it("should resolve with an error if any started containers' instances are failing", (done) => {
@@ -224,12 +234,13 @@ describe('CloudFoundryAPIClient', () => {
       });
 
       const apiClient = new CloudFoundryAPIClient();
-      apiClient.getBuildContainersState().then((state) => {
-        expect(state).to.deep.equal({
-          error: 'builder-2:\tNot all instances for are running. {"RUNNING":1,"CRASHED":1}',
+      apiClient.getBuildContainersState()
+        .then((state) => {
+          expect(state).to.deep.equal({
+            error: 'builder-2:\tNot all instances for are running. {"RUNNING":1,"CRASHED":1}',
+          });
+          done();
         });
-        done();
-      });
     });
   });
 
@@ -255,11 +266,13 @@ describe('CloudFoundryAPIClient', () => {
     mockListAppStatsRequest('456def', {});
 
     const apiClient = new CloudFoundryAPIClient();
-    apiClient.getBuildContainersState().then((state) => {
-      expect(state).to.deep.equal({
-        error: 'builder-2 has 0 running instances',
-      });
-      done();
-    }).catch(done);
+    apiClient.getBuildContainersState()
+      .then((state) => {
+        expect(state).to.deep.equal({
+          error: 'builder-2 has 0 running instances',
+        });
+        done();
+      })
+      .catch(done);
   });
 });

@@ -13,13 +13,13 @@ const mockedSQSReceiveMessage = (params, callback) => callback(null, {
 
 const mockedSQSDeleteMessage = (params, callback) => callback();
 
-const mockBuildQueue = (sqs) => new SQSClient({
+const mockBuildQueue = sqs => new SQSClient({
   receiveMessage: mockedSQSReceiveMessage,
   deleteMessage: mockedSQSDeleteMessage,
   ...sqs,
 });
 
-const mockBuilderPool = (pool) => ({
+const mockBuilderPool = pool => ({
   canStartBuild: () => false,
   start: () => undefined,
   startBuild: () => Promise.resolve(),

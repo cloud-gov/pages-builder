@@ -1,4 +1,4 @@
-const request = require('request');
+const axios = require('axios');
 const url = require('url');
 const CloudFoundryAuthClient = require('./cloud-foundry-auth-client');
 
@@ -12,34 +12,37 @@ class CloudFoundryAPIClient {
   }
 
   fetchBuildContainers() {
-    return this._authClient.accessToken().then((token) => this._request(
-      'GET',
-      `/v2/spaces/${this._spaceGUID()}/apps`,
-      token
-    )).then((body) => this._filterAppsResponse(JSON.parse(body)));
+    return this._authClient.accessToken()
+      .then(token => this._request(
+        'GET',
+        `/v2/spaces/${this._spaceGUID()}/apps`,
+        token
+      ))
+      .then(body => this._filterAppsResponse(body));
   }
 
   fetchAppStats(appGUID) {
-    return this._authClient.accessToken().then((token) => this._request(
-      'GET',
-      `/v2/apps/${appGUID}/stats`,
-      token
-    ));
+    return this._authClient.accessToken()
+      .then(token => this._request(
+        'GET',
+        `/v2/apps/${appGUID}/stats`,
+        token
+      ));
   }
 
   fetchAppInstanceStates(container) {
     return this.fetchAppStats(container.guid)
-      .then((stats) => ({
+      .then(stats => ({
         guid: container.guid,
         name: container.name,
-        states: this._appInstanceStates(JSON.parse(stats)),
+        states: this._appInstanceStates(stats),
       }));
   }
 
   fetchAllAppInstanceErrors(buildContainers) {
     const instanceErrors = [];
     let states;
-    const promises = buildContainers.map((container) => this.fetchAppInstanceStates(container));
+    const promises = buildContainers.map(container => this.fetchAppInstanceStates(container));
 
     return Promise.all(promises)
       .then((instanceStates) => {
@@ -63,7 +66,7 @@ class CloudFoundryAPIClient {
     return this.fetchBuildContainers()
       .then((buildContainers) => {
         numBuildContainers = buildContainers.length;
-        startedContainers = buildContainers.filter((bc) => bc.state === STATE_STARTED);
+        startedContainers = buildContainers.filter(bc => bc.state === STATE_STARTED);
 
         if (numBuildContainers < expectedNumBuildContainers) {
           containerErrors.push(`Expected ${expectedNumBuildContainers} build containers but only ${numBuildContainers} found.`);
@@ -74,7 +77,8 @@ class CloudFoundryAPIClient {
         }
 
         return this.fetchAllAppInstanceErrors(startedContainers);
-      }).then((instanceErrors) => containerErrors.concat(instanceErrors))
+      })
+      .then(instanceErrors => containerErrors.concat(instanceErrors))
       .then((errors) => {
         if (errors.length) {
           return { error: errors.join('\n') };
@@ -88,16 +92,18 @@ class CloudFoundryAPIClient {
   }
 
   updateBuildContainer(container, environment) {
-    return this._authClient.accessToken().then((token) => this._request(
-      'PUT',
-      container.url,
-      token,
-      { environment_json: environment }
-    )).then(() => this._authClient.accessToken()).then((token) => this._request(
-      'POST',
-      `${container.url}/restage`,
-      token
-    ));
+    return this._authClient.accessToken()
+      .then(token => this._request(
+        'PUT',
+        container.url,
+        token,
+        { environment_json: environment }
+      ))
+      .then(() => this._authClient.accessToken()).then(token => this._request(
+        'POST',
+        `${container.url}/restage`,
+        token
+      ));
   }
 
   _buildContainerImageName() {
@@ -106,8 +112,8 @@ class CloudFoundryAPIClient {
 
   _filterAppsResponse(response) {
     return response.resources
-      .map((resource) => this._buildContainerFromAppResponse(resource))
-      .filter((buildContainer) => buildContainer.dockerImage === this._buildContainerImageName());
+      .map(resource => this._buildContainerFromAppResponse(resource))
+      .filter(buildContainer => buildContainer.dockerImage === this._buildContainerImageName());
   }
 
   _buildContainerFromAppResponse(appResponse) {
@@ -121,7 +127,7 @@ class CloudFoundryAPIClient {
   }
 
   _appInstanceStates(statsResponse) {
-    const instances = Object.keys(statsResponse).map((i) => statsResponse[i]);
+    const instances = Object.keys(statsResponse).map(i => statsResponse[i]);
     const statesCount = {};
 
     instances.forEach((instance) => {
@@ -142,25 +148,15 @@ class CloudFoundryAPIClient {
   }
 
   _request(method, path, accessToken, json) {
-    return new Promise((resolve, reject) => {
-      request({
-        method: method.toUpperCase(),
-        url: this._resolveAPIURL(path),
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-        json,
-      }, (error, response, body) => {
-        if (error) {
-          reject(error);
-        } else if (response.statusCode > 399) {
-          const errorMessage = `Received status code: ${response.statusCode}`;
-          reject(new Error(body || errorMessage));
-        } else {
-          resolve(body);
-        }
-      });
-    });
+    return axios({
+      method: method.toUpperCase(),
+      url: this._resolveAPIURL(path),
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      data: json,
+    })
+      .then(response => response.data);
   }
 
   _spaceGUID() {

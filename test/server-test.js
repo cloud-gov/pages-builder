@@ -91,7 +91,7 @@ describe('server', () => {
 
       const expectedResult = {
         ok: false,
-        reasons: ['Received status code: 401'],
+        reasons: ['Request failed with status code 401'],
       };
 
       testServer.inject({
