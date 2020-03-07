@@ -1,8 +1,8 @@
 ---
 applications:
 - name: federalist-builder-dev
-  domain: fr.cloud.gov
-  hostname: federalist-builder-dev
+  routes:
+  - route: federalist-builder-dev.fr.cloud.gov
   disk_quota: 512M
   memory: 128MB
   instances: 1
@@ -10,8 +10,8 @@ applications:
   - federalist-dev-sqs-creds
   - federalist-deploy-user
   env:
+    BUILD_CONTAINER_BASE_NAME: "federalist-build-container-dev"
     BUILD_TIMEOUT_SECONDS: 600 # 10 * 60 seconds = 10 minutes
-    BUILD_CONTAINER_DOCKER_IMAGE_NAME: "federalist-registry-staging.fr.cloud.gov/federalist-garden-build-dev"
     CLOUD_FOUNDRY_OAUTH_TOKEN_URL: "https://login.fr.cloud.gov/oauth/token"
-    EXPECTED_NUM_BUILD_CONTAINERS: 1
     LOG_LEVEL: "verbose"
+    NUM_BUILD_CONTAINERS: 1

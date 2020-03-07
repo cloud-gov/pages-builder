@@ -65,13 +65,13 @@ Private configuration values should be in a cloud.gov user-provided service name
 
 Additional configuration is set up through environment variables:
 
+- `BUILD_CONTAINER_BASE_NAME`: (required) the base name of garden build application
 - `BUILD_TIMEOUT_SECONDS`: (required) number of seconds to let a build run before timing out
-- `BUILD_CONTAINER_DOCKER_IMAGE_NAME`: (required) the name of the docker image that is used to run builds
 - `CLOUD_FOUNDRY_OAUTH_TOKEN_URL`: (required) the OAuth2 token URL for Cloud Foundry, e.g. `https://login.fr.cloud.gov`
 - `LOG_LEVEL`: the log level for [winston](https://github.com/winstonjs/winston#logging-levels). Defaults to "info".
 - `NEW_RELIC_APP_NAME`: (required for production/staging) the name of the app in New Relic
+- `NUM_BUILD_CONTAINERS`: (required) the expected number of build containers to be running
 - `PORT`: (local/test only) the port for the server that handles healthcheck pings and build callbacks
-- `EXPECTED_NUM_BUILD_CONTAINERS`: (required) the expected number of build containers to be running
 
 ## Running locally
 

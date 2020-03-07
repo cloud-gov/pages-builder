@@ -3,17 +3,10 @@ const nock = require('nock');
 
 const randString = () => crypto.randomBytes(6).toString('hex');
 
-const expandResource = (resource) => {
+const expandResource = (resource, idx) => {
   const guid = resource.guid || randString();
-  const name = resource.name || randString();
+  const name = resource.name || `test-builder-${idx + 1}`;
   const state = resource.state || randString();
-
-  let dockerImage;
-  if (Object.keys(resource).indexOf('dockerImage') >= 0) {
-    dockerImage = resource.dockerImage;
-  } else {
-    dockerImage = 'example.com:5000/builder/1';
-  }
 
   return {
     metadata: {
@@ -23,7 +16,6 @@ const expandResource = (resource) => {
     entity: {
       name,
       state,
-      docker_image: dockerImage,
     },
   };
 };
