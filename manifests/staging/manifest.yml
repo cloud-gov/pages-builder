@@ -10,9 +10,6 @@ applications:
   - federalist-staging-sqs-creds
   - federalist-deploy-user
   - federalist-builder-env
-  - credentials-rotator-user
-  - ci-deploy-federalist-builder-user
-  - ci-deploy-federalist-user
   env:
     BUILD_CONTAINER_BASE_NAME: "federalist-build-container-staging"
     BUILD_TIMEOUT_SECONDS: 2700 # 45 * 60 seconds = 45 minutes
