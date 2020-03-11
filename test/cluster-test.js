@@ -135,22 +135,25 @@ describe('Cluster', () => {
       mockRestageAppRequest();
 
       process.env.BUILD_TIMEOUT_SECONDS = -1;
+      const build = {
+        buildID: '123abc',
+        containerEnvironment: {
+          BUILD_ID: '456def',
+          LOG_CALLBACK: logCallbackURL.href,
+          STATUS_CALLBACK: statusCallbackURL.href,
+        },
+      };
 
       const cluster = new Cluster();
-      cluster.stopBuild = (buildID) => {
-        expect(buildID).to.equal('123abc');
+      cluster.stopBuild = (build) => {
+        expect(build.buildID).to.equal('123abc');
+        expect(build.containerEnvironment.BUILD_ID).to.equal('456def');
         done();
       };
       cluster.start();
 
       setTimeout(() => {
-        cluster.startBuild({
-          buildID: '123abc',
-          containerEnvironment: {
-            LOG_CALLBACK: logCallbackURL.href,
-            STATUS_CALLBACK: statusCallbackURL.href,
-          },
-        });
+        cluster.startBuild(build);
       }, 50);
     });
 
@@ -185,17 +188,18 @@ describe('Cluster', () => {
   describe('.stopBuild(buildID)', () => {
     it('should make the build for the given buildID available', () => {
       const cluster = new Cluster();
-
+      const build = {
+        buildID: '456def',
+        containerEnvironment: {
+          BUILD_ID: 'fed654',
+          LOG_CALLBACK: logCallbackURL.href,
+          STATUS_CALLBACK: statusCallbackURL.href,
+        },
+      };
       cluster._containers = [
         {
           guid: '123abc',
-          build: {
-            buildID: '456def',
-            containerEnvironment: {
-              LOG_CALLBACK: logCallbackURL.href,
-              STATUS_CALLBACK: statusCallbackURL.href,
-            },
-          },
+          build,
         },
         {
           guid: '789ghi',
@@ -203,7 +207,7 @@ describe('Cluster', () => {
         },
       ];
 
-      cluster.stopBuild('456def');
+      cluster.stopBuild(build);
 
       const container = cluster._containers.find(c => c.guid === '123abc');
 
@@ -213,21 +217,22 @@ describe('Cluster', () => {
 
     it("should not send a request to the build's log and status callback", (done) => {
       const cluster = new Cluster();
-
+      const build = {
+        buildID: '456def',
+        containerEnvironment: {
+          BUILD_ID: 'fed654',
+          LOG_CALLBACK: logCallbackURL.href,
+          STATUS_CALLBACK: statusCallbackURL.href,
+        },
+      };
       cluster._containers = [
         {
           guid: '123abc',
-          build: {
-            buildID: '456def',
-            containerEnvironment: {
-              LOG_CALLBACK: logCallbackURL.href,
-              STATUS_CALLBACK: statusCallbackURL.href,
-            },
-          },
+          build,
         },
       ];
 
-      cluster.stopBuild('456def');
+      cluster.stopBuild(build);
 
       setTimeout(() => {
         expect(logCallbackNock.isDone()).to.be.false;

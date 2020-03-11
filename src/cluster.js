@@ -30,7 +30,11 @@ class Cluster {
 
     if (container) {
       return this._startBuildOnContainer(build, container).then(() => {
-        logger.info('Staged build %s on container %s', build.buildID, container.name);
+        logger.info('Staged build@id=%s - %s on container %s',
+          build.containerEnvironment.BUILD_ID,
+          build.buildID,
+          container.name
+        );
       });
     }
     return Promise.reject(new NoContainersAvailableError());
@@ -40,15 +44,20 @@ class Cluster {
     this._monitoringCluster = false;
   }
 
-  stopBuild(buildID) {
-    logger.info('Stopping build', buildID);
+  stopBuild(build) {
+    logger.info('Stopping build@id=%s - %s',
+      build.containerEnvironment.BUILD_ID,
+      build.buildID);
 
-    const container = this._findBuildContainer(buildID);
+    const container = this._findBuildContainer(build.buildID);
     if (container) {
       clearTimeout(container.timeout);
       container.build = undefined;
     } else {
-      logger.warn('Unable to stop build %s. Container not found.', buildID);
+      logger.warn('Unable to stop build@id=%s - %s. Container not found.',
+        build.containerEnvironment.BUILD_ID,
+        build.buildID
+      );
     }
   }
 
@@ -108,7 +117,10 @@ class Cluster {
     container.build = build; // eslint-disable-line no-param-reassign
     // eslint-disable-next-line no-param-reassign
     container.timeout = setTimeout(() => {
-      logger.warn('Build %s timed out', build.buildID);
+      logger.warn('Build@id=%s - %s timed out',
+      build.containerEnvironment.BUILD_ID,
+      build.buildID
+    );
       this._timeoutBuild(build);
     }, this._buildTimeoutMilliseconds());
     return this._apiClient.updateBuildContainer(
@@ -122,7 +134,7 @@ class Cluster {
   }
 
   _timeoutBuild(build) {
-    this.stopBuild(build.buildID);
+    this.stopBuild(build);
     new BuildTimeoutReporter(build).reportBuildTimeout();
   }
 }

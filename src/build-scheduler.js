@@ -33,14 +33,19 @@ class BuildScheduler {
     });
   }
 
+
   _attemptToStartBuild(build) {
-    logger.verbose('Attempting to start build');
+    logger.verbose('Attempting to start build@id=%s - %s',
+      build.containerEnvironment.BUILD_ID,
+      build.buildID
+    );
 
     if (this._builderPool.canStartBuild()) {
       return this._startBuildAndDeleteMessage(build);
     }
     logger.info(
-      'No containers available. Stopping build %s and waiting',
+      'No containers available. Stopping build@id=%s - %s and waiting',
+      build.containerEnvironment.BUILD_ID,
       build.buildID
     );
     return null;
@@ -55,7 +60,8 @@ class BuildScheduler {
         const owner = build.containerEnvironment.OWNER;
         const repo = build.containerEnvironment.REPOSITORY;
         const branch = build.containerEnvironment.BRANCH;
-        logger.info('New build %s/%s/%s - %s', owner, repo, branch, build.buildID);
+        const buildId = build.containerEnvironment.BUILD_ID;
+        logger.info('New build %s/%s/%s@id=%s - %s', owner, repo, branch, buildId, build.buildID);
 
         return this._attemptToStartBuild(build);
       }
