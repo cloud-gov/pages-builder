@@ -2,7 +2,6 @@ const cfenv = require('cfenv');
 const AWS = require('./src/aws');
 const BuildScheduler = require('./src/build-scheduler');
 const Cluster = require('./src/cluster');
-const logger = require('./src/logger');
 const createServer = require('./src/server');
 const SQSClient = require('./src/sqs-client');
 
