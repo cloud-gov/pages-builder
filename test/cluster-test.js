@@ -145,7 +145,7 @@ describe('Cluster', () => {
       };
 
       const cluster = new Cluster();
-      cluster.stopBuild = (build) => {
+      cluster.stopBuild = () => {
         expect(build.buildID).to.equal('123abc');
         expect(build.containerEnvironment.BUILD_ID).to.equal('456def');
         done();

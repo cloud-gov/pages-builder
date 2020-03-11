@@ -30,11 +30,7 @@ class Cluster {
 
     if (container) {
       return this._startBuildOnContainer(build, container).then(() => {
-        logger.info('Staged build@id=%s - %s on container %s',
-          build.containerEnvironment.BUILD_ID,
-          build.buildID,
-          container.name
-        );
+        this._logBuild(`Staged on container ${container.name}`, build, 'info');
       });
     }
     return Promise.reject(new NoContainersAvailableError());
@@ -45,19 +41,14 @@ class Cluster {
   }
 
   stopBuild(build) {
-    logger.info('Stopping build@id=%s - %s',
-      build.containerEnvironment.BUILD_ID,
-      build.buildID);
+    this._logBuild('Stopping', build, 'info');
 
     const container = this._findBuildContainer(build.buildID);
     if (container) {
       clearTimeout(container.timeout);
       container.build = undefined;
     } else {
-      logger.warn('Unable to stop build@id=%s - %s. Container not found.',
-        build.containerEnvironment.BUILD_ID,
-        build.buildID
-      );
+      this._logBuild('Unable to stop. Container not found.', build, 'warn');
     }
   }
 
@@ -117,10 +108,7 @@ class Cluster {
     container.build = build; // eslint-disable-line no-param-reassign
     // eslint-disable-next-line no-param-reassign
     container.timeout = setTimeout(() => {
-      logger.warn('Build@id=%s - %s timed out',
-        build.containerEnvironment.BUILD_ID,
-        build.buildID
-      );
+      this._logBuild('Timed out', build, 'warn');
       this._timeoutBuild(build);
     }, this._buildTimeoutMilliseconds());
     return this._apiClient.updateBuildContainer(
@@ -136,6 +124,24 @@ class Cluster {
   _timeoutBuild(build) {
     this.stopBuild(build);
     new BuildTimeoutReporter(build).reportBuildTimeout();
+  }
+
+  _logBuild(msg, build, level = 'verbose') {
+    const body = `${msg}: build@%s/%s/%s@id=%s - %s`;
+    const owner = build.containerEnvironment.OWNER;
+    const repo = build.containerEnvironment.REPOSITORY;
+    const branch = build.containerEnvironment.BRANCH;
+    const federalistBuildId = build.containerEnvironment.BUILD_ID;
+    const buildId = build.buildID;
+    if (level === 'error') {
+      logger.error(body, owner, repo, branch, federalistBuildId, buildId);
+    } else if (level === 'info') {
+      logger.info(body, owner, repo, branch, federalistBuildId, buildId);
+    } else if (level === 'warn') {
+      logger.warn(body, owner, repo, branch, federalistBuildId, buildId);
+    } else {
+      logger.verbose(body, owner, repo, branch, federalistBuildId, buildId);
+    }
   }
 }
 
