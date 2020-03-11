@@ -118,9 +118,9 @@ class Cluster {
     // eslint-disable-next-line no-param-reassign
     container.timeout = setTimeout(() => {
       logger.warn('Build@id=%s - %s timed out',
-      build.containerEnvironment.BUILD_ID,
-      build.buildID
-    );
+        build.containerEnvironment.BUILD_ID,
+        build.buildID
+      );
       this._timeoutBuild(build);
     }, this._buildTimeoutMilliseconds());
     return this._apiClient.updateBuildContainer(

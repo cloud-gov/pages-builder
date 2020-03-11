@@ -11,11 +11,7 @@ class BuildTimeoutReporter {
       this._sendBuildLogRequest(),
       this._sendBuildStatusRequest(),
     ]).catch((err) => {
-      logger.error('Error reporting build@id=%s - %s timeout:',
-        this._build.containerEnvironment.BUILD_ID,
-        this._build.buildID,
-        err,
-      );
+      this._log('Error reporting build timeout', 'error');
     });
   }
 
@@ -23,12 +19,20 @@ class BuildTimeoutReporter {
     return axios.post(url, json);
   }
 
+  _log(msg, level = 'verbose') {
+    const body = `${msg} for build@id=%s - %s`;
+    const federalistBuildId = this._build.containerEnvironment.BUILD_ID;
+    const buildId = this._build.buildID;
+    if (level === 'error') {
+      logger.error(body, federalistBuildId, buildId);
+    } else {
+      logger.verbose(body, federalistBuildId, buildId);
+    }
+  }
+
   _sendBuildLogRequest() {
     const url = this._build.containerEnvironment.LOG_CALLBACK;
-    logger.verbose('Sending timeout log request for build@id=%s - %s', 
-      this._build.containerEnvironment.BUILD_ID,
-      this._build.buildID,
-    );
+    this._log('Sending timeout log request');
     return this._request(url, {
       output: Buffer.from('The build timed out').toString('base64'),
       source: 'Build scheduler',
@@ -37,10 +41,7 @@ class BuildTimeoutReporter {
 
   _sendBuildStatusRequest() {
     const url = this._build.containerEnvironment.STATUS_CALLBACK;
-    logger.verbose('Sending timeout status request for build@id=%s - %s',
-      this._build.containerEnvironment.BUILD_ID,
-      this._build.buildID
-    );
+    this._log('Sending timeout status request');
     return this._request(url, {
       message: Buffer.from('The build timed out').toString('base64'),
       status: 'error',

@@ -19,9 +19,11 @@ describe('BuildTimeoutReporter', () => {
       const statusCallbackNock = mockBuildStatusCallback(statusURL);
 
       const build = {
+        buildID: '456def',
         containerEnvironment: {
           LOG_CALLBACK: logURL.href,
           STATUS_CALLBACK: statusURL.href,
+          BUILD_ID: '123abc',
         },
       };
 
