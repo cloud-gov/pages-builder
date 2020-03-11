@@ -21,7 +21,6 @@
     "axios": "^0.19.2",
     "cfenv": "^1.2.2",
     "jsonwebtoken": "^8.5.1",
-    "newrelic": "^6.4.0",
     "winston": "^3.2.1"
   },
   "devDependencies": {

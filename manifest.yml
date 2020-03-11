@@ -14,7 +14,6 @@ services:
 - ci-deploy-federalist-builder-user
 - ci-deploy-federalist-user
 env:
-  NEW_RELIC_APP_NAME: "federalist-builder-prod"
   BUILD_TIMEOUT_SECONDS: 2700 # 45 * 60 seconds = 45 minutes
   SQS_URL: "https://sqs.us-east-1.amazonaws.com/144433228153/federalist-builds"
   BUILD_COMPLETE_CALLBACK_HOST: "https://federalist-builder.fr.cloud.gov"
