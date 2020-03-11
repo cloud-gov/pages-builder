@@ -33,21 +33,29 @@ class BuildScheduler {
     });
   }
 
+  _logBuild(msg, build, level = 'verbose') {
+    const body = `${msg}: build@%s/%s/%s@id=%s - %s`;
+    const owner = build.containerEnvironment.OWNER;
+    const repo = build.containerEnvironment.REPOSITORY;
+    const branch = build.containerEnvironment.BRANCH;
+    const federalistBuildId = build.containerEnvironment.BUILD_ID;
+    const buildId = build.buildID;
+    if (level === 'error') {
+      logger.error(body, owner, repo, branch, federalistBuildId, buildId);
+    } else if (level === 'info') {
+      logger.info(body, owner, repo, branch, federalistBuildId, buildId);
+    } else {
+      logger.verbose(body, owner, repo, branch, federalistBuildId, buildId);
+    }
+  }
 
   _attemptToStartBuild(build) {
-    logger.verbose('Attempting to start build@id=%s - %s',
-      build.containerEnvironment.BUILD_ID,
-      build.buildID
-    );
+    this._logBuild('Attempting to start', build);
 
     if (this._builderPool.canStartBuild()) {
       return this._startBuildAndDeleteMessage(build);
     }
-    logger.info(
-      'No containers available. Stopping build@id=%s - %s and waiting',
-      build.containerEnvironment.BUILD_ID,
-      build.buildID
-    );
+    this._logBuild('No containers available. Stopping build and waiting', build);
     return null;
   }
 
@@ -57,12 +65,7 @@ class BuildScheduler {
     return this._buildQueue.receiveMessage().then((message) => {
       if (message) {
         const build = new Build(message);
-        const owner = build.containerEnvironment.OWNER;
-        const repo = build.containerEnvironment.REPOSITORY;
-        const branch = build.containerEnvironment.BRANCH;
-        const buildId = build.containerEnvironment.BUILD_ID;
-        logger.info('New build %s/%s/%s@id=%s - %s', owner, repo, branch, buildId, build.buildID);
-
+        this._logBuild('New Build', build, 'info');
         return this._attemptToStartBuild(build);
       }
       return null;
@@ -70,7 +73,7 @@ class BuildScheduler {
   }
 
   _startBuildAndDeleteMessage(build) {
-    logger.verbose('Starting build');
+    this._logBuild('Starting', build);
 
     return this._builderPool.startBuild(build)
       .then(() => this._buildQueue.deleteMessage(build.sqsMessage));

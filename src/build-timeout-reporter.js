@@ -11,7 +11,7 @@ class BuildTimeoutReporter {
       this._sendBuildLogRequest(),
       this._sendBuildStatusRequest(),
     ]).catch((err) => {
-      this._log('Error reporting build timeout', 'error');
+      this._logBuild(`Error reporting build timeout: ${err}`, 'error');
     });
   }
 
@@ -19,7 +19,7 @@ class BuildTimeoutReporter {
     return axios.post(url, json);
   }
 
-  _log(msg, level = 'verbose') {
+  _logBuild(msg, level = 'verbose') {
     const body = `${msg} for build@id=%s - %s`;
     const federalistBuildId = this._build.containerEnvironment.BUILD_ID;
     const buildId = this._build.buildID;
@@ -32,7 +32,7 @@ class BuildTimeoutReporter {
 
   _sendBuildLogRequest() {
     const url = this._build.containerEnvironment.LOG_CALLBACK;
-    this._log('Sending timeout log request');
+    this._logBuild('Sending timeout log request');
     return this._request(url, {
       output: Buffer.from('The build timed out').toString('base64'),
       source: 'Build scheduler',
@@ -41,7 +41,7 @@ class BuildTimeoutReporter {
 
   _sendBuildStatusRequest() {
     const url = this._build.containerEnvironment.STATUS_CALLBACK;
-    this._log('Sending timeout status request');
+    this._logBuild('Sending timeout status request');
     return this._request(url, {
       message: Buffer.from('The build timed out').toString('base64'),
       status: 'error',
