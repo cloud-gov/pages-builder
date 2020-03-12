@@ -125,7 +125,6 @@ class Cluster {
     this.stopBuild(build);
     new BuildTimeoutReporter(build).reportBuildTimeout();
   }
-
 }
 
 module.exports = Cluster;
