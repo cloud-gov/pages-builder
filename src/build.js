@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const url = require('url');
+const logger = require('./logger');
 
 class Build {
   constructor(sqsMessage) {
@@ -37,6 +38,24 @@ class Build {
     environment.FEDERALIST_BUILDER_CALLBACK = this._buildCallbackURL(buildID);
 
     return environment;
+  }
+
+  log(msg, level = 'verbose') {
+    const body = `${msg}: build@%s/%s/%s@id=%s - %s`;
+    const owner = this.containerEnvironment.OWNER;
+    const repo = this.containerEnvironment.REPOSITORY;
+    const branch = this.containerEnvironment.BRANCH;
+    const federalistBuildId = this.containerEnvironment.BUILD_ID;
+    const buildId = this.buildID;
+    if (level === 'error') {
+      logger.error(body, owner, repo, branch, federalistBuildId, buildId);
+    } else if (level === 'info') {
+      logger.info(body, owner, repo, branch, federalistBuildId, buildId);
+    } else if (level === 'warn') {
+      logger.warn(body, owner, repo, branch, federalistBuildId, buildId);
+    } else {
+      logger.verbose(body, owner, repo, branch, federalistBuildId, buildId);
+    }
   }
 }
 

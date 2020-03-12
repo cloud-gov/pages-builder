@@ -30,7 +30,7 @@ class Cluster {
 
     if (container) {
       return this._startBuildOnContainer(build, container).then(() => {
-        this._logBuild(`Staged on container ${container.name}`, build, 'info');
+        build.log(`Staged on container ${container.name}`, 'info');
       });
     }
     return Promise.reject(new NoContainersAvailableError());
@@ -41,14 +41,14 @@ class Cluster {
   }
 
   stopBuild(build) {
-    this._logBuild('Stopping', build, 'info');
+    build.log('Stopping', 'info');
 
     const container = this._findBuildContainer(build.buildID);
     if (container) {
       clearTimeout(container.timeout);
       container.build = undefined;
     } else {
-      this._logBuild('Unable to stop. Container not found.', build, 'warn');
+      build.log('Unable to stop. Container not found.', 'warn');
     }
   }
 
@@ -108,7 +108,7 @@ class Cluster {
     container.build = build; // eslint-disable-line no-param-reassign
     // eslint-disable-next-line no-param-reassign
     container.timeout = setTimeout(() => {
-      this._logBuild('Timed out', build, 'warn');
+      build.log('Timed out', 'warn');
       this._timeoutBuild(build);
     }, this._buildTimeoutMilliseconds());
     return this._apiClient.updateBuildContainer(
@@ -126,23 +126,6 @@ class Cluster {
     new BuildTimeoutReporter(build).reportBuildTimeout();
   }
 
-  _logBuild(msg, build, level = 'verbose') {
-    const body = `${msg}: build@%s/%s/%s@id=%s - %s`;
-    const owner = build.containerEnvironment.OWNER;
-    const repo = build.containerEnvironment.REPOSITORY;
-    const branch = build.containerEnvironment.BRANCH;
-    const federalistBuildId = build.containerEnvironment.BUILD_ID;
-    const buildId = build.buildID;
-    if (level === 'error') {
-      logger.error(body, owner, repo, branch, federalistBuildId, buildId);
-    } else if (level === 'info') {
-      logger.info(body, owner, repo, branch, federalistBuildId, buildId);
-    } else if (level === 'warn') {
-      logger.warn(body, owner, repo, branch, federalistBuildId, buildId);
-    } else {
-      logger.verbose(body, owner, repo, branch, federalistBuildId, buildId);
-    }
-  }
 }
 
 module.exports = Cluster;
