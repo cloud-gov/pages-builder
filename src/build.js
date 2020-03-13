@@ -38,6 +38,10 @@ class Build {
 
     return environment;
   }
+
+  federalistBuildId() {
+    return this.containerEnvironment.buildID;
+  }
 }
 
 module.exports = Build;

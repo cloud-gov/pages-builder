@@ -30,7 +30,7 @@ class Cluster {
 
     if (container) {
       return this._startBuildOnContainer(build, container).then(() => {
-        logger.info('Staged build %s on container %s', build.buildID, container.name);
+        logger.info('Staged build %s on container %s', build.federalistBuildId(), container.name);
       });
     }
     return Promise.reject(new NoContainersAvailableError());
@@ -108,7 +108,7 @@ class Cluster {
     container.build = build; // eslint-disable-line no-param-reassign
     // eslint-disable-next-line no-param-reassign
     container.timeout = setTimeout(() => {
-      logger.warn('Build %s timed out', build.buildID);
+      logger.warn('Build %s timed out', build.federalistBuildId());
       this._timeoutBuild(build);
     }, this._buildTimeoutMilliseconds());
     return this._apiClient.updateBuildContainer(

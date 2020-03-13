@@ -11,7 +11,7 @@ class BuildTimeoutReporter {
       this._sendBuildLogRequest(),
       this._sendBuildStatusRequest(),
     ]).catch((err) => {
-      logger.error('Error reporting build timeout:', err);
+      logger.error('Error reporting timeout for build %s: %s', this._build.federalistBuildId(), err);
     });
   }
 
@@ -21,7 +21,7 @@ class BuildTimeoutReporter {
 
   _sendBuildLogRequest() {
     const url = this._build.containerEnvironment.LOG_CALLBACK;
-    logger.verbose(`Sending timeout log request for ${this._build.buildID}`);
+    logger.verbose(`Sending timeout log request for build ${this._build.federalistBuildId()}`);
     return this._request(url, {
       output: Buffer.from('The build timed out').toString('base64'),
       source: 'Build scheduler',
@@ -30,7 +30,7 @@ class BuildTimeoutReporter {
 
   _sendBuildStatusRequest() {
     const url = this._build.containerEnvironment.STATUS_CALLBACK;
-    logger.verbose(`Sending timeout status request for ${this._build.buildID}`);
+    logger.verbose(`Sending timeout status request for build ${this._build.federalistBuildId()}`);
     return this._request(url, {
       message: Buffer.from('The build timed out').toString('base64'),
       status: 'error',
