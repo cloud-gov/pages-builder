@@ -1,5 +1,3 @@
-const cfenv = require('cfenv');
-
 /**
  * New Relic agent configuration.
  *
