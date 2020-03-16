@@ -59,8 +59,9 @@ The SQS message body should be JSON that takes the form of an ECS task override 
 }
 ```
 
-Private configuration values should be in a cloud.gov user-provided service named `federalist-builder-env`:
+Configuration values for NEW RELIC are set in the app's Cloud Foundry environment variables:
 
+- `NEW_RELIC_APP_NAME` the name of the app in New Relic
 - `NEW_RELIC_LICENSE_KEY` the private New Relic license key
 
 Additional configuration is set up through environment variables:
@@ -69,7 +70,6 @@ Additional configuration is set up through environment variables:
 - `BUILD_TIMEOUT_SECONDS`: (required) number of seconds to let a build run before timing out
 - `CLOUD_FOUNDRY_OAUTH_TOKEN_URL`: (required) the OAuth2 token URL for Cloud Foundry, e.g. `https://login.fr.cloud.gov`
 - `LOG_LEVEL`: the log level for [winston](https://github.com/winstonjs/winston#logging-levels). Defaults to "info".
-- `NEW_RELIC_APP_NAME`: (required for production/staging) the name of the app in New Relic
 - `NUM_BUILD_CONTAINERS`: (required) the expected number of build containers to be running
 - `PORT`: (local/test only) the port for the server that handles healthcheck pings and build callbacks
 

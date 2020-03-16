@@ -5,7 +5,10 @@ const Cluster = require('./src/cluster');
 const createServer = require('./src/server');
 const SQSClient = require('./src/sqs-client');
 
-if (appEnv.isAPMConfigured) {
+const { NEW_RELIC_APP_NAME, NEW_RELIC_LICENSE_KEY } = process.env;
+
+// If settings present, start New Relic
+if (NEW_RELIC_APP_NAME && NEW_RELIC_LICENSE_KEY) {
   require('newrelic'); // eslint-disable-line global-require
 }
 
