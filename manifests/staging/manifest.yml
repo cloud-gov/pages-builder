@@ -9,11 +9,9 @@ applications:
   services:
   - federalist-staging-sqs-creds
   - federalist-deploy-user
-  - federalist-builder-env
   env:
     BUILD_CONTAINER_BASE_NAME: "federalist-build-container-staging"
     BUILD_TIMEOUT_SECONDS: 2700 # 45 * 60 seconds = 45 minutes
     CLOUD_FOUNDRY_OAUTH_TOKEN_URL: "https://login.fr.cloud.gov/oauth/token"
     LOG_LEVEL: "verbose"
-    NEW_RELIC_APP_NAME: "federalist-builder-staging"
     NUM_BUILD_CONTAINERS: 2
