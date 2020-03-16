@@ -1,7 +1,3 @@
-const cfenv = require('cfenv');
-
-const creds = cfenv.getAppEnv().getServiceCreds('federalist-builder-env');
-
 /**
  * New Relic agent configuration.
  *
@@ -12,7 +8,7 @@ const creds = cfenv.getAppEnv().getServiceCreds('federalist-builder-env');
  */
 exports.config = {
   app_name: [process.env.NEW_RELIC_APP_NAME],
-  license_key: creds.NEW_RELIC_LICENSE_KEY,
+  license_key: process.env.NEW_RELIC_LICENSE_KEY,
   logging: {
     level: 'info',
   },
