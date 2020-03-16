@@ -9,7 +9,6 @@ instances: 1
 services:
 - federalist-staging-sqs-creds
 - federalist-deploy-user
-- credentials-rotator-user
 - ci-deploy-federalist-builder-user
 - ci-deploy-federalist-user
 env:
