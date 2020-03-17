@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const url = require('url');
+const appEnv = require('../env');
 
 class Build {
   constructor(sqsMessage) {
@@ -12,10 +13,7 @@ class Build {
   }
 
   _buildCallbackURL(buildID) {
-    return url.resolve(
-      process.env.BUILD_COMPLETE_CALLBACK_HOST,
-      `builds/${buildID}/callback`
-    );
+    return url.resolve(appEnv.url, `builds/${buildID}/callback`);
   }
 
   _generateBuildID() {

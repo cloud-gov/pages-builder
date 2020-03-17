@@ -9,8 +9,9 @@
   "description": "Checks an SQS queue and launches Federalist builds",
   "main": "app.js",
   "scripts": {
+    "dev": "node -r .env app",
     "start": "node app",
-    "test": "nyc mocha --require test/env.js --exit",
+    "test": "NODE_ENV=test nyc mocha --require test/env.js --exit",
     "eslint": "eslint ."
   },
   "author": "dhcole",
@@ -26,6 +27,7 @@
   },
   "devDependencies": {
     "chai": "^4.2.0",
+    "dotenv": "^8.2.0",
     "eslint": "^6.8.0",
     "eslint-config-airbnb-base": "^14.0.0",
     "eslint-plugin-import": "^2.20.1",

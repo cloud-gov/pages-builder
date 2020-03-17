@@ -52,11 +52,11 @@ describe('CloudFoundryAPIClient', () => {
         });
     });
 
-    it('should resolve with an empty array if there are no containers running the build image', (done) => {
+    it('should resolve with an empty array if there are no containers with the expected name', (done) => {
       mockTokenRequest();
       mockListAppsRequest([
-        { dockerImage: null },
-        { dockerImage: 'library/registry:2' },
+        { name: 'foo-builder-1' },
+        { name: 'boo-builder-2' },
       ]);
 
       const apiClient = new CloudFoundryAPIClient();
@@ -67,30 +67,33 @@ describe('CloudFoundryAPIClient', () => {
         });
     });
 
-    it('should resolve with filtered containers running the build image', (done) => {
+    it('should resolve with filtered containers with the expected names', (done) => {
+      const container1 = {
+        guid: '123abc',
+        name: 'test-builder-1',
+        state: 'STATE',
+        url: '/v2/apps/123abc',
+      };
+
+      const container2 = {
+        guid: '456def',
+        name: 'test-builder-2',
+        state: 'STATE',
+        url: '/v2/apps/456def',
+      };
+
       mockTokenRequest();
       mockListAppsRequest([
-        { dockerImage: null },
-        { dockerImage: 'library/registry:2' },
-        {
-          guid: '123abc',
-          name: 'builder-1',
-          state: 'STATE',
-          dockerImage: 'example.com:5000/builder/1',
-        },
+        container1,
+        container2,
+        { name: 'test-builder-3' },
       ]);
 
       const apiClient = new CloudFoundryAPIClient();
       apiClient.fetchBuildContainers()
         .then((containers) => {
-          expect(containers).to.have.length(1);
-          expect(containers).to.deep.equal([{
-            guid: '123abc',
-            url: '/v2/apps/123abc',
-            name: 'builder-1',
-            state: 'STATE',
-            dockerImage: 'example.com:5000/builder/1',
-          }]);
+          expect(containers).to.have.length(2);
+          expect(containers).to.deep.equal([container1, container2]);
           done();
         });
     });
@@ -119,22 +122,20 @@ describe('CloudFoundryAPIClient', () => {
   });
 
   describe('.getBuildContainersState()', () => {
-    // these tests rely on the EXPECTED_NUM_BUILD_CONTAINERS env var
+    // these tests rely on the NUM_BUILD_CONTAINERS env var
     // that is set in ./test/env.js
     it('should resolve with the state of the build containers', (done) => {
       mockTokenRequest();
       mockListAppsRequest([
         {
           guid: '123abc',
-          name: 'builder-1',
+          name: 'test-builder-1',
           state: 'STARTED',
-          dockerImage: 'example.com:5000/builder/1',
         },
         {
           guid: '456def',
-          name: 'builder-2',
+          name: 'test-builder-2',
           state: 'STARTED',
-          dockerImage: 'example.com:5000/builder/1',
         },
       ]);
 
@@ -159,9 +160,8 @@ describe('CloudFoundryAPIClient', () => {
       mockListAppsRequest([
         {
           guid: '123abc',
-          name: 'builder-1',
+          name: 'test-builder-1',
           state: 'STARTED',
-          dockerImage: 'example.com:5000/builder/1',
         },
       ]);
       mockListAppStatsRequest('123abc', { 0: { state: 'RUNNING' } });
@@ -185,15 +185,13 @@ describe('CloudFoundryAPIClient', () => {
       mockListAppsRequest([
         {
           guid: '123abc',
-          name: 'builder-1',
+          name: 'test-builder-1',
           state: 'STOPPED',
-          dockerImage: 'example.com:5000/builder/1',
         },
         {
           guid: '456def',
-          name: 'builder-2',
+          name: 'test-builder-2',
           state: 'STARTED',
-          dockerImage: 'example.com:5000/builder/1',
         },
       ]);
 
@@ -214,15 +212,13 @@ describe('CloudFoundryAPIClient', () => {
       mockListAppsRequest([
         {
           guid: '123abc',
-          name: 'builder-1',
+          name: 'test-builder-1',
           state: 'STARTED',
-          dockerImage: 'example.com:5000/builder/1',
         },
         {
           guid: '456def',
-          name: 'builder-2',
+          name: 'test-builder-2',
           state: 'STARTED',
-          dockerImage: 'example.com:5000/builder/1',
         },
       ]);
 
@@ -237,7 +233,7 @@ describe('CloudFoundryAPIClient', () => {
       apiClient.getBuildContainersState()
         .then((state) => {
           expect(state).to.deep.equal({
-            error: 'builder-2:\tNot all instances for are running. {"RUNNING":1,"CRASHED":1}',
+            error: 'test-builder-2:\tNot all instances for are running. {"RUNNING":1,"CRASHED":1}',
           });
           done();
         });
@@ -249,15 +245,13 @@ describe('CloudFoundryAPIClient', () => {
     mockListAppsRequest([
       {
         guid: '123abc',
-        name: 'builder-1',
+        name: 'test-builder-1',
         state: 'STARTED',
-        dockerImage: 'example.com:5000/builder/1',
       },
       {
         guid: '456def',
-        name: 'builder-2',
+        name: 'test-builder-2',
         state: 'STARTED',
-        dockerImage: 'example.com:5000/builder/1',
       },
     ]);
 
@@ -269,7 +263,7 @@ describe('CloudFoundryAPIClient', () => {
     apiClient.getBuildContainersState()
       .then((state) => {
         expect(state).to.deep.equal({
-          error: 'builder-2 has 0 running instances',
+          error: 'test-builder-2 has 0 running instances',
         });
         done();
       })

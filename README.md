@@ -66,18 +66,12 @@ Configuration values for NEW RELIC are set in the app's Cloud Foundry environmen
 
 Additional configuration is set up through environment variables:
 
+- `BUILD_CONTAINER_BASE_NAME`: (required) the base name of garden build application
 - `BUILD_TIMEOUT_SECONDS`: (required) number of seconds to let a build run before timing out
-- `BUILD_COMPLETE_CALLBACK_HOST` (required) the host that a build container should callback to when finished, e.g. `https://federalist-builder.18f.gov`
-- `BUILD_CONTAINER_DOCKER_IMAGE_NAME` (required) the name of the docker image that is used to run builds
-- `BUILD_SPACE_GUID` (required) the guid for the cloud.gov space where the build containers are located
-- `CLOUD_FOUNDRY_API_HOST` (required) the host for the Cloud Foundry API endpoint, e.g. `https://api.fr.cloud.gov`
-- `CLOUD_FOUNDRY_OAUTH_TOKEN_URL` (required) the OAuth2 token URL for Cloud Foundry, e.g. `https://login.fr.cloud.gov`
-- `DEPLOY_USER_USERNAME` (required) the username for the deploy user that starts builds in cloud.gov.
-- `DEPLOY_USER_PASSWORD` (required) the password for the deploy user that starts builds in cloud.gov.
-- `LOG_LEVEL` the log level for [winston](https://github.com/winstonjs/winston#logging-levels). Defaults to "info".
-- `PORT` the port for the server that handles healthcheck pings and build callbacks
-- `SQS_URL` (required) the URL of the SQS queue to poll
-- `EXPECTED_NUM_BUILD_CONTAINERS` (required) the expected number of build containers to be running
+- `CLOUD_FOUNDRY_OAUTH_TOKEN_URL`: (required) the OAuth2 token URL for Cloud Foundry, e.g. `https://login.fr.cloud.gov`
+- `LOG_LEVEL`: the log level for [winston](https://github.com/winstonjs/winston#logging-levels). Defaults to "info".
+- `NUM_BUILD_CONTAINERS`: (required) the expected number of build containers to be running
+- `PORT`: (local/test only) the port for the server that handles healthcheck pings and build callbacks
 
 ## Running locally
 

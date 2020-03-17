@@ -1,0 +1,17 @@
+---
+applications:
+- name: federalist-builder-staging
+  routes:
+  - route: federalist-builder-staging.fr.cloud.gov
+  disk_quota: 512M
+  memory: 128MB
+  instances: 1
+  services:
+  - federalist-staging-sqs-creds
+  - federalist-deploy-user
+  env:
+    BUILD_CONTAINER_BASE_NAME: "federalist-build-container-staging"
+    BUILD_TIMEOUT_SECONDS: 2700 # 45 * 60 seconds = 45 minutes
+    CLOUD_FOUNDRY_OAUTH_TOKEN_URL: "https://login.fr.cloud.gov/oauth/token"
+    LOG_LEVEL: "verbose"
+    NUM_BUILD_CONTAINERS: 2

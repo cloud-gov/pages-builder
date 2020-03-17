@@ -34,24 +34,21 @@ describe('server', () => {
       mockListAppsRequest([
         {
           guid: '123abc',
-          name: 'builder-1',
+          name: 'test-builder-1',
           state: 'STARTED',
-          dockerImage: 'example.com:5000/builder/1',
         },
         {
           guid: '456def',
-          name: 'builder-2',
+          name: 'test-builder-2',
           state: 'STARTED',
-          dockerImage: 'example.com:5000/builder/1',
         },
       ]);
       mockListAppStatsRequest('123abc', { 0: { state: 'RUNNING' } });
       mockListAppStatsRequest('456def', { 0: { state: 'RUNNING' } });
     };
 
-    it('should be ok all is good', (done) => {
+    it('should be ok all is good', () => {
       const queueAttributes = { Attributes: { ApproximateNumberOfMessages: 2 } };
-      process.env.SERVICE_KEY_CREATED = new Date(new Date() - (1 * 24 * 60 * 60 * 1000));
 
       const testServer = server(mockCluster(), mockBuildQueue({
         getQueueAttributes: (_, cb) => cb(null, queueAttributes),
@@ -60,7 +57,7 @@ describe('server', () => {
       mockTokenRequest().persist();
       mockGoodListAppsRequest();
 
-      testServer.inject({
+      return testServer.inject({
         method: 'GET',
         url: '/healthcheck',
       })
@@ -77,11 +74,10 @@ describe('server', () => {
 
           expect(response.statusCode).to.eq(200);
           expect(response.result).to.deep.equal(expected);
-          done();
         });
     });
 
-    it('should not be ok when an access token cannot be retrieved', (done) => {
+    it('should not be ok when an access token cannot be retrieved', () => {
       const testServer = server(mockCluster(), mockBuildQueue({
         getQueueAttributes: (_, cb) => cb(null, {}),
       }));
@@ -94,19 +90,17 @@ describe('server', () => {
         reasons: ['Request failed with status code 401'],
       };
 
-      testServer.inject({
+      return testServer.inject({
         method: 'GET',
         url: '/healthcheck',
       })
         .then((response) => {
           expect(response.statusCode).to.eq(200);
           expect(response.result).to.deep.equal(expectedResult);
-          done();
-        })
-        .catch(done);
+        });
     });
 
-    it('should not be ok when an access token is non-existent', (done) => {
+    it('should not be ok when an access token is non-existent', () => {
       const queueAttributes = { Attributes: { ApproximateNumberOfMessages: 2 } };
       const testServer = server(mockCluster(), mockBuildQueue({
         getQueueAttributes: (_, cb) => cb(null, queueAttributes),
@@ -120,17 +114,17 @@ describe('server', () => {
         reasons: ['No cloud foundry token received.'],
       };
 
-      testServer.inject({
+      return testServer.inject({
         method: 'GET',
         url: '/healthcheck',
-      }).then((response) => {
-        expect(response.statusCode).to.eq(200);
-        expect(response.result).to.deep.equal(expectedResult);
-        done();
-      });
+      })
+        .then((response) => {
+          expect(response.statusCode).to.eq(200);
+          expect(response.result).to.deep.equal(expectedResult);
+        });
     });
 
-    it('should not be ok if SQS attributes cannot be retrieved', (done) => {
+    it('should not be ok if SQS attributes cannot be retrieved', () => {
       const error = { error: 'Queue attributes unavailable.' };
       const testServer = server(mockCluster(), mockBuildQueue({
         getQueueAttributes: (_, cb) => cb(error),
@@ -139,7 +133,7 @@ describe('server', () => {
       mockTokenRequest().persist();
       mockGoodListAppsRequest();
 
-      testServer.inject({
+      return testServer.inject({
         method: 'GET',
         url: '/healthcheck',
       })
@@ -151,11 +145,10 @@ describe('server', () => {
 
           expect(response.statusCode).to.eq(200);
           expect(response.result).to.deep.equal(expected);
-          done();
         });
     });
 
-    it('should not be ok if there are not enough build containers', (done) => {
+    it('should not be ok if there are not enough build containers', () => {
       const queueAttributes = { Attributes: { ApproximateNumberOfMessages: 2 } };
 
       const testServer = server(mockCluster(), mockBuildQueue({
@@ -163,9 +156,9 @@ describe('server', () => {
       }));
 
       mockTokenRequest().persist();
-      mockListAppsRequest([{ name: 'builder-1' }]);
+      mockListAppsRequest([{ name: 'test-builder-1' }]);
 
-      testServer.inject({
+      return testServer.inject({
         method: 'GET',
         url: '/healthcheck',
       })
@@ -182,11 +175,10 @@ describe('server', () => {
 
           expect(response.statusCode).to.eq(200);
           expect(response.result).to.deep.equal(expected);
-          done();
         });
     });
 
-    it('should not be ok if any container is not STARTED', (done) => {
+    it('should not be ok if any container is not STARTED', () => {
       const queueAttributes = { Attributes: { ApproximateNumberOfMessages: 2 } };
 
       const testServer = server(mockCluster(), mockBuildQueue({
@@ -204,7 +196,8 @@ describe('server', () => {
         },
       ]);
       mockListAppStatsRequest('123abc', { 0: { state: 'RUNNING' } });
-      testServer.inject({
+
+      return testServer.inject({
         method: 'GET',
         url: '/healthcheck',
       })
@@ -218,21 +211,20 @@ describe('server', () => {
 
           expect(response.statusCode).to.eq(200);
           expect(response.result).to.deep.equal(expected);
-          done();
         });
     });
 
-    it('should be able to report multiple error reasons', (done) => {
+    it('should be able to report multiple error reasons', () => {
       const error = { error: 'Queue attributes unavailable.' };
       const testServer = server(mockCluster(), mockBuildQueue({
         getQueueAttributes: (_, cb) => cb(error),
       }));
 
       mockTokenRequest().persist();
-      mockListAppsRequest([{ guid: '123abc', name: 'builder-1' }]);
+      mockListAppsRequest([{ guid: '123abc', name: 'test-builder-1' }]);
       mockListAppStatsRequest('123abc', { 0: { state: 'RUNNING' } });
 
-      testServer.inject({
+      return testServer.inject({
         method: 'GET',
         url: '/healthcheck',
       })
@@ -250,26 +242,24 @@ describe('server', () => {
 
           expect(response.statusCode).to.eq(200);
           expect(response.result).to.deep.equal(expected);
-          done();
         });
     });
   });
 
   describe('DELETE /builds/{buildID}/callback', () => {
-    it('should respond with a 200', (done) => {
+    it('should respond with a 200', () => {
       const testServer = server(mockCluster(), mockBuildQueue());
 
-      testServer.inject({
+      return testServer.inject({
         method: 'DELETE',
         url: '/builds/123abc/callback',
       })
         .then((response) => {
           expect(response.statusCode).to.eq(200);
-          done();
         });
     });
 
-    it('should call stopBuild(buildID) on the cluster', (done) => {
+    it('should call stopBuild(buildID) on the cluster', () => {
       let stopBuildArg;
       const cluster = {
         stopBuild: (buildID) => {
@@ -279,13 +269,12 @@ describe('server', () => {
 
       const testServer = server(cluster, mockBuildQueue());
 
-      testServer.inject({
+      return testServer.inject({
         method: 'DELETE',
         url: '/builds/123abc/callback',
       })
         .then(() => {
           expect(stopBuildArg).to.eq('123abc');
-          done();
         });
     });
   });
