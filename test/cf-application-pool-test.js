@@ -46,6 +46,9 @@ describe('CFApplicationPool', () => {
     it('should return the number of available containers', (done) => {
       const numContainers = 10;
 
+      const origNumBuildContainers = process.env.NUM_BUILD_CONTAINERS;
+      process.env.NUM_BUILD_CONTAINERS = numContainers;
+
       mockTokenRequest();
       mockContainers(numContainers);
 
@@ -53,6 +56,7 @@ describe('CFApplicationPool', () => {
 
       setTimeout(() => {
         expect(builderPool._countAvailableContainers()).to.eq(numContainers);
+        process.env.NUM_BUILD_CONTAINERS = origNumBuildContainers;
         done();
       }, 50);
     });

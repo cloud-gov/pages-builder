@@ -5,15 +5,9 @@ const appEnv = require('../env');
 
 class CloudFoundryAuthClient {
   constructor() {
-    const {
-      DEPLOY_USER_USERNAME,
-      DEPLOY_USER_PASSWORD,
-      username,
-      password,
-    } = this._cloudFoundryCredentials();
-
-    this._username = DEPLOY_USER_USERNAME || username;
-    this._password = DEPLOY_USER_PASSWORD || password;
+    const { username, password } = appEnv.cloudFoundryCreds;
+    this._username = username;
+    this._password = password;
     this._token = '';
   }
 
@@ -27,28 +21,17 @@ class CloudFoundryAuthClient {
     });
   }
 
-  _cloudFoundryCredentials() {
-    const cloudFoundryCredentials = appEnv.getServiceCreds('federalist-deploy-user');
-
-    if (cloudFoundryCredentials) {
-      return cloudFoundryCredentials;
-    }
-    return {
-      DEPLOY_USER_USERNAME: process.env.DEPLOY_USER_USERNAME,
-      DEPLOY_USER_PASSWORD: process.env.DEPLOY_USER_PASSWORD,
-    };
-  }
-
   _fetchNewToken() {
-    return this._sendNewTokenRequest().then((token) => {
-      this._token = token;
-      return token;
-    });
+    return this._sendNewTokenRequest()
+      .then((token) => {
+        this._token = token;
+        return token;
+      });
   }
 
   _sendNewTokenRequest() {
     return axios.post(
-      this._tokenEndpoint(),
+      appEnv.cloudFoundryOAuthTokenUrl,
       qs.stringify({
         grant_type: 'password',
         username: this._username,
@@ -63,10 +46,6 @@ class CloudFoundryAuthClient {
       }
     )
       .then(response => response.data.access_token);
-  }
-
-  _tokenEndpoint() {
-    return process.env.CLOUD_FOUNDRY_OAUTH_TOKEN_URL;
   }
 
   _tokenExpired() {

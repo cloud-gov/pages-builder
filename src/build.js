@@ -13,10 +13,7 @@ class Build {
   }
 
   _buildCallbackURL(buildID) {
-    return url.resolve(
-      appEnv.url,
-      `builds/${buildID}/callback`
-    );
+    return url.resolve(appEnv.url, `builds/${buildID}/callback`);
   }
 
   _generateBuildID() {

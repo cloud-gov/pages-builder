@@ -1,10 +1,9 @@
 const axios = require('axios');
 const url = require('url');
+const appEnv = require('../env');
 const CloudFoundryAuthClient = require('./cloud-foundry-auth-client');
 
 const STATE_STARTED = 'STARTED';
-
-const expectedNumBuildContainers = parseInt(process.env.EXPECTED_NUM_BUILD_CONTAINERS, 10);
 
 class CloudFoundryAPIClient {
   constructor() {
@@ -12,19 +11,22 @@ class CloudFoundryAPIClient {
   }
 
   fetchBuildContainers() {
-    return this._authClient.accessToken().then(token => this._request(
-      'GET',
-      `/v2/spaces/${this._spaceGUID()}/apps`,
-      token
-    )).then(body => this._filterAppsResponse(body));
+    return this._authClient.accessToken()
+      .then(token => this._request(
+        'GET',
+        `/v2/spaces/${appEnv.spaceGUID}/apps`,
+        token
+      ))
+      .then(body => this._filterAppsResponse(body));
   }
 
   fetchAppStats(appGUID) {
-    return this._authClient.accessToken().then(token => this._request(
-      'GET',
-      `/v2/apps/${appGUID}/stats`,
-      token
-    ));
+    return this._authClient.accessToken()
+      .then(token => this._request(
+        'GET',
+        `/v2/apps/${appGUID}/stats`,
+        token
+      ));
   }
 
   fetchAppInstanceStates(container) {
@@ -86,22 +88,23 @@ class CloudFoundryAPIClient {
         numBuildContainers = buildContainers.length;
         startedContainers = buildContainers.filter(bc => bc.state === STATE_STARTED);
 
-        if (numBuildContainers < expectedNumBuildContainers) {
-          containerErrors.push(`Expected ${expectedNumBuildContainers} build containers but only ${numBuildContainers} found.`);
+        if (numBuildContainers < this._numBuildContainers()) {
+          containerErrors.push(`Expected ${this._numBuildContainers()} build containers but only ${numBuildContainers} found.`);
         }
 
-        if (startedContainers.length !== expectedNumBuildContainers) {
+        if (startedContainers.length !== this._numBuildContainers()) {
           containerErrors.push(`Not all build containers are in the ${STATE_STARTED} state.`);
         }
 
         return this.fetchAllAppInstanceErrors(startedContainers);
-      }).then(instanceErrors => containerErrors.concat(instanceErrors))
+      })
+      .then(instanceErrors => containerErrors.concat(instanceErrors))
       .then((errors) => {
         if (errors.length) {
           return { error: errors.join('\n') };
         }
         return {
-          expected: expectedNumBuildContainers,
+          expected: this._numBuildContainers(),
           found: numBuildContainers,
           started: startedContainers.length,
         };
@@ -109,26 +112,35 @@ class CloudFoundryAPIClient {
   }
 
   updateBuildContainer(container, environment) {
-    return this._authClient.accessToken().then(token => this._request(
-      'PUT',
-      container.url,
-      token,
-      { environment_json: environment }
-    )).then(() => this._authClient.accessToken()).then(token => this._request(
-      'POST',
-      `${container.url}/restage`,
-      token
-    ));
+    return this._authClient.accessToken()
+      .then(token => this._request(
+        'PUT',
+        container.url,
+        token,
+        { environment_json: environment }
+      ))
+      .then(() => this._authClient.accessToken())
+      .then(token => this._request(
+        'POST',
+        `${container.url}/restage`,
+        token
+      ));
   }
 
-  _buildContainerImageName() {
-    return process.env.BUILD_CONTAINER_DOCKER_IMAGE_NAME;
+  _buildContainerNames() {
+    if (this._numBuildContainers() <= 1) {
+      return [this._buildContainerBaseName()];
+    }
+
+    return Array(this._numBuildContainers())
+      .fill()
+      .map((_, idx) => `${this._buildContainerBaseName()}-${idx + 1}`);
   }
 
   _filterAppsResponse(response) {
     return response.resources
       .map(resource => this._buildContainerFromAppResponse(resource))
-      .filter(buildContainer => buildContainer.dockerImage === this._buildContainerImageName());
+      .filter(buildContainer => this._buildContainerNames().includes(buildContainer.name));
   }
 
   _buildContainerFromAppResponse(appResponse) {
@@ -136,7 +148,6 @@ class CloudFoundryAPIClient {
       guid: appResponse.metadata.guid,
       url: appResponse.metadata.url,
       name: appResponse.entity.name,
-      dockerImage: appResponse.entity.docker_image,
       state: appResponse.entity.state,
     };
   }
@@ -156,10 +167,7 @@ class CloudFoundryAPIClient {
   }
 
   _resolveAPIURL(path) {
-    return url.resolve(
-      process.env.CLOUD_FOUNDRY_API_HOST,
-      path
-    );
+    return url.resolve(appEnv.cloudFoundryApiHost, path);
   }
 
   _request(method, path, accessToken, json) {
@@ -170,7 +178,12 @@ class CloudFoundryAPIClient {
         Authorization: `Bearer ${accessToken}`,
       },
       data: json,
-    }).then(response => response.data);
+    })
+      .then(response => response.data);
+  }
+
+  _numBuildContainers() {
+    return parseInt(process.env.NUM_BUILD_CONTAINERS, 10);
   }
 
   _authRequest(method, path, json) {
@@ -178,8 +191,8 @@ class CloudFoundryAPIClient {
       .then(token => this._request(method, path, token, json));
   }
 
-  _spaceGUID() {
-    return process.env.BUILD_SPACE_GUID;
+  _buildContainerBaseName() {
+    return process.env.BUILD_CONTAINER_BASE_NAME;
   }
 }
 
