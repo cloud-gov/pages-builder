@@ -7,7 +7,7 @@ function createPool({ buildTimeout = 1000, taskAppName = 'taskApp', taskAppComma
   return new CFTaskPool({ buildTimeout, taskAppName, taskAppCommand });
 }
 
-describe.only('CFTaskPool', () => {
+describe('CFTaskPool', () => {
   describe('.canStartBuild', () => {
     it('returns a promise that resolves to the value of calling _hasAvailableMemory()', async () => {
       const foobar = 'foobar';
