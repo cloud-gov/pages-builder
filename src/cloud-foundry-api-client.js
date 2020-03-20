@@ -11,22 +11,12 @@ class CloudFoundryAPIClient {
   }
 
   fetchBuildContainers() {
-    return this._authClient.accessToken()
-      .then(token => this._request(
-        'GET',
-        `/v2/spaces/${appEnv.spaceGUID}/apps`,
-        token
-      ))
+    return this._authRequest('GET', `/v2/spaces/${appEnv.spaceGUID}/apps`)
       .then(body => this._filterAppsResponse(body));
   }
 
   fetchAppStats(appGUID) {
-    return this._authClient.accessToken()
-      .then(token => this._request(
-        'GET',
-        `/v2/apps/${appGUID}/stats`,
-        token
-      ));
+    return this._authRequest('GET', `/v2/apps/${appGUID}/stats`);
   }
 
   fetchAppInstanceStates(container) {
@@ -112,19 +102,12 @@ class CloudFoundryAPIClient {
   }
 
   updateBuildContainer(container, environment) {
-    return this._authClient.accessToken()
-      .then(token => this._request(
-        'PUT',
-        container.url,
-        token,
-        { environment_json: environment }
-      ))
-      .then(() => this._authClient.accessToken())
-      .then(token => this._request(
-        'POST',
-        `${container.url}/restage`,
-        token
-      ));
+    return this._authRequest(
+      'PUT',
+      container.url,
+      { environment_json: environment }
+    )
+      .then(() => this._authRequest('POST', `${container.url}/restage`));
   }
 
   _buildContainerNames() {

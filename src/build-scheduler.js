@@ -22,15 +22,17 @@ class BuildScheduler {
   }
 
   _run() {
-    this._findAndScheduleNewBuild().catch((error) => {
-      logger.error(error);
-    }).then(() => {
-      if (this.running) {
-        setImmediate(() => {
-          this._run();
-        });
-      }
-    });
+    this._findAndScheduleNewBuild()
+      .catch((error) => {
+        logger.error(error);
+      })
+      .then(() => {
+        if (this.running) {
+          setImmediate(() => {
+            this._run();
+          });
+        }
+      });
   }
 
   async _attemptToStartBuild(build) {
@@ -39,29 +41,32 @@ class BuildScheduler {
     if (await this._builderPool.canStartBuild()) {
       return this._startBuildAndDeleteMessage(build);
     }
+
     logger.info(
       'No resources available for build %s, waiting...',
       build.buildID
     );
+
     return Promise.resolve(null);
   }
 
   _findAndScheduleNewBuild() {
     logger.verbose('Waiting for message');
 
-    return this._buildQueue.receiveMessage().then((message) => {
-      if (message) {
-        logger.verbose('Received message');
-        const build = new Build(message);
-        const owner = build.containerEnvironment.OWNER;
-        const repo = build.containerEnvironment.REPOSITORY;
-        const branch = build.containerEnvironment.BRANCH;
-        logger.info('New build %s/%s/%s - %s', owner, repo, branch, build.buildID);
+    return this._buildQueue.receiveMessage()
+      .then((message) => {
+        if (message) {
+          logger.verbose('Received message');
+          const build = new Build(message);
+          const owner = build.containerEnvironment.OWNER;
+          const repo = build.containerEnvironment.REPOSITORY;
+          const branch = build.containerEnvironment.BRANCH;
+          logger.info('New build %s/%s/%s - %s', owner, repo, branch, build.buildID);
 
-        return this._attemptToStartBuild(build);
-      }
-      return null;
-    });
+          return this._attemptToStartBuild(build);
+        }
+        return null;
+      });
   }
 
   _startBuildAndDeleteMessage(build) {
