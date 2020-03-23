@@ -3,8 +3,23 @@ const sinon = require('sinon');
 
 const CFTaskPool = require('../src/cf-task-pool');
 
-function createPool({ buildTimeout = 1000, taskAppName = 'taskApp', taskAppCommand = 'echo' } = {}) {
-  return new CFTaskPool({ buildTimeout, taskAppName, taskAppCommand });
+const defaults = {
+  buildTimeout: 1000,
+  maxTaskMemory: 30 * 1024,
+  taskDisk: 4 * 1024,
+  taskMemory: 2 * 1024,
+  url: 'http://example.com',
+  taskAppName: 'taskApp',
+  taskAppCommand: 'echo',
+};
+
+function createPool(params = {}) {
+  const args = {
+    ...defaults,
+    ...params,
+  };
+
+  return new CFTaskPool(args);
 }
 
 describe('CFTaskPool', () => {

@@ -10,11 +10,15 @@ class NoContainersAvailableError extends Error {
 }
 
 class CFApplicationPool {
-  constructor(buildTimeoutMilliseconds) {
-    this._buildTimeoutMilliseconds = buildTimeoutMilliseconds;
+  constructor({ buildContainerBaseName, buildTimeout, numBuildContainers }) {
+    this._apiClient = new CloudFoundryAPIClient();
+
+    this._buildTimeout = buildTimeout;
+    this._buildContainerBaseName = buildContainerBaseName;
+    this._numBuildContainers = numBuildContainers;
+
     this._containers = [];
     this._monitoringCluster = false;
-    this._apiClient = new CloudFoundryAPIClient();
   }
 
   canStartBuild() {
@@ -78,7 +82,9 @@ class CFApplicationPool {
       return Promise.resolve();
     }
 
-    return this._apiClient.fetchBuildContainers()
+    return this._apiClient.fetchBuildContainers(
+      this._buildContainerBaseName, this._numBuildContainers
+    )
       .then((containers) => {
         this._resolveNewContainers(containers);
         logger.info('Cluster monitor: %s container(s) present', this._containers.length);
@@ -111,7 +117,7 @@ class CFApplicationPool {
     container.timeout = setTimeout(() => {
       logger.warn('Build %s timed out', build.buildID);
       this._timeoutBuild(build);
-    }, this._buildTimeoutMilliseconds);
+    }, this._buildTimeout);
     return this._apiClient.updateBuildContainer(
       container,
       build.containerEnvironment

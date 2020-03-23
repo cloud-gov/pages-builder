@@ -12,8 +12,18 @@ const mockRestageAppRequest = require('./nocks/cloud-foundry-restage-app-nock');
 const mockTokenRequest = require('./nocks/cloud-foundry-oauth-token-nock');
 const mockUpdateAppRequest = require('./nocks/cloud-foundry-update-app-nock');
 
-function startPool(timeoutSecs = 21 * 60) {
-  const builderPool = new CFApplicationPool(timeoutSecs * 1000);
+const defaults = {
+  buildContainerBaseName: 'test-builder',
+  numBuildContainers: 2,
+  buildTimeout: 21 * 60,
+};
+
+function startPool(params = {}) {
+  const args = {
+    ...defaults,
+    ...params,
+  };
+  const builderPool = new CFApplicationPool(args);
   builderPool.start();
   return builderPool;
 }
@@ -44,19 +54,19 @@ describe('CFApplicationPool', () => {
 
   describe('._countAvailableContainers()', () => {
     it('should return the number of available containers', (done) => {
-      const numContainers = 10;
+      const numBuildContainers = 10;
 
-      const origNumBuildContainers = process.env.NUM_BUILD_CONTAINERS;
-      process.env.NUM_BUILD_CONTAINERS = numContainers;
+      // const origNumBuildContainers = process.env.NUM_BUILD_CONTAINERS;
+      // process.env.NUM_BUILD_CONTAINERS = numContainers;
 
       mockTokenRequest();
-      mockContainers(numContainers);
+      mockContainers(numBuildContainers);
 
-      const builderPool = startPool();
+      const builderPool = startPool({ numBuildContainers });
 
       setTimeout(() => {
-        expect(builderPool._countAvailableContainers()).to.eq(numContainers);
-        process.env.NUM_BUILD_CONTAINERS = origNumBuildContainers;
+        expect(builderPool._countAvailableContainers()).to.eq(numBuildContainers);
+        // process.env.NUM_BUILD_CONTAINERS = origNumBuildContainers;
         done();
       }, 50);
     });
@@ -140,7 +150,7 @@ describe('CFApplicationPool', () => {
       mockUpdateAppRequest();
       mockRestageAppRequest();
 
-      const builderPool = startPool(-1);
+      const builderPool = startPool({ buildTimeout: -1 });
 
       builderPool.stopBuild = (buildID) => {
         expect(buildID).to.equal('123abc');
@@ -165,7 +175,7 @@ describe('CFApplicationPool', () => {
       mockUpdateAppRequest();
       mockRestageAppRequest();
 
-      const builderPool = startPool(-1);
+      const builderPool = startPool({ buildTimeout: -1 });
 
       setTimeout(() => {
         builderPool.startBuild({
@@ -186,7 +196,7 @@ describe('CFApplicationPool', () => {
 
   describe('.stopBuild(buildID)', () => {
     it('should make the build for the given buildID available', () => {
-      const builderPool = new CFApplicationPool();
+      const builderPool = new CFApplicationPool(defaults);
 
       builderPool._containers = [
         {
@@ -214,7 +224,7 @@ describe('CFApplicationPool', () => {
     });
 
     it("should not send a request to the build's log and status callback", (done) => {
-      const builderPool = new CFApplicationPool();
+      const builderPool = new CFApplicationPool(defaults);
 
       builderPool._containers = [
         {
@@ -244,7 +254,7 @@ describe('CFApplicationPool', () => {
       mockTokenRequest();
       mockContainers(1);
 
-      const builderPool = new CFApplicationPool(1000);
+      const builderPool = new CFApplicationPool(defaults);
       await builderPool.start();
 
       expect(await builderPool.canStartBuild()).to.be.true;
@@ -254,7 +264,7 @@ describe('CFApplicationPool', () => {
       mockTokenRequest();
       mockContainers(0);
 
-      const builderPool = new CFApplicationPool(1000);
+      const builderPool = new CFApplicationPool(defaults);
       await builderPool.start();
 
       expect(await builderPool.canStartBuild()).to.be.false;

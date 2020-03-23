@@ -10,9 +10,9 @@ class CloudFoundryAPIClient {
     this._authClient = new CloudFoundryAuthClient();
   }
 
-  fetchBuildContainers() {
+  fetchBuildContainers(buildContainerBaseName, numBuildContainers) {
     return this._authRequest('GET', `/v2/spaces/${appEnv.spaceGUID}/apps`)
-      .then(body => this._filterAppsResponse(body));
+      .then(body => this._filterAppsResponse(buildContainerBaseName, numBuildContainers, body));
   }
 
   fetchAppStats(appGUID) {
@@ -68,25 +68,25 @@ class CloudFoundryAPIClient {
     return this._authRequest('POST', `/v3/tasks/${taskGUID}/actions/cancel`);
   }
 
-  getBuildContainersState() {
+  getBuildContainersState(buildContainerBaseName, numBuildContainers) {
     const containerErrors = [];
-    let numBuildContainers;
-    let startedContainers;
+    let _numBuildContainers;
+    let _startedContainers;
 
-    return this.fetchBuildContainers()
+    return this.fetchBuildContainers(buildContainerBaseName, numBuildContainers)
       .then((buildContainers) => {
-        numBuildContainers = buildContainers.length;
-        startedContainers = buildContainers.filter(bc => bc.state === STATE_STARTED);
+        _numBuildContainers = buildContainers.length;
+        _startedContainers = buildContainers.filter(bc => bc.state === STATE_STARTED);
 
-        if (numBuildContainers < this._numBuildContainers()) {
-          containerErrors.push(`Expected ${this._numBuildContainers()} build containers but only ${numBuildContainers} found.`);
+        if (_numBuildContainers < numBuildContainers) {
+          containerErrors.push(`Expected ${numBuildContainers} build containers but only ${_numBuildContainers} found.`);
         }
 
-        if (startedContainers.length !== this._numBuildContainers()) {
+        if (_startedContainers.length !== numBuildContainers) {
           containerErrors.push(`Not all build containers are in the ${STATE_STARTED} state.`);
         }
 
-        return this.fetchAllAppInstanceErrors(startedContainers);
+        return this.fetchAllAppInstanceErrors(_startedContainers);
       })
       .then(instanceErrors => containerErrors.concat(instanceErrors))
       .then((errors) => {
@@ -94,9 +94,9 @@ class CloudFoundryAPIClient {
           return { error: errors.join('\n') };
         }
         return {
-          expected: this._numBuildContainers(),
-          found: numBuildContainers,
-          started: startedContainers.length,
+          expected: numBuildContainers,
+          found: _numBuildContainers,
+          started: _startedContainers.length,
         };
       });
   }
@@ -110,20 +110,21 @@ class CloudFoundryAPIClient {
       .then(() => this._authRequest('POST', `${container.url}/restage`));
   }
 
-  _buildContainerNames() {
-    if (this._numBuildContainers() <= 1) {
-      return [this._buildContainerBaseName()];
+  _buildContainerNames(buildContainerBaseName, numBuildContainers) {
+    if (numBuildContainers <= 1) {
+      return [buildContainerBaseName];
     }
 
-    return Array(this._numBuildContainers())
+    return Array(numBuildContainers)
       .fill()
-      .map((_, idx) => `${this._buildContainerBaseName()}-${idx + 1}`);
+      .map((_, idx) => `${buildContainerBaseName}-${idx + 1}`);
   }
 
-  _filterAppsResponse(response) {
+  _filterAppsResponse(buildContainerBaseName, numBuildContainers, response) {
     return response.resources
       .map(resource => this._buildContainerFromAppResponse(resource))
-      .filter(buildContainer => this._buildContainerNames().includes(buildContainer.name));
+      .filter(buildContainer => this._buildContainerNames(buildContainerBaseName, numBuildContainers)
+        .includes(buildContainer.name));
   }
 
   _buildContainerFromAppResponse(appResponse) {
@@ -172,10 +173,6 @@ class CloudFoundryAPIClient {
   _authRequest(method, path, json) {
     return this._authClient.accessToken()
       .then(token => this._request(method, path, token, json));
-  }
-
-  _buildContainerBaseName() {
-    return process.env.BUILD_CONTAINER_BASE_NAME;
   }
 }
 
