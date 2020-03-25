@@ -1,0 +1,21 @@
+---
+applications:
+- name: federalist-builder-staging-task
+  routes:
+  - route: federalist-builder-staging-task.fr.cloud.gov
+  disk_quota: 512M
+  memory: 128MB
+  instances: 1
+  services:
+  - federalist-dev-staging-task-creds
+  - federalist-deploy-user
+  env:
+    BUILDER_POOL_TYPE: "task"
+    TASK_APP_NAME: "federalist-build-container-staging-task"
+    TASK_APP_COMMAND: "cd app && python main.py -p"
+    TASK_MEM_GB: 2
+    TASK_DISK_GB: 4
+    TASK_MAX_MEM_GB: 30
+    BUILD_TIMEOUT_SECONDS: 600 # 10 * 60 seconds = 10 minutes
+    CLOUD_FOUNDRY_OAUTH_TOKEN_URL: "https://login.fr.cloud.gov/oauth/token"
+    LOG_LEVEL: "verbose"

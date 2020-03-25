@@ -130,7 +130,7 @@ class CFApplicationPool {
 
   _timeoutBuild(build) {
     this.stopBuild(build.buildID);
-    new BuildTimeoutReporter(build).reportBuildTimeout();
+    BuildTimeoutReporter.reportBuildTimeout(build);
   }
 }
 

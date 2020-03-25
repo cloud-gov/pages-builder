@@ -12,7 +12,7 @@ describe('BuildTimeoutReporter', () => {
   });
 
   describe('reportBuildTimeout', () => {
-    it("should send a request to the build's status and log callback", (done) => {
+    it("should send a request to the build's status and log callback", async () => {
       const logURL = url.parse('https://www.example.gov/log');
       const statusURL = url.parse('https://www.example.gov/status');
       const logCallbackNock = mockBuildLogCallback(logURL);
@@ -25,11 +25,9 @@ describe('BuildTimeoutReporter', () => {
         },
       };
 
-      new BuildTimeoutReporter(build).reportBuildTimeout().then(() => {
-        expect(logCallbackNock.isDone()).to.be.true;
-        expect(statusCallbackNock.isDone()).to.be.true;
-        done();
-      }).catch(done);
+      await BuildTimeoutReporter.reportBuildTimeout(build);
+      expect(logCallbackNock.isDone()).to.be.true;
+      expect(statusCallbackNock.isDone()).to.be.true;
     });
   });
 });

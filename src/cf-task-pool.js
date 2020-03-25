@@ -10,6 +10,7 @@ class CFTaskPool {
     buildTimeout, maxTaskMemory, taskAppName, taskAppCommand, taskDisk, taskMemory, url,
   }) {
     this._apiClient = new CloudFoundryAPIClient();
+    this._buildTimeoutReporter = BuildTimeoutReporter;
 
     this._buildTimeout = buildTimeout;
     this._maxTaskMemory = maxTaskMemory;
@@ -31,17 +32,19 @@ class CFTaskPool {
     return this._setTaskAppGUID(this._taskAppName);
   }
 
-  startBuild(build) {
+  async startBuild(build) {
     const buildTask = this._buildTask(build);
-    return this._apiClient.startTaskForApp(buildTask, this._taskAppGUID)
-      .then((task) => {
-        logger.info('Started build %s in task %s guid %s', build.buildID, task.name, task.guid);
-        this._builds[build.buildID] = {
-          taskGUID: task.guid,
-          timeout: this._createBuildTimeout(build),
-        };
-      })
-      .catch(error => new TaskStartError(error.message));
+    try {
+      const task = await this._apiClient.startTaskForApp(buildTask, this._taskAppGUID);
+      logger.info('Started build %s in task %s guid %s', build.buildID, task.name, task.guid);
+      this._builds[build.buildID] = {
+        taskGUID: task.guid,
+        timeout: this._createBuildTimeout(build),
+      };
+      return undefined;
+    } catch (error) {
+      throw new TaskStartError(error.message);
+    }
   }
 
   stop() {
@@ -94,14 +97,15 @@ class CFTaskPool {
     const tasks = await this._apiClient.fetchActiveTasksForApp(this._taskAppGUID);
     const memory = tasks.reduce((mem, task) => mem + task.memory_in_mb, 0);
 
+
     const buffer = this._taskMemory;
-    return (memory + buffer) < this._maxMemory;
+    return (memory + buffer) < this._maxTaskMemory;
   }
 
   _timeoutBuild(build) {
     logger.warn('Build %s timed out', build.buildID);
     this.stopBuild(build.buildID);
-    new BuildTimeoutReporter(build).reportBuildTimeout();
+    this._buildTimeoutReporter.reportBuildTimeout(build);
   }
 }
 

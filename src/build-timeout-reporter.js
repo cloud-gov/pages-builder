@@ -1,41 +1,35 @@
 const axios = require('axios');
 const logger = require('./logger');
 
-class BuildTimeoutReporter {
-  constructor(build) {
-    this._build = build;
-  }
-
-  reportBuildTimeout() {
-    return Promise.all([
-      this._sendBuildLogRequest(),
-      this._sendBuildStatusRequest(),
-    ]).catch((err) => {
-      logger.error('Error reporting build timeout:', err);
-    });
-  }
-
-  _request(url, json) {
-    return axios.post(url, json);
-  }
-
-  _sendBuildLogRequest() {
-    const url = this._build.containerEnvironment.LOG_CALLBACK;
-    logger.verbose(`Sending timeout log request for ${this._build.buildID}`);
-    return this._request(url, {
-      output: Buffer.from('The build timed out').toString('base64'),
-      source: 'Build scheduler',
-    });
-  }
-
-  _sendBuildStatusRequest() {
-    const url = this._build.containerEnvironment.STATUS_CALLBACK;
-    logger.verbose(`Sending timeout status request for ${this._build.buildID}`);
-    return this._request(url, {
-      message: Buffer.from('The build timed out').toString('base64'),
-      status: 'error',
-    });
-  }
+function _request(url, json) {
+  return axios.post(url, json);
 }
 
-module.exports = BuildTimeoutReporter;
+function _sendBuildLogRequest(build) {
+  const url = build.containerEnvironment.LOG_CALLBACK;
+  logger.verbose(`Sending timeout log request for ${build.buildID}`);
+  return _request(url, {
+    output: Buffer.from('The build timed out').toString('base64'),
+    source: 'Build scheduler',
+  });
+}
+
+function _sendBuildStatusRequest(build) {
+  const url = build.containerEnvironment.STATUS_CALLBACK;
+  logger.verbose(`Sending timeout status request for ${build.buildID}`);
+  return _request(url, {
+    message: Buffer.from('The build timed out').toString('base64'),
+    status: 'error',
+  });
+}
+
+function reportBuildTimeout(build) {
+  return Promise.all([
+    _sendBuildLogRequest(build),
+    _sendBuildStatusRequest(build),
+  ]).catch((err) => {
+    logger.error('Error reporting build timeout:', err);
+  });
+}
+
+module.exports = { reportBuildTimeout };
