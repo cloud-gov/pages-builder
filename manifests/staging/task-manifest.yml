@@ -7,7 +7,7 @@ applications:
   memory: 128MB
   instances: 1
   services:
-  - federalist-dev-staging-task-creds
+  - federalist-staging-sqs-task-creds
   - federalist-deploy-user
   env:
     BUILDER_POOL_TYPE: "task"
@@ -15,7 +15,7 @@ applications:
     TASK_APP_COMMAND: "cd app && python main.py -p"
     TASK_MEM_GB: 2
     TASK_DISK_GB: 4
-    TASK_MAX_MEM_GB: 30
+    TASK_MAX_MEM_GB: 20
     BUILD_TIMEOUT_SECONDS: 600 # 10 * 60 seconds = 10 minutes
     CLOUD_FOUNDRY_OAUTH_TOKEN_URL: "https://login.fr.cloud.gov/oauth/token"
     LOG_LEVEL: "verbose"
