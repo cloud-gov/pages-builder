@@ -76,8 +76,9 @@ class CFTaskPool {
   _buildTask(build) {
     const { containerEnvironment: e } = build;
 
-    e.BUILDER_CALLBACK = this._url;
-    e.STATUS_CALLBACK = this._url;
+    // All values have to be strings
+    e.BUILD_ID = `${e.BUILD_ID}`;
+    e.SKIP_LOGGING = `${e.SKIP_LOGGING}`;
 
     return {
       name: `build-${e.BUILD_ID}`,

@@ -1,17 +1,17 @@
 ---
 applications:
-- name: federalist-builder-staging-task
+- name: federalist-builder-task
   routes:
-  - route: federalist-builder-staging-task.fr.cloud.gov
+  - route: federalist-builder-task.fr.cloud.gov
   disk_quota: 512M
   memory: 128MB
   instances: 1
   services:
-  - federalist-staging-sqs-creds
+  - federalist-production-sqs-creds
   - federalist-deploy-user
   env:
     BUILDER_POOL_TYPE: "task"
-    TASK_APP_NAME: "federalist-build-container-staging-task"
+    TASK_APP_NAME: "federalist-build-container-task"
     TASK_APP_COMMAND: "cd app && python main.py -p"
     TASK_MEM_GB: 2
     TASK_DISK_GB: 4

@@ -33,7 +33,7 @@ appEnv.cloudFoundryApiHost = cfApiHost;
 appEnv.spaceGUID = spaceId;
 
 appEnv.sqsCreds = sqsCreds;
-appEnv.sqsUrl = sqsCreds.sqs_url;
+appEnv.sqsUrl = BUILDER_POOL_TYPE === 'task' ? sqsCreds.sqs_task_url : sqsCreds.sqs_url;
 
 // Builder Pools
 appEnv.builderPoolType = BUILDER_POOL_TYPE;
