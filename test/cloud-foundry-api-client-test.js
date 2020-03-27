@@ -348,9 +348,18 @@ describe('CloudFoundryAPIClient', () => {
   describe('._filterAppsResponse', () => {
     const response = {
       resources: [
-        { metadata: { guid: '', url: '' }, entity: { name: `${buildContainerBaseName}`, state: '' } },
-        { metadata: { guid: '', url: '' }, entity: { name: `${buildContainerBaseName}-1`, state: '' } },
-        { metadata: { guid: '', url: '' }, entity: { name: `${buildContainerBaseName}-2`, state: '' } },
+        {
+          metadata: { guid: '', url: '' },
+          entity: { name: `${buildContainerBaseName}`, state: '' },
+        },
+        {
+          metadata: { guid: '', url: '' },
+          entity: { name: `${buildContainerBaseName}-1`, state: '' },
+        },
+        {
+          metadata: { guid: '', url: '' },
+          entity: { name: `${buildContainerBaseName}-2`, state: '' },
+        },
       ],
     };
 
@@ -360,7 +369,9 @@ describe('CloudFoundryAPIClient', () => {
       it('returns containers with the exact build container base name', () => {
         const apiClient = new CloudFoundryAPIClient();
 
-        const result = apiClient._filterAppsResponse(buildContainerBaseName, _numBuildContainers, response);
+        const result = apiClient._filterAppsResponse(
+          buildContainerBaseName, _numBuildContainers, response
+        );
 
         expect(result).to.deep.have.members([
           {
@@ -376,7 +387,9 @@ describe('CloudFoundryAPIClient', () => {
       it('returns containers with incremented build container base name', () => {
         const apiClient = new CloudFoundryAPIClient();
 
-        const result = apiClient._filterAppsResponse(buildContainerBaseName, _numBuildContainers, response);
+        const result = apiClient._filterAppsResponse(
+          buildContainerBaseName, _numBuildContainers, response
+        );
 
         expect(result).to.deep.have.members([
           {
