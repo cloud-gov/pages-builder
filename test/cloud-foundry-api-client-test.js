@@ -345,7 +345,7 @@ describe('CloudFoundryAPIClient', () => {
     });
   });
 
-  describe.only('._filterAppsResponse', () => {
+  describe('._filterAppsResponse', () => {
     const response = {
       resources: [
         { metadata: { guid: '', url: '' }, entity: { name: `${buildContainerBaseName}`, state: '' } },
