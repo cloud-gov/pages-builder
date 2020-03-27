@@ -123,9 +123,8 @@ class CloudFoundryAPIClient {
   _filterAppsResponse(buildContainerBaseName, numBuildContainers, response) {
     return response.resources
       .map(resource => this._buildContainerFromAppResponse(resource))
-      .filter(buildContainer => this._buildContainerNames(
-        buildContainerBaseName, numBuildContainers
-      )
+      .filter(buildContainer => this
+        ._buildContainerNames(buildContainerBaseName, numBuildContainers)
         .includes(buildContainer.name));
   }
 

@@ -344,4 +344,49 @@ describe('CloudFoundryAPIClient', () => {
       });
     });
   });
+
+  describe.only('._filterAppsResponse', () => {
+    const response = {
+      resources: [
+        { metadata: { guid: '', url: '' }, entity: { name: `${buildContainerBaseName}`, state: '' } },
+        { metadata: { guid: '', url: '' }, entity: { name: `${buildContainerBaseName}-1`, state: '' } },
+        { metadata: { guid: '', url: '' }, entity: { name: `${buildContainerBaseName}-2`, state: '' } },
+      ],
+    };
+
+    describe('when there is one build container', () => {
+      const _numBuildContainers = 1;
+
+      it('returns containers with the exact build container base name', () => {
+        const apiClient = new CloudFoundryAPIClient();
+
+        const result = apiClient._filterAppsResponse(buildContainerBaseName, _numBuildContainers, response);
+
+        expect(result).to.deep.have.members([
+          {
+            guid: '', url: '', name: `${buildContainerBaseName}`, state: '',
+          },
+        ]);
+      });
+    });
+
+    describe('when there are many build containers', () => {
+      const _numBuildContainers = 3;
+
+      it('returns containers with incremented build container base name', () => {
+        const apiClient = new CloudFoundryAPIClient();
+
+        const result = apiClient._filterAppsResponse(buildContainerBaseName, _numBuildContainers, response);
+
+        expect(result).to.deep.have.members([
+          {
+            guid: '', url: '', name: `${buildContainerBaseName}-1`, state: '',
+          },
+          {
+            guid: '', url: '', name: `${buildContainerBaseName}-2`, state: '',
+          },
+        ]);
+      });
+    });
+  });
 });
