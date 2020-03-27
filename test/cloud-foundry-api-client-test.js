@@ -8,6 +8,8 @@ const mockListAppStatsRequest = require('./nocks/cloud-foundry-list-app-stats-no
 const mockRestageAppRequest = require('./nocks/cloud-foundry-restage-app-nock');
 const mockTokenRequest = require('./nocks/cloud-foundry-oauth-token-nock');
 const mockUpdateAppRequest = require('./nocks/cloud-foundry-update-app-nock');
+const mockV3ListAppsRequest = require('./nocks/cloud-foundry-v3-list-apps-nock');
+const mockV3ListTasksRequest = require('./nocks/cloud-foundry-v3-list-tasks-nock');
 
 
 describe('CloudFoundryAPIClient', () => {
@@ -265,6 +267,81 @@ describe('CloudFoundryAPIClient', () => {
 
     expect(state).to.deep.equal({
       error: 'test-builder-2 has 0 running instances',
+    });
+  });
+
+  describe('.fetchAppByName', () => {
+    const appName = 'my-app';
+    const app = { name: appName };
+
+    beforeEach(() => {
+      mockTokenRequest();
+    });
+
+    describe('when the app is found', () => {
+      it('resolves with the app', async () => {
+        mockV3ListAppsRequest(appName, [app]);
+
+        const apiClient = new CloudFoundryAPIClient();
+        const result = await apiClient.fetchAppByName(appName);
+
+        expect(result.name).to.eq(appName);
+      });
+    });
+
+    describe('when the app is NOT found', () => {
+      it('resolves with undefined', async () => {
+        const fakeAppName = 'foobar';
+        mockV3ListAppsRequest(fakeAppName, [app]);
+
+        const apiClient = new CloudFoundryAPIClient();
+        const result = await apiClient.fetchAppByName(fakeAppName);
+
+        expect(result).but.be.undefined;
+      });
+    });
+  });
+
+  describe('.fetchActiveTasksForApp', () => {
+    const appGUID = 'abc123';
+    const activeTasks = [
+      { name: 'pending', state: 'PENDING' },
+      { name: 'running', state: 'RUNNING' },
+      { name: 'canceling', state: 'CANCELING' },
+    ];
+
+    const inactiveTasks = [
+      { name: 'failed', state: 'FAILED' },
+    ];
+
+    const allTasks = [
+      ...activeTasks,
+      ...inactiveTasks,
+    ];
+
+    beforeEach(() => {
+      mockTokenRequest();
+    });
+
+    describe('when there are active tasks for the app', () => {
+      it('resolves with only the active tasks', async () => {
+        mockV3ListTasksRequest(appGUID, allTasks);
+
+        const apiClient = new CloudFoundryAPIClient();
+        const result = await apiClient.fetchActiveTasksForApp(appGUID);
+        expect(result).to.have.deep.members(activeTasks);
+      });
+    });
+
+    describe('when there are NO active tasks for the app', () => {
+      it('resolves with an empty array', async () => {
+        mockV3ListTasksRequest(appGUID, inactiveTasks);
+
+        const apiClient = new CloudFoundryAPIClient();
+        const result = await apiClient.fetchActiveTasksForApp(appGUID);
+
+        expect(result).to.deep.eq([]);
+      });
     });
   });
 });
