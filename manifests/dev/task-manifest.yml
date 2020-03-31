@@ -4,7 +4,7 @@ applications:
   routes:
   - route: federalist-builder-dev-task.fr.cloud.gov
   disk_quota: 512M
-  memory: 128MB
+  memory: 128M
   instances: 1
   services:
   - federalist-dev-sqs-creds

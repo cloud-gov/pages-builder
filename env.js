@@ -46,8 +46,8 @@ appEnv.numBuildContainers = parseInt(NUM_BUILD_CONTAINERS, 10);
 // Task Builder Pool
 appEnv.taskAppName = TASK_APP_NAME;
 appEnv.taskAppCommand = TASK_APP_COMMAND;
-appEnv.taskDisk = TASK_DISK_GB && TASK_DISK_GB * 1024;
-appEnv.taskMemory = TASK_MEM_GB && TASK_MEM_GB * 1024;
-appEnv.maxTaskMemory = TASK_MAX_MEM_GB && TASK_MAX_MEM_GB * 1024;
+appEnv.taskDisk = TASK_DISK_GB && parseInt(TASK_DISK_GB, 10) * 1024;
+appEnv.taskMemory = TASK_MEM_GB && parseInt(TASK_MEM_GB, 10) * 1024;
+appEnv.maxTaskMemory = TASK_MAX_MEM_GB && parseInt(TASK_MAX_MEM_GB, 10) * 1024;
 
 module.exports = appEnv;

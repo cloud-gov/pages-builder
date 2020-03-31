@@ -15,7 +15,14 @@ if (NEW_RELIC_APP_NAME && NEW_RELIC_LICENSE_KEY) {
   require('newrelic'); // eslint-disable-line global-require
 }
 
-// eslint-disable-next-line no-use-before-define
+function getBuilderPool(type) {
+  /* eslint-disable global-require */
+  return type === 'task'
+    ? require('./src/cf-task-pool')
+    : require('./src/cf-application-pool');
+  /* eslint-enable global-require */
+}
+
 const BuilderPool = getBuilderPool(appEnv.builderPoolType);
 const builderPool = new BuilderPool(appEnv);
 const buildQueue = new SQSClient(new AWS.SQS(), appEnv.sqsUrl);
@@ -33,11 +40,3 @@ process.on('unhandledRejection', (err) => {
 });
 
 buildScheduler.start();
-
-function getBuilderPool(type) {
-  /* eslint-disable global-require */
-  return type === 'task'
-    ? require('./src/cf-task-pool')
-    : require('./src/cf-application-pool');
-  /* eslint-enable global-require */
-}
