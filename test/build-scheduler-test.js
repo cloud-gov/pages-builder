@@ -1,5 +1,11 @@
 const { expect } = require('chai');
 const BuildScheduler = require('../src/build-scheduler');
+const SQSClient = require('../src/sqs-client');
+
+const mockServer = {
+  start: () => {},
+  stop: () => {},
+};
 
 const mockedSQSReceiveMessage = (params, callback) => callback(null, {
   Messages: [],
@@ -7,22 +13,20 @@ const mockedSQSReceiveMessage = (params, callback) => callback(null, {
 
 const mockedSQSDeleteMessage = (params, callback) => callback();
 
-const mockSQS = (buildScheduler, sqs) => {
-  buildScheduler._sqsClient._sqs = Object.assign({ // eslint-disable-line no-param-reassign
-    receiveMessage: mockedSQSReceiveMessage,
-    deleteMessage: mockedSQSDeleteMessage,
-  }, sqs);
-};
+const mockBuildQueue = sqs => new SQSClient({
+  receiveMessage: mockedSQSReceiveMessage,
+  deleteMessage: mockedSQSDeleteMessage,
+  ...sqs,
+});
 
-const mockCluster = (buildScheduler, cluster) => {
-  buildScheduler._cluster = Object.assign({ // eslint-disable-line no-param-reassign
-    countAvailableContainers: () => 0,
-    start: () => undefined,
-    startBuild: () => Promise.resolve(),
-    stop: () => undefined,
-    stopBuild: () => undefined,
-  }, cluster);
-};
+const mockBuilderPool = pool => ({
+  canStartBuild: () => false,
+  start: () => undefined,
+  startBuild: () => Promise.resolve(),
+  stop: () => undefined,
+  stopBuild: () => undefined,
+  ...pool,
+});
 
 describe('BuildScheduler', () => {
   it('it should start a build when a message is received from SQS and then delete the message', (done) => {
@@ -57,7 +61,7 @@ describe('BuildScheduler', () => {
     const cluster = {};
 
     let hasStartedBuild = false;
-    cluster.countAvailableContainers = () => 1;
+    cluster.canStartBuild = () => true;
     cluster.startBuild = (build) => {
       expect(build).not.to.be.undefined;
       expect(build.containerEnvironment).to.have.property(
@@ -73,10 +77,11 @@ describe('BuildScheduler', () => {
       return Promise.resolve();
     };
 
-    const buildScheduler = new BuildScheduler();
-
-    mockSQS(buildScheduler, sqs);
-    mockCluster(buildScheduler, cluster);
+    const buildScheduler = new BuildScheduler(
+      mockBuilderPool(cluster),
+      mockBuildQueue(sqs),
+      mockServer
+    );
 
     buildScheduler.start();
 
@@ -112,16 +117,17 @@ describe('BuildScheduler', () => {
 
     let runningBuildCount = 0;
     const maxBuildCount = 10;
-    cluster.countAvailableContainers = () => maxBuildCount - runningBuildCount;
+    cluster.canStartBuild = () => maxBuildCount - runningBuildCount > 0;
     cluster.startBuild = () => {
       runningBuildCount += 1;
       return Promise.resolve();
     };
 
-    const buildScheduler = new BuildScheduler();
-
-    mockSQS(buildScheduler, sqs);
-    mockCluster(buildScheduler, cluster);
+    const buildScheduler = new BuildScheduler(
+      mockBuilderPool(cluster),
+      mockBuildQueue(sqs),
+      mockServer
+    );
 
     buildScheduler.start();
 
@@ -165,16 +171,17 @@ describe('BuildScheduler', () => {
     const cluster = {};
 
     let hasAttemptedToStartedBuild = false;
-    cluster.countAvailableContainers = () => 1;
+    cluster.canStartBuild = () => true;
     cluster.startBuild = () => {
       hasAttemptedToStartedBuild = true;
       return Promise.reject(new Error('Test error'));
     };
 
-    const buildScheduler = new BuildScheduler();
-
-    mockSQS(buildScheduler, sqs);
-    mockCluster(buildScheduler, cluster);
+    const buildScheduler = new BuildScheduler(
+      mockBuilderPool(cluster),
+      mockBuildQueue(sqs),
+      mockServer
+    );
 
     buildScheduler.start();
 

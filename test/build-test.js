@@ -30,7 +30,7 @@ describe('Build', () => {
       const build = new Build(sqsMessage);
       expect(build.containerEnvironment).to.have.property(
         'FEDERALIST_BUILDER_CALLBACK',
-        `https://example.com/builds/${build.buildID}/callback`
+        `http://localhost:3000/builds/${build.buildID}/callback`
       );
     });
   });

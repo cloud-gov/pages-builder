@@ -1,72 +1,79 @@
-const winston = require('winston');
 const Build = require('./build');
-const Cluster = require('./cluster');
-const SQSClient = require('./sqs-client');
+const logger = require('./logger');
 
 class BuildScheduler {
-  constructor() {
-    this._cluster = new Cluster();
-    this._sqsClient = new SQSClient();
+  constructor(builderPool, buildQueue, server) {
+    this._builderPool = builderPool;
+    this._buildQueue = buildQueue;
+    this._server = server;
   }
 
   start() {
-    this._cluster.start();
+    this._server.start();
+    this._builderPool.start();
     this.running = true;
     this._run();
   }
 
   stop() {
-    this._cluster.stop();
+    this._server.stop();
+    this._builderPool.stop();
     this.running = false;
   }
 
   _run() {
-    this._findAndScheduleNewBuild().catch((error) => {
-      winston.error(error);
-    }).then(() => {
-      if (this.running) {
-        setImmediate(() => { // eslint-disable-line scanjs-rules/call_setImmediate
-          this._run();
-        });
-      }
-    });
+    this._findAndScheduleNewBuild()
+      .catch((error) => {
+        logger.error(error);
+      })
+      .then(() => {
+        if (this.running) {
+          setImmediate(() => {
+            this._run();
+          });
+        }
+      });
   }
 
-  _attemptToStartBuild(build) {
-    winston.verbose('Attempting to start build');
+  async _attemptToStartBuild(build) {
+    logger.verbose('Attempting to start build');
 
-    if (this._cluster.countAvailableContainers() > 0) {
+    if (await this._builderPool.canStartBuild()) {
       return this._startBuildAndDeleteMessage(build);
     }
-    winston.info(
-      'No containers available. Stopping build %s and waiting',
+
+    logger.info(
+      'No resources available for build %s, waiting...',
       build.buildID
     );
-    return null;
+
+    return Promise.resolve(null);
   }
 
   _findAndScheduleNewBuild() {
-    winston.verbose('Receiving message');
+    logger.verbose('Waiting for message');
 
-    return this._sqsClient.receiveMessage().then((message) => {
-      if (message) {
-        const build = new Build(message);
-        const owner = build.containerEnvironment.OWNER;
-        const repo = build.containerEnvironment.REPOSITORY;
-        const branch = build.containerEnvironment.BRANCH;
-        winston.info('New build %s/%s/%s - %s', owner, repo, branch, build.buildID);
+    return this._buildQueue.receiveMessage()
+      .then((message) => {
+        if (message) {
+          logger.verbose('Received message');
+          const build = new Build(message);
+          const owner = build.containerEnvironment.OWNER;
+          const repo = build.containerEnvironment.REPOSITORY;
+          const branch = build.containerEnvironment.BRANCH;
+          logger.info('New build %s/%s/%s - %s', owner, repo, branch, build.buildID);
 
-        return this._attemptToStartBuild(build);
-      }
-      return null;
-    });
+          return this._attemptToStartBuild(build);
+        }
+        return null;
+      });
   }
 
   _startBuildAndDeleteMessage(build) {
-    winston.verbose('Starting build');
+    logger.verbose('Starting build');
 
-    return this._cluster.startBuild(build)
-      .then(() => this._sqsClient.deleteMessage(build.sqsMessage));
+    return this._builderPool.startBuild(build)
+      .then(() => this._buildQueue.deleteMessage(build.sqsMessage));
   }
 }
 

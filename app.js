@@ -1,24 +1,42 @@
-const cfenv = require('cfenv');
-const winston = require('winston');
+const appEnv = require('./env');
+const AWS = require('./src/aws');
+const BuildScheduler = require('./src/build-scheduler');
+const logger = require('./src/logger');
+const createServer = require('./src/server');
+const SQSClient = require('./src/sqs-client');
 
-// Setup winston for logging
-winston.level = process.env.LOG_LEVEL || 'info';
-
-const appEnv = cfenv.getAppEnv();
+const {
+  NEW_RELIC_APP_NAME,
+  NEW_RELIC_LICENSE_KEY,
+} = process.env;
 
 // If settings present, start New Relic
-if (process.env.NEW_RELIC_APP_NAME) {
-  const creds = appEnv.getServiceCreds('federalist-builder-env');
-  if (creds.NEW_RELIC_LICENSE_KEY) {
-    winston.info(`Activating New Relic: ${process.env.NEW_RELIC_APP_NAME}`);
-    require('newrelic'); // eslint-disable-line global-require
-  }
+if (NEW_RELIC_APP_NAME && NEW_RELIC_LICENSE_KEY) {
+  require('newrelic'); // eslint-disable-line global-require
 }
 
-process.env.SQS_URL = appEnv.getServiceCreds(`federalist-${process.env.APP_ENV}-sqs-creds`).sqs_url;
+function getBuilderPool(type) {
+  /* eslint-disable global-require */
+  return type === 'task'
+    ? require('./src/cf-task-pool')
+    : require('./src/cf-application-pool');
+  /* eslint-enable global-require */
+}
 
-const BuildScheduler = require('./src/build-scheduler');
+const BuilderPool = getBuilderPool(appEnv.builderPoolType);
+const builderPool = new BuilderPool(appEnv);
+const buildQueue = new SQSClient(new AWS.SQS(), appEnv.sqsUrl);
+const server = createServer(builderPool, buildQueue);
 
-// Start a BuildScheduler
-const buildScheduler = new BuildScheduler();
+const buildScheduler = new BuildScheduler(
+  builderPool,
+  buildQueue,
+  server
+);
+
+process.on('unhandledRejection', (err) => {
+  logger.error(err);
+  process.exit(1);
+});
+
 buildScheduler.start();
