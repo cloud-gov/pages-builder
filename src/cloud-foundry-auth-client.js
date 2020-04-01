@@ -12,13 +12,11 @@ class CloudFoundryAuthClient {
   }
 
   accessToken() {
-    return new Promise((resolve) => {
-      if (this._tokenExpired()) {
-        resolve(this._fetchNewToken());
-      } else {
-        resolve(this._token);
-      }
-    });
+    if (!this._tokenExpired()) {
+      return Promise.resolve(this._token);
+    }
+
+    return this._fetchNewToken();
   }
 
   _fetchNewToken() {

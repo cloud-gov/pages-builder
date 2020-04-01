@@ -8,11 +8,14 @@ const logger = require('./src/logger');
  * See node_modules/lib/config.defaults.js in the agent distribution for a more complete
  * description of configuration variables and their potential values.
  */
-logger.info(`Activating New Relic: ${process.env.NEW_RELIC_APP_NAME}`);
+
+const { NEW_RELIC_APP_NAME, NEW_RELIC_LICENSE_KEY } = process.env;
+
+logger.info(`Activating New Relic: ${NEW_RELIC_APP_NAME}`);
 
 exports.config = {
-  app_name: [process.env.NEW_RELIC_APP_NAME],
-  license_key: process.env.NEW_RELIC_LICENSE_KEY,
+  app_name: [NEW_RELIC_APP_NAME],
+  license_key: NEW_RELIC_LICENSE_KEY,
   logging: {
     level: 'info',
   },

@@ -9,20 +9,25 @@ class NoContainersAvailableError extends Error {
   }
 }
 
-class Cluster {
-  constructor() {
+class CFApplicationPool {
+  constructor({ buildContainerBaseName, buildTimeout, numBuildContainers }) {
+    this._apiClient = new CloudFoundryAPIClient();
+
+    this._buildTimeout = buildTimeout;
+    this._buildContainerBaseName = buildContainerBaseName;
+    this._numBuildContainers = numBuildContainers;
+
     this._containers = [];
     this._monitoringCluster = false;
-    this._apiClient = new CloudFoundryAPIClient();
   }
 
   canStartBuild() {
-    return this._countAvailableContainers() > 0;
+    return Promise.resolve(this._countAvailableContainers() > 0);
   }
 
   start() {
     this._monitoringCluster = true;
-    this._monitorCluster();
+    return this._monitorCluster();
   }
 
   startBuild(build) {
@@ -52,11 +57,6 @@ class Cluster {
     }
   }
 
-  _buildTimeoutMilliseconds() {
-    const timeoutSeconds = parseInt(process.env.BUILD_TIMEOUT_SECONDS, 10) || 21 * 60;
-    return timeoutSeconds * 1000;
-  }
-
   _countAvailableContainers() {
     return this._containers.filter(container => !container.build).length;
   }
@@ -75,9 +75,17 @@ class Cluster {
     return this._containers.find(container => container.guid === guid);
   }
 
+  // Returns a resolved promise after one attempt at fetching containers
+  // Will never reject, even if there is an error.
   _monitorCluster() {
-    if (this._monitoringCluster) {
-      this._apiClient.fetchBuildContainers().then((containers) => {
+    if (!this._monitoringCluster) {
+      return Promise.resolve();
+    }
+
+    return this._apiClient.fetchBuildContainers(
+      this._buildContainerBaseName, this._numBuildContainers
+    )
+      .then((containers) => {
         this._resolveNewContainers(containers);
         logger.info('Cluster monitor: %s container(s) present', this._containers.length);
       }).catch((error) => {
@@ -87,7 +95,6 @@ class Cluster {
           this._monitorCluster();
         }, 60 * 1000);
       });
-    }
   }
 
   _resolveNewContainers(containers) {
@@ -110,7 +117,7 @@ class Cluster {
     container.timeout = setTimeout(() => {
       logger.warn('Build %s timed out', build.buildID);
       this._timeoutBuild(build);
-    }, this._buildTimeoutMilliseconds());
+    }, this._buildTimeout);
     return this._apiClient.updateBuildContainer(
       container,
       build.containerEnvironment
@@ -123,8 +130,8 @@ class Cluster {
 
   _timeoutBuild(build) {
     this.stopBuild(build.buildID);
-    new BuildTimeoutReporter(build).reportBuildTimeout();
+    BuildTimeoutReporter.reportBuildTimeout(build);
   }
 }
 
-module.exports = Cluster;
+module.exports = CFApplicationPool;

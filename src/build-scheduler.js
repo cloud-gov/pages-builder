@@ -22,45 +22,51 @@ class BuildScheduler {
   }
 
   _run() {
-    this._findAndScheduleNewBuild().catch((error) => {
-      logger.error(error);
-    }).then(() => {
-      if (this.running) {
-        setImmediate(() => {
-          this._run();
-        });
-      }
-    });
+    this._findAndScheduleNewBuild()
+      .catch((error) => {
+        logger.error(error);
+      })
+      .then(() => {
+        if (this.running) {
+          setImmediate(() => {
+            this._run();
+          });
+        }
+      });
   }
 
-  _attemptToStartBuild(build) {
+  async _attemptToStartBuild(build) {
     logger.verbose('Attempting to start build');
 
-    if (this._builderPool.canStartBuild()) {
+    if (await this._builderPool.canStartBuild()) {
       return this._startBuildAndDeleteMessage(build);
     }
+
     logger.info(
-      'No containers available. Stopping build %s and waiting',
+      'No resources available for build %s, waiting...',
       build.buildID
     );
-    return null;
+
+    return Promise.resolve(null);
   }
 
   _findAndScheduleNewBuild() {
-    logger.verbose('Receiving message');
+    logger.verbose('Waiting for message');
 
-    return this._buildQueue.receiveMessage().then((message) => {
-      if (message) {
-        const build = new Build(message);
-        const owner = build.containerEnvironment.OWNER;
-        const repo = build.containerEnvironment.REPOSITORY;
-        const branch = build.containerEnvironment.BRANCH;
-        logger.info('New build %s/%s/%s - %s', owner, repo, branch, build.buildID);
+    return this._buildQueue.receiveMessage()
+      .then((message) => {
+        if (message) {
+          logger.verbose('Received message');
+          const build = new Build(message);
+          const owner = build.containerEnvironment.OWNER;
+          const repo = build.containerEnvironment.REPOSITORY;
+          const branch = build.containerEnvironment.BRANCH;
+          logger.info('New build %s/%s/%s - %s', owner, repo, branch, build.buildID);
 
-        return this._attemptToStartBuild(build);
-      }
-      return null;
-    });
+          return this._attemptToStartBuild(build);
+        }
+        return null;
+      });
   }
 
   _startBuildAndDeleteMessage(build) {
