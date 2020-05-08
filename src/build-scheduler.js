@@ -38,7 +38,7 @@ class BuildScheduler {
   async _attemptToStartBuild(build) {
     logger.verbose('Attempting to start build');
 
-    if (await this._builderPool.canStartBuild()) {
+    if (await this._builderPool.canStartBuild(build)) {
       return this._startBuildAndDeleteMessage(build);
     }
 

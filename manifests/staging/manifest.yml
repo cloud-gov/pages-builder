@@ -19,3 +19,4 @@ applications:
     BUILD_TIMEOUT_SECONDS: 2700 # 45 * 60 seconds = 45 minutes
     CLOUD_FOUNDRY_OAUTH_TOKEN_URL: "https://login.fr.cloud.gov/oauth/token"
     LOG_LEVEL: "verbose"
+    CUSTOM_TASK_MEM_REPOS: '["davemcorwin/federalist-uswds-gatsby"]'
