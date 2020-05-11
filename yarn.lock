@@ -135,10 +135,10 @@
     lodash "^4.17.13"
     to-fast-properties "^2.0.0"
 
-"@grpc/grpc-js@^0.6.15":
-  version "0.6.18"
-  resolved "https://registry.yarnpkg.com/@grpc/grpc-js/-/grpc-js-0.6.18.tgz#ba3b3dfef869533161d192a385412a4abd0db127"
-  integrity sha512-uAzv/tM8qpbf1vpx1xPMfcUMzbfdqJtdCYAqY/LsLeQQlnTb4vApylojr+wlCyr7bZeg3AFfHvtihnNOQQt/nA==
+"@grpc/grpc-js@1.0.3":
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/@grpc/grpc-js/-/grpc-js-1.0.3.tgz#7fa2ba293ccc1e91b24074c2628c8c68336e18c4"
+  integrity sha512-JKV3f5Bv2TZxK6eJSB9EarsZrnLxrvcFNwI9goq0YRXa3S6NNoCSnI3cG3lkXVIJ03Wng1WXe76kc2JQtRe7AQ==
   dependencies:
     semver "^6.2.0"
 
@@ -2196,12 +2196,12 @@ natural-compare@^1.4.0:
   resolved "https://registry.yarnpkg.com/natural-compare/-/natural-compare-1.4.0.tgz#4abebfeed7541f2c27acfb29bdbbd15c8d5ba4f7"
   integrity sha1-Sr6/7tdUHywnrPspvbvRXI1bpPc=
 
-newrelic@^6.6.0:
-  version "6.6.0"
-  resolved "https://registry.yarnpkg.com/newrelic/-/newrelic-6.6.0.tgz#ed1c6914bf758a7703573354e551d3f82722f4d5"
-  integrity sha512-0pC8VheOQfnWMKs5WwF4SFa9BMwm34hobwwsEE3PePcRcGNSIo6MXZZDvptaBH+9ZOMuaWkK2q5y0h8UKPxq9w==
+newrelic@^6.7.0:
+  version "6.7.0"
+  resolved "https://registry.yarnpkg.com/newrelic/-/newrelic-6.7.0.tgz#577f3f4102b42617aab900fd1503f64124a739e4"
+  integrity sha512-NU5jCS8tm3T7A1ybEj+xShLilxPtKMS7nYzIf+QgbEsf8nFWoAvUdgr7J2Bszf6kC3mO0OsHKGLs/qb8CWU1qg==
   dependencies:
-    "@grpc/grpc-js" "^0.6.15"
+    "@grpc/grpc-js" "1.0.3"
     "@grpc/proto-loader" "^0.5.3"
     "@newrelic/aws-sdk" "^1.1.1"
     "@newrelic/koa" "^3.0.0"
