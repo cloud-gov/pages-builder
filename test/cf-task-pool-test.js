@@ -11,6 +11,7 @@ const defaults = {
   url: 'http://example.com',
   taskAppName: 'taskApp',
   taskAppCommand: 'echo',
+  customTaskMemRepos: [],
 };
 
 function createPool(params = {}) {
@@ -29,15 +30,23 @@ describe('CFTaskPool', () => {
 
   describe('.canStartBuild', () => {
     it('returns a promise that resolves to the value of calling _hasAvailableMemory()', async () => {
-      const foobar = 'foobar';
+      const foobar = true;
       const builderPool = createPool();
+      const build = {};
+      const requiredMemory = 3;
+
       sinon
         .stub(builderPool, '_hasAvailableMemory')
         .resolves(foobar);
 
-      const result = await builderPool.canStartBuild();
+      sinon
+        .stub(builderPool, '_requiredMemory')
+        .returns(requiredMemory);
 
-      sinon.assert.calledOnce(builderPool._hasAvailableMemory);
+      const result = await builderPool.canStartBuild(build);
+
+      sinon.assert.calledOnceWithExactly(builderPool._requiredMemory, build);
+      sinon.assert.calledOnceWithExactly(builderPool._hasAvailableMemory, requiredMemory);
       expect(result).to.eq(foobar);
     });
   });
@@ -304,6 +313,31 @@ describe('CFTaskPool', () => {
       expectedKeys.forEach(key => expect(result[key]).to.exist);
       expect(result.name).to.include(buildId);
       expect(result.command).to.include(taskAppCommand);
+      expect(result.memory_in_mb).to.eq(builderPool._taskMemory);
+    });
+
+    describe('when build requires custom memory', () => {
+      it('returns the custom memory', () => {
+        const expectedKeys = ['name', 'disk_in_mb', 'memory_in_mb', 'command'];
+        const buildId = 1234;
+        const taskAppCommand = 'command';
+
+        const build = {
+          containerEnvironment: {
+            BUILD_ID: buildId,
+            OWNER: 'owner',
+            REPOSITORY: 'REPO', // Checking case insensitivity as well
+          },
+        };
+        const builderPool = createPool({ taskAppCommand, customTaskMemRepos: ['owner/repo'] });
+        const result = builderPool._buildTask(build);
+
+        expect(result).to.be.an('object');
+        expectedKeys.forEach(key => expect(result[key]).to.exist);
+        expect(result.name).to.include(buildId);
+        expect(result.command).to.include(taskAppCommand);
+        expect(result.memory_in_mb).to.eq(CFTaskPool.CUSTOM_MEM);
+      });
     });
   });
 
@@ -336,7 +370,7 @@ describe('CFTaskPool', () => {
             { memory_in_mb: taskMemory },
           ]);
 
-        const hasAvailableMemory = await builderPool._hasAvailableMemory();
+        const hasAvailableMemory = await builderPool._hasAvailableMemory(taskMemory);
         expect(hasAvailableMemory).to.be.false;
       });
     });
@@ -347,7 +381,7 @@ describe('CFTaskPool', () => {
         sinon.stub(builderPool._apiClient, 'fetchActiveTasksForApp')
           .resolves([{ memory_in_mb: taskMemory }]);
 
-        const hasAvailableMemory = await builderPool._hasAvailableMemory();
+        const hasAvailableMemory = await builderPool._hasAvailableMemory(taskMemory);
         expect(hasAvailableMemory).to.be.true;
       });
     });
@@ -374,6 +408,34 @@ describe('CFTaskPool', () => {
       builderPool._timeoutBuild(build);
 
       sinon.assert.calledWith(builderPool._buildTimeoutReporter.reportBuildTimeout, build);
+    });
+  });
+
+  describe('._requiredMemory', () => {
+    it('returns the default memory', () => {
+      const builderPool = createPool();
+      const build = {
+        containerEnvironment: {
+          OWNER: 'owner',
+          REPOSITORY: 'REPO', // Checking case insensitivity as well
+        },
+      };
+      const result = builderPool._requiredMemory(build);
+      expect(result).to.eq(builderPool._taskMemory);
+    });
+
+    describe('when build requires custom memory', () => {
+      it('returns the custom memory', () => {
+        const builderPool = createPool({ customTaskMemRepos: ['owner/repo'] });
+        const build = {
+          containerEnvironment: {
+            OWNER: 'owner',
+            REPOSITORY: 'repo',
+          },
+        };
+        const result = builderPool._requiredMemory(build);
+        expect(result).to.eq(CFTaskPool.CUSTOM_MEM);
+      });
     });
   });
 });

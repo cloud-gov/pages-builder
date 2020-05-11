@@ -12,6 +12,7 @@ const {
   TASK_DISK_GB,
   TASK_MAX_MEM_GB,
   TASK_MEM_GB,
+  CUSTOM_TASK_MEM_REPOS,
 } = process.env;
 
 const vcapFile = NODE_ENV === 'test' ? './test/env.json' : '.env.json';
@@ -33,7 +34,7 @@ appEnv.cloudFoundryApiHost = cfApiHost;
 appEnv.spaceGUID = spaceId;
 
 appEnv.sqsCreds = sqsCreds;
-appEnv.sqsUrl = BUILDER_POOL_TYPE === 'task' ? sqsCreds.sqs_task_url : sqsCreds.sqs_url;
+appEnv.sqsUrl = sqsCreds.sqs_url;
 
 // Builder Pools
 appEnv.builderPoolType = BUILDER_POOL_TYPE;
@@ -49,5 +50,6 @@ appEnv.taskAppCommand = TASK_APP_COMMAND;
 appEnv.taskDisk = TASK_DISK_GB && parseInt(TASK_DISK_GB, 10) * 1024;
 appEnv.taskMemory = TASK_MEM_GB && parseInt(TASK_MEM_GB, 10) * 1024;
 appEnv.maxTaskMemory = TASK_MAX_MEM_GB && parseInt(TASK_MAX_MEM_GB, 10) * 1024;
+appEnv.customTaskMemRepos = JSON.parse(CUSTOM_TASK_MEM_REPOS || '[]');
 
 module.exports = appEnv;

@@ -5,9 +5,12 @@ const logger = require('./logger');
 
 class TaskStartError extends Error {}
 
+const CUSTOM_MEM = 8 * 1024;
+
 class CFTaskPool {
   constructor({
     buildTimeout, maxTaskMemory, taskAppName, taskAppCommand, taskDisk, taskMemory, url,
+    customTaskMemRepos,
   }) {
     this._apiClient = new CloudFoundryAPIClient();
     this._buildTimeoutReporter = BuildTimeoutReporter;
@@ -19,13 +22,15 @@ class CFTaskPool {
     this._taskDisk = taskDisk;
     this._taskMemory = taskMemory;
     this._url = url;
+    this._customTaskMemRepos = customTaskMemRepos;
 
     this._builds = {};
     this._taskAppGUID = null;
   }
 
-  canStartBuild() {
-    return this._hasAvailableMemory();
+  canStartBuild(build) {
+    const requestedMemory = this._requiredMemory(build);
+    return this._hasAvailableMemory(requestedMemory);
   }
 
   start() {
@@ -83,7 +88,7 @@ class CFTaskPool {
     return {
       name: `build-${e.BUILD_ID}`,
       disk_in_mb: this._taskDisk,
-      memory_in_mb: this._taskMemory,
+      memory_in_mb: this._requiredMemory(build),
       command: `${this._taskAppCommand} '${JSON.stringify(e)}'`,
     };
   }
@@ -94,13 +99,11 @@ class CFTaskPool {
     );
   }
 
-  async _hasAvailableMemory() {
+  async _hasAvailableMemory(requestedMemory) {
     const tasks = await this._apiClient.fetchActiveTasksForApp(this._taskAppGUID);
-    const memory = tasks.reduce((mem, task) => mem + task.memory_in_mb, 0);
+    const allocMemory = tasks.reduce((mem, task) => mem + task.memory_in_mb, 0);
 
-
-    const buffer = this._taskMemory;
-    return (memory + buffer) < this._maxTaskMemory;
+    return (allocMemory + requestedMemory) < this._maxTaskMemory;
   }
 
   _timeoutBuild(build) {
@@ -108,6 +111,16 @@ class CFTaskPool {
     this.stopBuild(build.buildID);
     this._buildTimeoutReporter.reportBuildTimeout(build);
   }
+
+  _requiredMemory(build) {
+    const { OWNER, REPOSITORY } = build.containerEnvironment;
+    const repo = `${OWNER}/${REPOSITORY}`.toLowerCase();
+    return this._customTaskMemRepos.includes(repo)
+      ? CUSTOM_MEM
+      : this._taskMemory;
+  }
 }
+
+CFTaskPool.CUSTOM_MEM = CUSTOM_MEM;
 
 module.exports = CFTaskPool;
