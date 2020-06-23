@@ -22,5 +22,4 @@ const mockV3ListTasksRequest = (appGUID, resources) => nock('https://api.example
     .filter(resource => ['PENDING', 'RUNNING', 'CANCELING'].includes(resource.state)),
 });
 
-
 module.exports = mockV3ListTasksRequest;
