@@ -9,7 +9,6 @@ const mockToken = (expiration = (Date.now() / 1000) + 600) => (
   jwt.sign({ exp: expiration }, '123abc')
 );
 
-
 describe('CloudFoundryAuthClient', () => {
   describe('.accessToken()', () => {
     afterEach(() => nock.cleanAll());

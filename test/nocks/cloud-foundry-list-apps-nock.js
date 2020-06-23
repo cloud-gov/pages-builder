@@ -30,5 +30,4 @@ const mockListAppsRequest = resources => nock('https://api.example.com', {
   resources: resources.map(expandResource),
 });
 
-
 module.exports = mockListAppsRequest;
