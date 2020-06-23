@@ -7,7 +7,6 @@ const mockTokenRequest = require('./nocks/cloud-foundry-oauth-token-nock');
 const mockListAppsRequest = require('./nocks/cloud-foundry-list-apps-nock');
 const mockListAppStatsRequest = require('./nocks/cloud-foundry-list-app-stats-nock');
 
-
 const mockCluster = () => ({ stopBuild: () => {} });
 const mockBuildQueue = (sqs = {}) => new SQSClient(sqs, 'QUEUE_URL');
 

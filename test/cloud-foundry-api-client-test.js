@@ -11,7 +11,6 @@ const mockUpdateAppRequest = require('./nocks/cloud-foundry-update-app-nock');
 const mockV3ListAppsRequest = require('./nocks/cloud-foundry-v3-list-apps-nock');
 const mockV3ListTasksRequest = require('./nocks/cloud-foundry-v3-list-tasks-nock');
 
-
 describe('CloudFoundryAPIClient', () => {
   const buildContainerBaseName = 'test-builder';
   const numBuildContainers = 2;

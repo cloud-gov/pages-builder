@@ -27,5 +27,4 @@ const mockV3ListAppsRequest = (appName, resources) => nock('https://api.example.
     .filter(resource => resource.name === appName),
 });
 
-
 module.exports = mockV3ListAppsRequest;
