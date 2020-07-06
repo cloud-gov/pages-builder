@@ -18,7 +18,7 @@
   "license": "CC0-1.0",
   "dependencies": {
     "@hapi/hapi": "^19.1.1",
-    "aws-sdk": "^2.706.0",
+    "aws-sdk": "^2.709.0",
     "axios": "^0.19.2",
     "cfenv": "^1.2.2",
     "jsonwebtoken": "^8.5.1",
@@ -28,7 +28,7 @@
   "devDependencies": {
     "chai": "^4.2.0",
     "dotenv": "^8.2.0",
-    "eslint": "^7.3.1",
+    "eslint": "^7.4.0",
     "eslint-config-airbnb-base": "^14.2.0",
     "eslint-plugin-import": "^2.22.0",
     "mocha": "^8.0.1",
