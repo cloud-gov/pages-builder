@@ -209,10 +209,10 @@
     "@hapi/boom" "9.x.x"
     "@hapi/hoek" "9.x.x"
 
-"@hapi/catbox@11.x.x":
-  version "11.0.1"
-  resolved "https://registry.yarnpkg.com/@hapi/catbox/-/catbox-11.0.1.tgz#c3a1ce5c7a5aa587471e16914745fd27ae861571"
-  integrity sha512-CsdannMSzWqLcJ7rXT55JGAzoR+BPXesKn9POOrF0A0wsumbUwHP7vxBUH/21YitcM/dLxjUfphkRAQT+XaoyQ==
+"@hapi/catbox@^11.1.0":
+  version "11.1.0"
+  resolved "https://registry.yarnpkg.com/@hapi/catbox/-/catbox-11.1.0.tgz#949380c82b8f1cd1f760d67569fcd34aba54f140"
+  integrity sha512-FDEjfn26RZRyOEPeZdaAL7dRiAK5FOGuwTnTw0gxK30csAlKeOHsEnoIxnLIXx7QOS17eUaOk6+MiweWQM6Keg==
   dependencies:
     "@hapi/boom" "9.x.x"
     "@hapi/hoek" "9.x.x"
@@ -243,17 +243,17 @@
   resolved "https://registry.yarnpkg.com/@hapi/formula/-/formula-2.0.0.tgz#edade0619ed58c8e4f164f233cda70211e787128"
   integrity sha512-V87P8fv7PI0LH7LiVi8Lkf3x+KCO7pQozXRssAHNXXL9L1K+uyu4XypLXwxqVDKgyQai6qj3/KteNlrqDx4W5A==
 
-"@hapi/hapi@^19.1.1":
-  version "19.1.1"
-  resolved "https://registry.yarnpkg.com/@hapi/hapi/-/hapi-19.1.1.tgz#d3b73777194b2229be81dd237b23b06711a781ca"
-  integrity sha512-rpQzSs0XsHSF7usM4qdJJ0Bcmhs9stWhUW3OiamW33bw4qL8q3uEgUKB9KH8ODmluCAkkXOQ0X0Dh9t94E5VIw==
+"@hapi/hapi@^19.2.0":
+  version "19.2.0"
+  resolved "https://registry.yarnpkg.com/@hapi/hapi/-/hapi-19.2.0.tgz#a177f27d1d067f1fb23de9c0a0b4349502190a7b"
+  integrity sha512-Isf/BUPQMRMYK+xx4y2B05lrrGw6PSbJKytk1SlaXeV7tXm6m+6tFRBog6c/na0QNgojafb0bjMB+vBg64CwUA==
   dependencies:
     "@hapi/accept" "^5.0.1"
     "@hapi/ammo" "^5.0.1"
     "@hapi/boom" "9.x.x"
     "@hapi/bounce" "2.x.x"
     "@hapi/call" "8.x.x"
-    "@hapi/catbox" "11.x.x"
+    "@hapi/catbox" "^11.1.0"
     "@hapi/catbox-memory" "5.x.x"
     "@hapi/heavy" "7.x.x"
     "@hapi/hoek" "9.x.x"
