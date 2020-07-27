@@ -814,10 +814,10 @@ camelcase@^5.0.0, camelcase@^5.3.1:
   resolved "https://registry.yarnpkg.com/camelcase/-/camelcase-5.3.1.tgz#e3c9b31569e106811df242f715725a1f4c494320"
   integrity sha512-L28STB170nwWS63UjtlEOE3dldQApaJXZkOI1uMFfzf3rRuPegHaHesyee+YxQ+W6SvRDQV6UrdOdRiR153wJg==
 
-cfenv@^1.2.2:
-  version "1.2.2"
-  resolved "https://registry.yarnpkg.com/cfenv/-/cfenv-1.2.2.tgz#5823bbfb63daca06d2f5617e2c7f4d863e1b99a8"
-  integrity sha512-fl8xrG9ezqfO7L664lL+/vkqXun0D/xS/0IJ9++IMHLR6SI0If56C/KIHy9oIGb8jq9swHZFdct1MfN/80yYUw==
+cfenv@^1.2.3:
+  version "1.2.3"
+  resolved "https://registry.yarnpkg.com/cfenv/-/cfenv-1.2.3.tgz#37c4fb92e8faae96a6f42418b6693fb121dc09b0"
+  integrity sha512-RDXQdRAVk7NxA4+/7ARr6RWkRnLQGH6o2+W0EQehc4vltfJYsyhRNYiivbfHu7Eh77yG9Rdn6JO/Wz/AuFE46Q==
   dependencies:
     js-yaml "3.13.x"
     ports "1.1.x"
