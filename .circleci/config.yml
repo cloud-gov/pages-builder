@@ -29,7 +29,7 @@ jobs:
           command: yarn eslint
       - run:
           name: Test
-          command: yarn test
+          command: yarn test:cover
       - run:
           name: Report test coverage
           # Attempt to submit coverage. Use `|| true` to always succeed even if that submission fails.

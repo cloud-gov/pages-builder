@@ -12,6 +12,8 @@ const {
   TASK_DISK_GB,
   TASK_MAX_MEM_GB,
   TASK_MEM_GB,
+  TASK_CUSTOM_MEM_GB,
+  TASK_CUSTOM_DISK_GB,
   CUSTOM_TASK_MEM_REPOS,
 } = process.env;
 
@@ -51,5 +53,7 @@ appEnv.taskDisk = TASK_DISK_GB && parseInt(TASK_DISK_GB, 10) * 1024;
 appEnv.taskMemory = TASK_MEM_GB && parseInt(TASK_MEM_GB, 10) * 1024;
 appEnv.maxTaskMemory = TASK_MAX_MEM_GB && parseInt(TASK_MAX_MEM_GB, 10) * 1024;
 appEnv.customTaskMemRepos = JSON.parse(CUSTOM_TASK_MEM_REPOS || '[]');
+appEnv.taskCustomMemory = TASK_CUSTOM_MEM_GB && parseInt(TASK_CUSTOM_MEM_GB, 10) * 1024;
+appEnv.taskCustomDisk = TASK_CUSTOM_DISK_GB && parseInt(TASK_CUSTOM_DISK_GB, 10) * 1024;
 
 module.exports = appEnv;
