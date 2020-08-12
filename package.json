@@ -11,27 +11,28 @@
   "scripts": {
     "dev": "node -r .env app",
     "start": "node app",
-    "test": "NODE_ENV=test nyc mocha --require test/env.js --exit",
+    "test": "NODE_ENV=test mocha --require test/env.js --exit",
+    "test:cover": "NODE_ENV=test nyc mocha --require test/env.js --exit",
     "eslint": "eslint ."
   },
   "author": "dhcole",
   "license": "CC0-1.0",
   "dependencies": {
-    "@hapi/hapi": "^19.1.1",
-    "aws-sdk": "^2.709.0",
+    "@hapi/hapi": "^19.2.0",
+    "aws-sdk": "^2.729.0",
     "axios": "^0.19.2",
-    "cfenv": "^1.2.2",
+    "cfenv": "^1.2.3",
     "jsonwebtoken": "^8.5.1",
-    "newrelic": "^6.10.0",
+    "newrelic": "^6.11.0",
     "winston": "^3.3.3"
   },
   "devDependencies": {
     "chai": "^4.2.0",
     "dotenv": "^8.2.0",
-    "eslint": "^7.4.0",
+    "eslint": "^7.6.0",
     "eslint-config-airbnb-base": "^14.2.0",
     "eslint-plugin-import": "^2.22.0",
-    "mocha": "^8.0.1",
+    "mocha": "^8.1.1",
     "nock": "^13.0.0",
     "nyc": "^15.1.0",
     "sinon": "^9.0.2"

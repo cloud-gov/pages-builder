@@ -12,6 +12,8 @@ const defaults = {
   taskAppName: 'taskApp',
   taskAppCommand: 'echo',
   customTaskMemRepos: [],
+  taskCustomDisk: 6 * 1024,
+  taskCustomMemory: 8 * 1024,
 };
 
 function createPool(params = {}) {
@@ -33,20 +35,19 @@ describe('CFTaskPool', () => {
       const foobar = true;
       const builderPool = createPool();
       const build = {};
-      const requiredMemory = 3;
 
       sinon
         .stub(builderPool, '_hasAvailableMemory')
         .resolves(foobar);
 
       sinon
-        .stub(builderPool, '_requiredMemory')
-        .returns(requiredMemory);
+        .stub(builderPool, '_requiresCustom')
+        .returns(false);
 
       const result = await builderPool.canStartBuild(build);
 
-      sinon.assert.calledOnceWithExactly(builderPool._requiredMemory, build);
-      sinon.assert.calledOnceWithExactly(builderPool._hasAvailableMemory, requiredMemory);
+      sinon.assert.calledOnceWithExactly(builderPool._requiresCustom, build);
+      sinon.assert.calledOnceWithExactly(builderPool._hasAvailableMemory, builderPool._taskMemory);
       expect(result).to.eq(foobar);
     });
   });
@@ -314,9 +315,10 @@ describe('CFTaskPool', () => {
       expect(result.name).to.include(buildId);
       expect(result.command).to.include(taskAppCommand);
       expect(result.memory_in_mb).to.eq(builderPool._taskMemory);
+      expect(result.disk_in_mb).to.eq(builderPool._taskDisk);
     });
 
-    describe('when build requires custom memory', () => {
+    describe('when build requires custom resources', () => {
       it('returns the custom memory', () => {
         const expectedKeys = ['name', 'disk_in_mb', 'memory_in_mb', 'command'];
         const buildId = 1234;
@@ -336,7 +338,8 @@ describe('CFTaskPool', () => {
         expectedKeys.forEach(key => expect(result[key]).to.exist);
         expect(result.name).to.include(buildId);
         expect(result.command).to.include(taskAppCommand);
-        expect(result.memory_in_mb).to.eq(CFTaskPool.CUSTOM_MEM);
+        expect(result.memory_in_mb).to.eq(builderPool._taskCustomMemory);
+        expect(result.disk_in_mb).to.eq(builderPool._taskCustomDisk);
       });
     });
   });
@@ -411,8 +414,8 @@ describe('CFTaskPool', () => {
     });
   });
 
-  describe('._requiredMemory', () => {
-    it('returns the default memory', () => {
+  describe('._requiresCustom', () => {
+    it('returns false', () => {
       const builderPool = createPool();
       const build = {
         containerEnvironment: {
@@ -420,12 +423,12 @@ describe('CFTaskPool', () => {
           REPOSITORY: 'REPO', // Checking case insensitivity as well
         },
       };
-      const result = builderPool._requiredMemory(build);
-      expect(result).to.eq(builderPool._taskMemory);
+      const result = builderPool._requiresCustom(build);
+      expect(result).to.be.false;
     });
 
     describe('when build requires custom memory', () => {
-      it('returns the custom memory', () => {
+      it('returns true', () => {
         const builderPool = createPool({ customTaskMemRepos: ['owner/repo'] });
         const build = {
           containerEnvironment: {
@@ -433,8 +436,8 @@ describe('CFTaskPool', () => {
             REPOSITORY: 'repo',
           },
         };
-        const result = builderPool._requiredMemory(build);
-        expect(result).to.eq(CFTaskPool.CUSTOM_MEM);
+        const result = builderPool._requiresCustom(build);
+        expect(result).to.be.true;
       });
     });
   });

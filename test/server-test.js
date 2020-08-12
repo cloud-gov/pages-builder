@@ -11,7 +11,10 @@ const mockCluster = () => ({ stopBuild: () => {} });
 const mockBuildQueue = (sqs = {}) => new SQSClient(sqs, 'QUEUE_URL');
 
 describe('server', () => {
-  afterEach(() => nock.cleanAll());
+  afterEach(() => {
+    nock.abortPendingRequests();
+    nock.cleanAll();
+  });
 
   describe('GET /', () => {
     it('should respond with a 200', (done) => {
