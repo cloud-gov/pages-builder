@@ -5,12 +5,10 @@ const logger = require('./logger');
 
 class TaskStartError extends Error {}
 
-const CUSTOM_MEM = 8 * 1024;
-
 class CFTaskPool {
   constructor({
     buildTimeout, maxTaskMemory, taskAppName, taskAppCommand, taskDisk, taskMemory, url,
-    customTaskMemRepos,
+    customTaskMemRepos, taskCustomMemory, taskCustomDisk,
   }) {
     this._apiClient = new CloudFoundryAPIClient();
     this._buildTimeoutReporter = BuildTimeoutReporter;
@@ -23,13 +21,15 @@ class CFTaskPool {
     this._taskMemory = taskMemory;
     this._url = url;
     this._customTaskMemRepos = customTaskMemRepos;
+    this._taskCustomMemory = taskCustomMemory;
+    this._taskCustomDisk = taskCustomDisk;
 
     this._builds = {};
     this._taskAppGUID = null;
   }
 
   canStartBuild(build) {
-    const requestedMemory = this._requiredMemory(build);
+    const requestedMemory = this._requiresCustom(build) ? this._taskCustomMemory : this._taskMemory;
     return this._hasAvailableMemory(requestedMemory);
   }
 
@@ -85,10 +85,12 @@ class CFTaskPool {
     e.BUILD_ID = `${e.BUILD_ID}`;
     e.SKIP_LOGGING = `${e.SKIP_LOGGING}`;
 
+    const requiresCustom = this._requiresCustom(build);
+
     return {
       name: `build-${e.BUILD_ID}`,
-      disk_in_mb: this._taskDisk,
-      memory_in_mb: this._requiredMemory(build),
+      disk_in_mb: requiresCustom ? this._taskCustomDisk : this._taskDisk,
+      memory_in_mb: requiresCustom ? this._taskCustomMemory : this._taskMemory,
       command: `${this._taskAppCommand} '${JSON.stringify(e)}'`,
     };
   }
@@ -112,15 +114,11 @@ class CFTaskPool {
     this._buildTimeoutReporter.reportBuildTimeout(build);
   }
 
-  _requiredMemory(build) {
+  _requiresCustom(build) {
     const { OWNER, REPOSITORY } = build.containerEnvironment;
     const repo = `${OWNER}/${REPOSITORY}`.toLowerCase();
-    return this._customTaskMemRepos.includes(repo)
-      ? CUSTOM_MEM
-      : this._taskMemory;
+    return this._customTaskMemRepos.includes(repo);
   }
 }
-
-CFTaskPool.CUSTOM_MEM = CUSTOM_MEM;
 
 module.exports = CFTaskPool;

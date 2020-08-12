@@ -49,6 +49,7 @@ describe('CFApplicationPool', () => {
 
   afterEach(() => {
     process.env.BUILD_TIMEOUT_SECONDS = undefined;
+    nock.abortPendingRequests();
     nock.cleanAll();
   });
 
@@ -156,7 +157,6 @@ describe('CFApplicationPool', () => {
         expect(buildID).to.equal('123abc');
         done();
       };
-      builderPool.start();
 
       setTimeout(() => {
         builderPool.startBuild({
@@ -165,7 +165,7 @@ describe('CFApplicationPool', () => {
             LOG_CALLBACK: logCallbackURL.href,
             STATUS_CALLBACK: statusCallbackURL.href,
           },
-        });
+        }).catch();
       }, 50);
     });
 
