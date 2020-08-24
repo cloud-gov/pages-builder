@@ -41,10 +41,12 @@ describe('CFApplicationPool', () => {
   const statusCallbackURL = url.parse('https://www.example.gov/status');
   let logCallbackNock;
   let statusCallbackNock;
+  const buildStatus = 'error';
+  const output = `Build status updated to ${buildStatus}: The build timed out`;
 
   beforeEach(() => {
-    logCallbackNock = mockBuildLogCallback(logCallbackURL);
-    statusCallbackNock = mockBuildStatusCallback(statusCallbackURL);
+    logCallbackNock = mockBuildLogCallback(logCallbackURL, output);
+    statusCallbackNock = mockBuildStatusCallback(statusCallbackURL, buildStatus);
   });
 
   afterEach(() => {
