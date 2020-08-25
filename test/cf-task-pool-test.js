@@ -393,7 +393,6 @@ describe('CFTaskPool', () => {
 
   describe('._timeoutBuild', () => {
     const build = { buildID: 1 };
-    const buildStatus = 'error';
 
     let builderPool;
 
@@ -412,7 +411,7 @@ describe('CFTaskPool', () => {
     it('reports the build timeout', () => {
       builderPool._timeoutBuild(build);
 
-      sinon.assert.calledWith(builderPool._buildStatusReporter.reportBuildStatus, build, buildStatus);
+      sinon.assert.calledWith(builderPool._buildStatusReporter.reportBuildStatus, build, 'error');
     });
   });
 
