@@ -41,10 +41,12 @@ describe('CFApplicationPool', () => {
   const statusCallbackURL = url.parse('https://www.example.gov/status');
   let logCallbackNock;
   let statusCallbackNock;
-  const buildStatus = 'error';
-  const output = `Build status updated to ${buildStatus}: The build timed out`;
+  let buildStatus;
+  let output;
 
   beforeEach(() => {
+    buildStatus = 'error';
+    output = `Build status updated to ${buildStatus}: The build timed out`;
     logCallbackNock = mockBuildLogCallback(logCallbackURL, output);
     statusCallbackNock = mockBuildStatusCallback(statusCallbackURL, buildStatus);
   });
@@ -114,6 +116,69 @@ describe('CFApplicationPool', () => {
         });
         setTimeout(() => {
           expect(builderPool._countAvailableContainers()).to.eq(0);
+          done();
+        }, 50);
+      }, 50);
+    });
+
+    it('should update build status to staged', (done) => {
+      buildStatus = 'staged';
+      output = `Build status updated to ${buildStatus}`;
+      logCallbackNock = mockBuildLogCallback(logCallbackURL, output);
+      statusCallbackNock = mockBuildStatusCallback(statusCallbackURL, buildStatus);
+      mockTokenRequest();
+      mockListAppsRequest([{}]);
+
+      const mockedUpdateRequest = mockUpdateAppRequest();
+      const mockedRestageRequest = mockRestageAppRequest();
+
+      const builderPool = startPool();
+
+      setTimeout(() => {
+        expect(logCallbackNock.isDone()).to.be.false;
+        expect(statusCallbackNock.isDone()).to.be.false;
+        builderPool.startBuild({
+          buildID: '123abc',
+          containerEnvironment: {
+            LOG_CALLBACK: logCallbackURL.href,
+            STATUS_CALLBACK: statusCallbackURL.href,
+          },
+        });
+        setTimeout(() => {
+          expect(logCallbackNock.isDone()).to.be.true;
+          expect(statusCallbackNock.isDone()).to.be.true;
+          done();
+        }, 50);
+      }, 50);
+    });
+
+    it('should NOT update build status to staged if build fails', (done) => {
+      buildStatus = 'staged';
+      output = `Build status updated to ${buildStatus}`;
+      logCallbackNock = mockBuildLogCallback(logCallbackURL, output);
+      statusCallbackNock = mockBuildStatusCallback(statusCallbackURL, buildStatus);
+      mockTokenRequest();
+      mockListAppsRequest([{ guid: 'fake-container' }]);
+
+      mockUpdateAppRequest();
+
+      nock('https://api.example.com').post(
+        '/v2/apps/fake-container/restage'
+      ).reply(500);
+
+      const builderPool = startPool();
+
+      setTimeout(() => {
+        builderPool.startBuild({
+          buildID: '123abc',
+          containerEnvironment: {
+            LOG_CALLBACK: logCallbackURL.href,
+            STATUS_CALLBACK: statusCallbackURL.href,
+          },
+        });
+        setTimeout(() => {
+          expect(logCallbackNock.isDone()).to.be.false;
+          expect(statusCallbackNock.isDone()).to.be.false;
           done();
         }, 50);
       }, 50);

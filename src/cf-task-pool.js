@@ -46,7 +46,7 @@ class CFTaskPool {
         taskGUID: task.guid,
         timeout: this._createBuildTimeout(build),
       };
-      BuildStatusReporter.reportBuildStatus(build, 'tasked');
+      this._buildStatusReporter.reportBuildStatus(build, 'tasked');
       return undefined;
     } catch (error) {
       throw new TaskStartError(error.message);
