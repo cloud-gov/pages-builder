@@ -30,7 +30,7 @@ function _sendBuildStatusRequest(build, buildStatus, buildErrorMsg) {
 }
 
 function reportBuildStatus(build, buildStatus) {
-  const buildErrorMsg =  buildStatus === 'error' ? 'The build timed out' : '';
+  const buildErrorMsg = buildStatus === 'error' ? 'The build timed out' : '';
 
   let buildLogOutput = `Build status updated to ${buildStatus}`;
   if (buildErrorMsg.length) {

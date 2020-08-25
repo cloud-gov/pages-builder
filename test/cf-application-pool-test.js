@@ -129,8 +129,8 @@ describe('CFApplicationPool', () => {
       mockTokenRequest();
       mockListAppsRequest([{}]);
 
-      const mockedUpdateRequest = mockUpdateAppRequest();
-      const mockedRestageRequest = mockRestageAppRequest();
+      mockUpdateAppRequest();
+      mockRestageAppRequest();
 
       const builderPool = startPool();
 

@@ -159,7 +159,7 @@ describe('CFTaskPool', () => {
       builderPool._taskAppGUID = taskAppGUID;
 
       const buildTaskSpy = sinon.spy(builderPool, '_buildTask');
-      sinon.spy(builderPool._buildStatusReporter,'reportBuildStatus');
+      sinon.spy(builderPool._buildStatusReporter, 'reportBuildStatus');
       sinon.stub(builderPool, '_createBuildTimeout').returns(timeOutHandle);
 
       getBuildTask = () => buildTaskSpy.getCall(0).returnValue;
