@@ -1,14 +1,9 @@
 const cfenv = require('cfenv');
 
 const {
-  BUILDER_POOL_TYPE,
-  BUILD_CONTAINER_BASE_NAME,
   BUILD_TIMEOUT_SECONDS,
   CLOUD_FOUNDRY_OAUTH_TOKEN_URL,
   NODE_ENV,
-  NUM_BUILD_CONTAINERS,
-  TASK_APP_NAME,
-  TASK_APP_COMMAND,
   TASK_DISK_GB,
   TASK_MAX_MEM_GB,
   TASK_MEM_GB,
@@ -38,17 +33,9 @@ appEnv.spaceGUID = spaceId;
 appEnv.sqsCreds = sqsCreds;
 appEnv.sqsUrl = sqsCreds.sqs_url;
 
-// Builder Pools
-appEnv.builderPoolType = BUILDER_POOL_TYPE;
 appEnv.buildTimeout = 1000 * (parseInt(BUILD_TIMEOUT_SECONDS, 10) || 21 * 60); // milliseconds
 
-// Application Builder Pool
-appEnv.buildContainerBaseName = BUILD_CONTAINER_BASE_NAME;
-appEnv.numBuildContainers = parseInt(NUM_BUILD_CONTAINERS, 10);
-
 // Task Builder Pool
-appEnv.taskAppName = TASK_APP_NAME;
-appEnv.taskAppCommand = TASK_APP_COMMAND;
 appEnv.taskDisk = TASK_DISK_GB && parseInt(TASK_DISK_GB, 10) * 1024;
 appEnv.taskMemory = TASK_MEM_GB && parseInt(TASK_MEM_GB, 10) * 1024;
 appEnv.maxTaskMemory = TASK_MAX_MEM_GB && parseInt(TASK_MAX_MEM_GB, 10) * 1024;

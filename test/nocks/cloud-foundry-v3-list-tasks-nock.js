@@ -10,12 +10,12 @@ const expandResource = (resource, idx) => {
   };
 };
 
-const mockV3ListTasksRequest = (appGUID, resources) => nock('https://api.example.com', {
+const mockV3ListTasksRequest = resources => nock('https://api.example.com', {
   reqheaders: {
     authorization: /Bearer .+/,
   },
 }).get(
-  `/v3/apps/${appGUID}/tasks?states=PENDING,RUNNING,CANCELING`
+  '/v3/tasks?states=PENDING,RUNNING,CANCELING&label_selector=type==build-task'
 ).reply(200, {
   resources: resources
     .map(expandResource)

@@ -9,8 +9,6 @@ const defaults = {
   taskDisk: 4 * 1024,
   taskMemory: 2 * 1024,
   url: 'http://example.com',
-  taskAppName: 'taskApp',
-  taskAppCommand: 'echo',
   customTaskMemRepos: [],
   taskCustomDisk: 6 * 1024,
   taskCustomMemory: 8 * 1024,
@@ -52,111 +50,22 @@ describe('CFTaskPool', () => {
     });
   });
 
-  describe('.start', () => {
-    describe('when the Cloud Foundry application was found', () => {
-      const taskAppName = 'taskAppName';
-      const taskAppGUID = 'taskAppGUID';
-      let builderPool;
-      let result;
-
-      before(async () => {
-        builderPool = createPool({ taskAppName });
-
-        sinon
-          .stub(builderPool._apiClient, 'fetchAppByName')
-          .resolves({ guid: taskAppGUID });
-
-        result = await builderPool.start();
-      });
-
-      it('calls CF API fetchAppByName with the taskAppName', () => {
-        sinon.assert.calledWith(builderPool._apiClient.fetchAppByName, taskAppName);
-      });
-
-      it('sets the taskAppGUID returned from the CF Api', () => {
-        expect(builderPool._taskAppGUID).to.eq(taskAppGUID);
-      });
-
-      it('returns a promise that resolves to `true`', () => {
-        expect(result).to.be.true;
-      });
-    });
-
-    describe('when the Cloud Foundry application cannot be found', () => {
-      const taskAppName = 'taskAppName';
-      let builderPool;
-      let result;
-
-      before(async () => {
-        builderPool = createPool({ taskAppName });
-
-        sinon
-          .stub(builderPool._apiClient, 'fetchAppByName')
-          .resolves(null);
-
-        result = await builderPool.start().catch(error => error);
-      });
-
-      it('calls CF API fetchAppByName with the taskAppName', () => {
-        sinon.assert.calledWith(builderPool._apiClient.fetchAppByName, taskAppName);
-      });
-
-      it('returns a rejected promise with an error', () => {
-        expect(result).to.be.an.instanceOf(Error);
-        expect(result.message).to.eq(`Unable to find application with name: ${taskAppName}`);
-      });
-
-      it('does not set the taskAppGUID', () => {
-        expect(builderPool._taskAppGUID).to.be.null;
-      });
-    });
-
-    describe('when there is an error using the Cloud Foundry api', () => {
-      const taskAppName = 'taskAppName';
-      const error = new Error('Hello World');
-      let builderPool;
-      let result;
-
-      before(async () => {
-        builderPool = createPool({ taskAppName });
-
-        sinon
-          .stub(builderPool._apiClient, 'fetchAppByName')
-          .rejects(error);
-
-        result = await builderPool.start().catch(err => err);
-      });
-
-      it('calls CF API fetchAppByName with the taskAppName', () => {
-        sinon.assert.calledWith(builderPool._apiClient.fetchAppByName, taskAppName);
-      });
-
-      it('returns a rejected promise with an error', () => {
-        expect(result).to.be.an.instanceOf(Error);
-        expect(result.message).to.eq(error.message);
-      });
-
-      it('does not set the taskAppGUID', () => {
-        expect(builderPool._taskAppGUID).to.be.null;
-      });
-    });
-  });
-
   describe('.startBuild', () => {
-    const taskAppGUID = 'abc123';
     const timeOutHandle = 1;
     const task = {
       name: 'task',
       guid: 'def987',
     };
-    const build = { buildID: 1, containerEnvironment: {} };
+    const build = {
+      buildID: 1,
+      containerEnvironment: {},
+    };
 
     let builderPool;
     let getBuildTask;
 
     beforeEach(() => {
       builderPool = createPool();
-      builderPool._taskAppGUID = taskAppGUID;
 
       const buildTaskSpy = sinon.spy(builderPool, '_buildTask');
       sinon.stub(builderPool, '_createBuildTimeout').returns(timeOutHandle);
@@ -164,8 +73,59 @@ describe('CFTaskPool', () => {
       getBuildTask = () => buildTaskSpy.getCall(0).returnValue;
     });
 
+    describe('when no build containers are found', () => {
+      it('rejects with a `TaskStartError`', async () => {
+        sinon.stub(builderPool._apiClient, 'fetchBuildContainersByLabel').resolves([]);
+
+        const result = await builderPool.startBuild({}).catch(error => error);
+
+        expect(result).to.be.a('Error');
+        expect(result.message).to.equal('No build containers exist in this space.');
+      });
+    });
+
+    describe('when no build containers for the specified name are found', () => {
+      it('rejects with a `TaskStartError`', async () => {
+        sinon.stub(builderPool._apiClient, 'fetchBuildContainersByLabel').resolves([{}]);
+
+        const result = await builderPool.startBuild({}).catch(error => error);
+
+        expect(result).to.be.a('Error');
+        expect(result.message).to.equal('Could not find build container with name: "default"');
+      });
+    });
+
+    describe('when starting the task fails', () => {
+      it('rejects with a TaskStartError', async () => {
+        const container = {
+          containerName: 'default',
+          guid: 'abc123',
+        };
+
+        sinon.stub(builderPool._apiClient, 'fetchBuildContainersByLabel').resolves([container]);
+        sinon.stub(builderPool._apiClient, 'startTaskForApp').rejects(new Error('uh oh'));
+
+        const result = await builderPool.startBuild(build).catch(error => error);
+
+        sinon.assert.calledWith(builderPool._buildTask, build);
+        sinon.assert.calledWith(
+          builderPool._apiClient.startTaskForApp, getBuildTask(), container.guid
+        );
+
+        expect(result).be.a('error');
+        expect(result.message).to.eq('uh oh');
+        expect(builderPool._builds[build.buildID]).to.be.undefined;
+      });
+    });
+
     describe('when successful', () => {
       it('starts the task in CF and adds the build GUID and timeout to an in-memory cache', async () => {
+        const container = {
+          containerName: 'default',
+          guid: 'abc123',
+        };
+
+        sinon.stub(builderPool._apiClient, 'fetchBuildContainersByLabel').resolves([container]);
         sinon.stub(builderPool._apiClient, 'startTaskForApp').resolves(task);
 
         expect(builderPool._builds[build.buildID]).to.be.undefined;
@@ -174,32 +134,13 @@ describe('CFTaskPool', () => {
 
         sinon.assert.calledWith(builderPool._buildTask, build);
         sinon.assert.calledWith(
-          builderPool._apiClient.startTaskForApp, getBuildTask(), taskAppGUID
+          builderPool._apiClient.startTaskForApp, getBuildTask(), container.guid
         );
 
         expect(builderPool._builds[build.buildID]).to.deep.equal({
           taskGUID: 'def987',
           timeout: timeOutHandle,
         });
-      });
-    });
-
-    describe('when there is an error', () => {
-      it('rejects with a TaskStartError', async () => {
-        sinon.stub(builderPool._apiClient, 'startTaskForApp').rejects(new Error('uh oh'));
-
-        expect(builderPool._builds[build.buildID]).to.be.undefined;
-
-        const result = await builderPool.startBuild(build).catch(error => error);
-
-        sinon.assert.calledWith(builderPool._buildTask, build);
-        sinon.assert.calledWith(
-          builderPool._apiClient.startTaskForApp, getBuildTask(), taskAppGUID
-        );
-
-        expect(result).be.a('error');
-        expect(result.message).to.eq('uh oh');
-        expect(builderPool._builds[build.buildID]).to.be.undefined;
       });
     });
   });
@@ -249,71 +190,25 @@ describe('CFTaskPool', () => {
     });
   });
 
-  describe('._setTaskAppGUID', () => {
-    describe('when the app cannot be found', () => {
-      it('does not set the task app guid', async () => {
-        const builderPool = createPool();
-        sinon.stub(builderPool._apiClient, 'fetchAppByName')
-          .resolves(null);
-
-        await builderPool._setTaskAppGUID('foobar').catch(error => error);
-
-        expect(builderPool._taskAppGUID) === null;
-      });
-
-      it('rejects with an error', async () => {
-        const builderPool = createPool();
-        sinon.stub(builderPool._apiClient, 'fetchAppByName')
-          .resolves(null);
-
-        const result = await builderPool._setTaskAppGUID('foobar').catch(error => error);
-        expect(result).to.be.an('error');
-      });
-    });
-
-    describe('when the app is found', () => {
-      it('sets the task app guid', async () => {
-        const appGUID = 1;
-
-        const builderPool = createPool();
-        sinon.stub(builderPool._apiClient, 'fetchAppByName')
-          .resolves({ guid: appGUID });
-
-        await builderPool._setTaskAppGUID('foobar');
-
-        expect(builderPool._taskAppGUID) === appGUID;
-      });
-
-      it('resolves true', async () => {
-        const builderPool = createPool();
-        sinon.stub(builderPool._apiClient, 'fetchAppByName')
-          .resolves({ guid: 1 });
-
-        const result = await builderPool._setTaskAppGUID('foobar');
-
-        expect(result).to.be.true;
-      });
-    });
-  });
-
   describe('._buildTask', () => {
     it('returns an object containing name, memory, disk, and command for task', () => {
       const expectedKeys = ['name', 'disk_in_mb', 'memory_in_mb', 'command'];
       const buildId = 1234;
-      const taskAppCommand = 'command';
+      const command = 'command';
 
       const build = {
         containerEnvironment: {
           BUILD_ID: buildId,
         },
       };
-      const builderPool = createPool({ taskAppCommand });
-      const result = builderPool._buildTask(build);
+
+      const builderPool = createPool();
+      const result = builderPool._buildTask(build, command);
 
       expect(result).to.be.an('object');
       expectedKeys.forEach(key => expect(result[key]).to.exist);
       expect(result.name).to.include(buildId);
-      expect(result.command).to.include(taskAppCommand);
+      expect(result.command).to.eq(`${command} ${JSON.stringify(build.containerEnvironment)}`);
       expect(result.memory_in_mb).to.eq(builderPool._taskMemory);
       expect(result.disk_in_mb).to.eq(builderPool._taskDisk);
     });
@@ -322,7 +217,7 @@ describe('CFTaskPool', () => {
       it('returns the custom memory', () => {
         const expectedKeys = ['name', 'disk_in_mb', 'memory_in_mb', 'command'];
         const buildId = 1234;
-        const taskAppCommand = 'command';
+        const command = 'command';
 
         const build = {
           containerEnvironment: {
@@ -331,13 +226,13 @@ describe('CFTaskPool', () => {
             REPOSITORY: 'REPO', // Checking case insensitivity as well
           },
         };
-        const builderPool = createPool({ taskAppCommand, customTaskMemRepos: ['owner/repo'] });
-        const result = builderPool._buildTask(build);
+        const builderPool = createPool({ customTaskMemRepos: ['owner/repo'] });
+        const result = builderPool._buildTask(build, command);
 
         expect(result).to.be.an('object');
         expectedKeys.forEach(key => expect(result[key]).to.exist);
         expect(result.name).to.include(buildId);
-        expect(result.command).to.include(taskAppCommand);
+        expect(result.command).to.eq(`${command} ${JSON.stringify(build.containerEnvironment)}`);
         expect(result.memory_in_mb).to.eq(builderPool._taskCustomMemory);
         expect(result.disk_in_mb).to.eq(builderPool._taskCustomDisk);
       });
@@ -367,7 +262,7 @@ describe('CFTaskPool', () => {
     describe('when there is not enough memory', () => {
       it('returns false', async () => {
         const builderPool = createPool({ taskMemory, maxTaskMemory });
-        sinon.stub(builderPool._apiClient, 'fetchActiveTasksForApp')
+        sinon.stub(builderPool._apiClient, 'fetchActiveTasks')
           .resolves([
             { memory_in_mb: taskMemory },
             { memory_in_mb: taskMemory },
@@ -381,7 +276,7 @@ describe('CFTaskPool', () => {
     describe('when there is enough memory', () => {
       it('returns true ', async () => {
         const builderPool = createPool({ taskMemory, maxTaskMemory });
-        sinon.stub(builderPool._apiClient, 'fetchActiveTasksForApp')
+        sinon.stub(builderPool._apiClient, 'fetchActiveTasks')
           .resolves([{ memory_in_mb: taskMemory }]);
 
         const hasAvailableMemory = await builderPool._hasAvailableMemory(taskMemory);

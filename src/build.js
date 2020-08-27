@@ -6,7 +6,7 @@ class Build {
   constructor(sqsMessage) {
     this.sqsMessage = sqsMessage;
     this.buildID = this._generateBuildID();
-    this.containerEnvironment = this._resolveContainerEnvironment(
+    this._resolveContainerEnvironment(
       this.buildID,
       this.sqsMessage
     );
@@ -24,17 +24,25 @@ class Build {
   }
 
   _resolveContainerEnvironment(buildID, sqsMessage) {
-    const environmentOverrides = JSON.parse(sqsMessage.Body).environment;
+    const {
+      containerName,
+      containerSize,
+      environment,
+    } = JSON.parse(sqsMessage.Body);
 
-    const environment = environmentOverrides.reduce(
-      (env, environmentOverride) => Object.assign(env, {
-        [environmentOverride.name]: environmentOverride.value,
-      }), {}
+    const containerEnvironment = environment.reduce(
+      (env, { name, value }) => ({ ...env, [name]: value }),
+      {}
     );
 
-    environment.FEDERALIST_BUILDER_CALLBACK = this._buildCallbackURL(buildID);
+    containerEnvironment.FEDERALIST_BUILDER_CALLBACK = this._buildCallbackURL(buildID);
 
-    return environment;
+    // force a string, might no longer be necessary
+    containerEnvironment.BUILD_ID = `${containerEnvironment.BUILD_ID}`;
+
+    this.containerEnvironment = containerEnvironment;
+    this.containerName = containerName;
+    this.containerSize = containerSize;
   }
 }
 

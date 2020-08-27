@@ -7,7 +7,7 @@ class TaskStartError extends Error {}
 
 class CFTaskPool {
   constructor({
-    buildTimeout, maxTaskMemory, taskAppName, taskAppCommand, taskDisk, taskMemory, url,
+    buildTimeout, maxTaskMemory, taskDisk, taskMemory, url,
     customTaskMemRepos, taskCustomMemory, taskCustomDisk,
   }) {
     this._apiClient = new CloudFoundryAPIClient();
@@ -15,8 +15,6 @@ class CFTaskPool {
 
     this._buildTimeout = buildTimeout;
     this._maxTaskMemory = maxTaskMemory;
-    this._taskAppName = taskAppName;
-    this._taskAppCommand = taskAppCommand;
     this._taskDisk = taskDisk;
     this._taskMemory = taskMemory;
     this._url = url;
@@ -29,18 +27,26 @@ class CFTaskPool {
   }
 
   canStartBuild(build) {
-    const requestedMemory = this._requiresCustom(build) ? this._taskCustomMemory : this._taskMemory;
+    const requestedMemory = this._containerSize(build).memory_in_mb;
     return this._hasAvailableMemory(requestedMemory);
   }
 
-  start() {
-    return this._setTaskAppGUID(this._taskAppName);
-  }
-
   async startBuild(build) {
-    const buildTask = this._buildTask(build);
+    const containers = await this._apiClient.fetchBuildContainersByLabel();
+    if (containers.length < 1) {
+      throw new TaskStartError('No build containers exist in this space.');
+    }
+
+    const containerName = build.containerName || 'default';
+    const container = containers.find(c => c.containerName === containerName);
+    if (!container) {
+      throw new TaskStartError(`Could not find build container with name: "${containerName}"`);
+    }
+
+    const buildTask = this._buildTask(build, container.command);
+
     try {
-      const task = await this._apiClient.startTaskForApp(buildTask, this._taskAppGUID);
+      const task = await this._apiClient.startTaskForApp(buildTask, container.guid);
       logger.info('Started build %s in task %s guid %s', build.buildID, task.name, task.guid);
       this._builds[build.buildID] = {
         taskGUID: task.guid,
@@ -67,31 +73,16 @@ class CFTaskPool {
       });
   }
 
-  _setTaskAppGUID(taskAppName) {
-    return this._apiClient.fetchAppByName(taskAppName)
-      .then((app) => {
-        if (!app) {
-          throw new Error(`Unable to find application with name: ${taskAppName}`);
-        }
-        this._taskAppGUID = app.guid;
-        return true;
-      });
-  }
+  _buildTask(build, command) {
+    const { containerEnvironment } = build;
 
-  _buildTask(build) {
-    const { containerEnvironment: e } = build;
-
-    // All values have to be strings
-    e.BUILD_ID = `${e.BUILD_ID}`;
-    e.SKIP_LOGGING = `${e.SKIP_LOGGING}`;
-
-    const requiresCustom = this._requiresCustom(build);
+    const params = JSON.stringify(containerEnvironment);
+    const size = this._containerSize(build);
 
     return {
-      name: `build-${e.BUILD_ID}`,
-      disk_in_mb: requiresCustom ? this._taskCustomDisk : this._taskDisk,
-      memory_in_mb: requiresCustom ? this._taskCustomMemory : this._taskMemory,
-      command: `${this._taskAppCommand} '${JSON.stringify(e)}'`,
+      name: `build-${containerEnvironment.BUILD_ID}`,
+      ...size,
+      command: `${command} '${params}'`,
     };
   }
 
@@ -102,7 +93,7 @@ class CFTaskPool {
   }
 
   async _hasAvailableMemory(requestedMemory) {
-    const tasks = await this._apiClient.fetchActiveTasksForApp(this._taskAppGUID);
+    const tasks = await this._apiClient.fetchActiveTasks();
     const allocMemory = tasks.reduce((mem, task) => mem + task.memory_in_mb, 0);
 
     return (allocMemory + requestedMemory) < this._maxTaskMemory;
@@ -118,6 +109,14 @@ class CFTaskPool {
     const { OWNER, REPOSITORY } = build.containerEnvironment;
     const repo = `${OWNER}/${REPOSITORY}`.toLowerCase();
     return this._customTaskMemRepos.includes(repo);
+  }
+
+  _containerSize(build) {
+    const isLargeContainer = (build.containerSize === 'large') || this._requiresCustom(build);
+    return {
+      disk_in_mb: isLargeContainer ? this._taskCustomDisk : this._taskDisk,
+      memory_in_mb: isLargeContainer ? this._taskCustomMemory : this._taskMemory,
+    };
   }
 }
 
