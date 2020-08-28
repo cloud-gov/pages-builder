@@ -1,5 +1,5 @@
 /* eslint-disable max-classes-per-file */
-const BuildTimeoutReporter = require('./build-timeout-reporter');
+const BuildStatusReporter = require('./build-status-reporter');
 const CloudFoundryAPIClient = require('./cloud-foundry-api-client');
 const logger = require('./logger');
 
@@ -36,6 +36,7 @@ class CFApplicationPool {
     if (container) {
       return this._startBuildOnContainer(build, container).then(() => {
         logger.info('Staged build %s on container %s', build.buildID, container.name);
+        return BuildStatusReporter.reportBuildStatus(build, 'staged');
       });
     }
     return Promise.reject(new NoContainersAvailableError());
@@ -130,7 +131,7 @@ class CFApplicationPool {
 
   _timeoutBuild(build) {
     this.stopBuild(build.buildID);
-    BuildTimeoutReporter.reportBuildTimeout(build);
+    BuildStatusReporter.reportBuildStatus(build, 'error');
   }
 }
 

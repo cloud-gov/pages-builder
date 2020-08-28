@@ -1,5 +1,5 @@
 /* eslint-disable max-classes-per-file */
-const BuildTimeoutReporter = require('./build-timeout-reporter');
+const BuildStatusReporter = require('./build-status-reporter');
 const CloudFoundryAPIClient = require('./cloud-foundry-api-client');
 const logger = require('./logger');
 
@@ -11,7 +11,7 @@ class CFTaskPool {
     customTaskMemRepos, taskCustomMemory, taskCustomDisk,
   }) {
     this._apiClient = new CloudFoundryAPIClient();
-    this._buildTimeoutReporter = BuildTimeoutReporter;
+    this._buildStatusReporter = BuildStatusReporter;
 
     this._buildTimeout = buildTimeout;
     this._maxTaskMemory = maxTaskMemory;
@@ -52,6 +52,7 @@ class CFTaskPool {
         taskGUID: task.guid,
         timeout: this._createBuildTimeout(build),
       };
+      this._buildStatusReporter.reportBuildStatus(build, 'tasked');
       return undefined;
     } catch (error) {
       throw new TaskStartError(error.message);
@@ -102,7 +103,7 @@ class CFTaskPool {
   _timeoutBuild(build) {
     logger.warn('Build %s timed out', build.buildID);
     this.stopBuild(build.buildID);
-    this._buildTimeoutReporter.reportBuildTimeout(build);
+    this._buildStatusReporter.reportBuildStatus(build, 'error');
   }
 
   _requiresCustom(build) {

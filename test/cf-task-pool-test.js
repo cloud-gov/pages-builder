@@ -68,6 +68,7 @@ describe('CFTaskPool', () => {
       builderPool = createPool();
 
       const buildTaskSpy = sinon.spy(builderPool, '_buildTask');
+      sinon.spy(builderPool._buildStatusReporter, 'reportBuildStatus');
       sinon.stub(builderPool, '_createBuildTimeout').returns(timeOutHandle);
 
       getBuildTask = () => buildTaskSpy.getCall(0).returnValue;
@@ -111,7 +112,7 @@ describe('CFTaskPool', () => {
         sinon.assert.calledWith(
           builderPool._apiClient.startTaskForApp, getBuildTask(), container.guid
         );
-
+        sinon.assert.notCalled(builderPool._buildStatusReporter.reportBuildStatus);
         expect(result).be.a('error');
         expect(result.message).to.eq('uh oh');
         expect(builderPool._builds[build.buildID]).to.be.undefined;
@@ -208,7 +209,7 @@ describe('CFTaskPool', () => {
       expect(result).to.be.an('object');
       expectedKeys.forEach(key => expect(result[key]).to.exist);
       expect(result.name).to.include(buildId);
-      expect(result.command).to.eq(`${command} ${JSON.stringify(build.containerEnvironment)}`);
+      expect(result.command).to.eq(`${command} '${JSON.stringify(build.containerEnvironment)}'`);
       expect(result.memory_in_mb).to.eq(builderPool._taskMemory);
       expect(result.disk_in_mb).to.eq(builderPool._taskDisk);
     });
@@ -232,7 +233,7 @@ describe('CFTaskPool', () => {
         expect(result).to.be.an('object');
         expectedKeys.forEach(key => expect(result[key]).to.exist);
         expect(result.name).to.include(buildId);
-        expect(result.command).to.eq(`${command} ${JSON.stringify(build.containerEnvironment)}`);
+        expect(result.command).to.eq(`${command} '${JSON.stringify(build.containerEnvironment)}'`);
         expect(result.memory_in_mb).to.eq(builderPool._taskCustomMemory);
         expect(result.disk_in_mb).to.eq(builderPool._taskCustomDisk);
       });
@@ -293,7 +294,7 @@ describe('CFTaskPool', () => {
     beforeEach(() => {
       builderPool = createPool();
       sinon.stub(builderPool, 'stopBuild');
-      sinon.stub(builderPool._buildTimeoutReporter, 'reportBuildTimeout');
+      sinon.stub(builderPool._buildStatusReporter, 'reportBuildStatus');
     });
 
     it('calls `this.stopBuild` with the buildID of the build', () => {
@@ -305,7 +306,7 @@ describe('CFTaskPool', () => {
     it('reports the build timeout', () => {
       builderPool._timeoutBuild(build);
 
-      sinon.assert.calledWith(builderPool._buildTimeoutReporter.reportBuildTimeout, build);
+      sinon.assert.calledWith(builderPool._buildStatusReporter.reportBuildStatus, build, 'error');
     });
   });
 
