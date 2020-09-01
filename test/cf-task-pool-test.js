@@ -159,6 +159,7 @@ describe('CFTaskPool', () => {
       builderPool._taskAppGUID = taskAppGUID;
 
       const buildTaskSpy = sinon.spy(builderPool, '_buildTask');
+      sinon.spy(builderPool._buildStatusReporter, 'reportBuildStatus');
       sinon.stub(builderPool, '_createBuildTimeout').returns(timeOutHandle);
 
       getBuildTask = () => buildTaskSpy.getCall(0).returnValue;
@@ -176,7 +177,7 @@ describe('CFTaskPool', () => {
         sinon.assert.calledWith(
           builderPool._apiClient.startTaskForApp, getBuildTask(), taskAppGUID
         );
-
+        sinon.assert.calledWith(builderPool._buildStatusReporter.reportBuildStatus, build, 'tasked');
         expect(builderPool._builds[build.buildID]).to.deep.equal({
           taskGUID: 'def987',
           timeout: timeOutHandle,
@@ -196,7 +197,7 @@ describe('CFTaskPool', () => {
         sinon.assert.calledWith(
           builderPool._apiClient.startTaskForApp, getBuildTask(), taskAppGUID
         );
-
+        sinon.assert.notCalled(builderPool._buildStatusReporter.reportBuildStatus);
         expect(result).be.a('error');
         expect(result.message).to.eq('uh oh');
         expect(builderPool._builds[build.buildID]).to.be.undefined;
@@ -398,7 +399,7 @@ describe('CFTaskPool', () => {
     beforeEach(() => {
       builderPool = createPool();
       sinon.stub(builderPool, 'stopBuild');
-      sinon.stub(builderPool._buildTimeoutReporter, 'reportBuildTimeout');
+      sinon.stub(builderPool._buildStatusReporter, 'reportBuildStatus');
     });
 
     it('calls `this.stopBuild` with the buildID of the build', () => {
@@ -410,7 +411,7 @@ describe('CFTaskPool', () => {
     it('reports the build timeout', () => {
       builderPool._timeoutBuild(build);
 
-      sinon.assert.calledWith(builderPool._buildTimeoutReporter.reportBuildTimeout, build);
+      sinon.assert.calledWith(builderPool._buildStatusReporter.reportBuildStatus, build, 'error');
     });
   });
 
