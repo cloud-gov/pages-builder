@@ -1,4 +1,3 @@
-const appEnv = require('../../env');
 const logger = require('../logger');
 const CloudFoundryAuthClient = require('../cloud-foundry-auth-client');
 const CloudFoundryApiClient = require('../cloud-foundry-api-client');
@@ -44,10 +43,7 @@ function createHealthcheckHandler(queueClient) {
     const checkPromises = [
       authClient.accessToken(), // make sure we can authenticate with cloud.gov
       queueClient.getQueueAttributes([ATTR_NUM_MESSAGES, ATTR_NUM_MESSAGES_DELAYED]),
-      apiClient.getBuildContainersState(
-        appEnv.buildContainerBaseName,
-        appEnv.numBuildContainers
-      ),
+      apiClient.getBuildContainersState(),
     ];
 
     let reply;

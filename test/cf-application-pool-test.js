@@ -175,7 +175,7 @@ describe('CFApplicationPool', () => {
             LOG_CALLBACK: logCallbackURL.href,
             STATUS_CALLBACK: statusCallbackURL.href,
           },
-        });
+        }).catch(e => e);
         setTimeout(() => {
           expect(logCallbackNock.isDone()).to.be.false;
           expect(statusCallbackNock.isDone()).to.be.false;
