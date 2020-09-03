@@ -10,9 +10,6 @@ applications:
       - federalist-((env))-sqs-creds
       - federalist-deploy-user
     env:
-      BUILDER_POOL_TYPE: task
-      TASK_APP_NAME: federalist-build-container((env_postfix))
-      TASK_APP_COMMAND: "cd app && python main.py -p"
       TASK_MEM_GB: 2
       TASK_DISK_GB: 4
       TASK_MAX_MEM_GB: ((task_max_mem))

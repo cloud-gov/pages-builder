@@ -4,7 +4,7 @@ const nock = require('nock');
 const server = require('../src/server');
 const SQSClient = require('../src/sqs-client');
 const mockTokenRequest = require('./nocks/cloud-foundry-oauth-token-nock');
-const mockListAppsRequest = require('./nocks/cloud-foundry-list-apps-nock');
+const mockListAppsRequest = require('./nocks/cloud-foundry-list-apps-by-label-nock');
 const mockListAppStatsRequest = require('./nocks/cloud-foundry-list-app-stats-nock');
 
 const mockCluster = () => ({ stopBuild: () => {} });
@@ -67,7 +67,6 @@ describe('server', () => {
           const expected = {
             ok: true,
             buildContainers: {
-              expected: 2,
               found: 2,
               started: 2,
             },
@@ -169,7 +168,6 @@ describe('server', () => {
             ok: false,
             reasons: [
               [
-                'Expected 2 build containers but only 1 found.',
                 'Not all build containers are in the STARTED state.',
               ].join('\n'),
             ],
@@ -236,7 +234,6 @@ describe('server', () => {
             reasons: [
               error.error,
               [
-                'Expected 2 build containers but only 1 found.',
                 'Not all build containers are in the STARTED state.',
               ].join('\n'),
             ],

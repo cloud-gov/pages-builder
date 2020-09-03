@@ -36,7 +36,7 @@ class CFApplicationPool {
     if (container) {
       return this._startBuildOnContainer(build, container).then(() => {
         logger.info('Staged build %s on container %s', build.buildID, container.name);
-        BuildStatusReporter.reportBuildStatus(build, 'staged');
+        return BuildStatusReporter.reportBuildStatus(build, 'staged');
       });
     }
     return Promise.reject(new NoContainersAvailableError());

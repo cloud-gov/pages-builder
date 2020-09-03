@@ -4,6 +4,7 @@ const appEnv = require('../env');
 const CloudFoundryAuthClient = require('./cloud-foundry-auth-client');
 
 const STATE_STARTED = 'STARTED';
+const TASK_LABEL = 'build-task';
 
 class CloudFoundryAPIClient {
   constructor() {
@@ -13,6 +14,17 @@ class CloudFoundryAPIClient {
   fetchBuildContainers(buildContainerBaseName, numBuildContainers) {
     return this._authRequest('GET', `/v2/spaces/${appEnv.spaceGUID}/apps`)
       .then(body => this._filterAppsResponse(buildContainerBaseName, numBuildContainers, body));
+  }
+
+  fetchBuildContainersByLabel() {
+    return this._authRequest('GET', '/v3/apps/?label_selector=type==build-container')
+      .then(body => body.resources.map(app => ({
+        guid: app.guid,
+        name: app.name,
+        state: app.state,
+        containerName: app.metadata.labels.name,
+        command: app.metadata.annotations.command,
+      })));
   }
 
   fetchAppStats(appGUID) {
@@ -54,51 +66,51 @@ class CloudFoundryAPIClient {
       .then(data => data.resources.find(app => app.name === appName));
   }
 
-  fetchActiveTasksForApp(appGUID) {
-    const params = 'states=PENDING,RUNNING,CANCELING';
-    return this._authRequest('GET', `/v3/apps/${appGUID}/tasks?${params}`)
+  fetchActiveTasks() {
+    const qs = new URLSearchParams();
+    qs.set('states', 'PENDING,RUNNING,CANCELING');
+    qs.set('label_selector', `type==${TASK_LABEL}`);
+
+    return this._authRequest('GET', `/v3/tasks?${qs.toString()}`)
       .then(data => data.resources);
   }
 
   startTaskForApp(task, appGUID) {
-    return this._authRequest('POST', `/v3/apps/${appGUID}/tasks`, task);
+    const taskParams = {
+      ...task,
+      metadata: { labels: { type: TASK_LABEL } },
+    };
+    return this._authRequest('POST', `/v3/apps/${appGUID}/tasks`, taskParams);
   }
 
   stopTask(taskGUID) {
     return this._authRequest('POST', `/v3/tasks/${taskGUID}/actions/cancel`);
   }
 
-  getBuildContainersState(buildContainerBaseName, numBuildContainers) {
+  async getBuildContainersState() {
     const containerErrors = [];
-    let _numBuildContainers;
-    let _startedContainers;
 
-    return this.fetchBuildContainers(buildContainerBaseName, numBuildContainers)
-      .then((buildContainers) => {
-        _numBuildContainers = buildContainers.length;
-        _startedContainers = buildContainers.filter(bc => bc.state === STATE_STARTED);
+    const buildContainers = await this.fetchBuildContainersByLabel();
 
-        if (_numBuildContainers < numBuildContainers) {
-          containerErrors.push(`Expected ${numBuildContainers} build containers but only ${_numBuildContainers} found.`);
-        }
+    const numBuildContainers = buildContainers.length;
+    const startedContainers = buildContainers.filter(bc => bc.state === STATE_STARTED);
+    const numStartedContainers = startedContainers.length;
 
-        if (_startedContainers.length !== numBuildContainers) {
-          containerErrors.push(`Not all build containers are in the ${STATE_STARTED} state.`);
-        }
+    if (numStartedContainers !== numBuildContainers) {
+      containerErrors.push(`Not all build containers are in the ${STATE_STARTED} state.`);
+    }
 
-        return this.fetchAllAppInstanceErrors(_startedContainers);
-      })
-      .then(instanceErrors => containerErrors.concat(instanceErrors))
-      .then((errors) => {
-        if (errors.length) {
-          return { error: errors.join('\n') };
-        }
-        return {
-          expected: numBuildContainers,
-          found: _numBuildContainers,
-          started: _startedContainers.length,
-        };
-      });
+    const instanceErrors = await this.fetchAllAppInstanceErrors(startedContainers);
+    containerErrors.push(...instanceErrors);
+
+    if (containerErrors.length) {
+      return { error: containerErrors.join('\n') };
+    }
+
+    return {
+      found: numBuildContainers,
+      started: numStartedContainers,
+    };
   }
 
   updateBuildContainer(container, environment) {

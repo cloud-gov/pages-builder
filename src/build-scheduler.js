@@ -10,7 +10,6 @@ class BuildScheduler {
 
   start() {
     this._server.start();
-    this._builderPool.start();
     this.running = true;
     this._run();
   }

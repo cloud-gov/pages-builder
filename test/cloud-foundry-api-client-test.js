@@ -3,7 +3,7 @@ const nock = require('nock');
 
 const CloudFoundryAPIClient = require('../src/cloud-foundry-api-client');
 
-const mockListAppsRequest = require('./nocks/cloud-foundry-list-apps-nock');
+const mockListAppsRequest = require('./nocks/cloud-foundry-list-apps-by-label-nock');
 const mockListAppStatsRequest = require('./nocks/cloud-foundry-list-app-stats-nock');
 const mockRestageAppRequest = require('./nocks/cloud-foundry-restage-app-nock');
 const mockTokenRequest = require('./nocks/cloud-foundry-oauth-token-nock');
@@ -13,7 +13,6 @@ const mockV3ListTasksRequest = require('./nocks/cloud-foundry-v3-list-tasks-nock
 
 describe('CloudFoundryAPIClient', () => {
   const buildContainerBaseName = 'test-builder';
-  const numBuildContainers = 2;
 
   afterEach(() => nock.cleanAll());
 
@@ -43,63 +42,46 @@ describe('CloudFoundryAPIClient', () => {
     });
   });
 
-  describe('.fetchBuildContainers()', () => {
+  describe('.fetchBuildContainersByLabel()', () => {
     it('should resolve with an empty array if there are no apps', async () => {
       mockTokenRequest();
       mockListAppsRequest([]);
 
       const apiClient = new CloudFoundryAPIClient();
-      const containers = await apiClient.fetchBuildContainers(
-        buildContainerBaseName, numBuildContainers
-      );
+      const containers = await apiClient.fetchBuildContainersByLabel();
 
       expect(containers).to.deep.equal([]);
     });
 
-    it('should resolve with an empty array if there are no containers with the expected name', async () => {
-      mockTokenRequest();
-      mockListAppsRequest([
-        { name: 'foo-builder-1' },
-        { name: 'boo-builder-2' },
-      ]);
-
-      const apiClient = new CloudFoundryAPIClient();
-      const containers = await apiClient.fetchBuildContainers(
-        buildContainerBaseName, numBuildContainers
-      );
-
-      expect(containers).to.deep.equal([]);
-    });
-
-    it('should resolve with filtered containers with the expected names', async () => {
-      const container1 = {
-        guid: '123abc',
-        name: 'test-builder-1',
-        state: 'STATE',
-        url: '/v2/apps/123abc',
-      };
-
-      const container2 = {
-        guid: '456def',
-        name: 'test-builder-2',
-        state: 'STATE',
-        url: '/v2/apps/456def',
+    it('should resolve with appropriate schema', async () => {
+      const app = {
+        guid: 'guid',
+        name: 'name',
+        state: 'state',
+        metadata: {
+          labels: {
+            type: 'type',
+            name: 'name',
+          },
+          annotations: {
+            command: 'command',
+          },
+        },
       };
 
       mockTokenRequest();
-      mockListAppsRequest([
-        container1,
-        container2,
-        { name: 'test-builder-3' },
-      ]);
+      mockListAppsRequest([app]);
 
       const apiClient = new CloudFoundryAPIClient();
-      const containers = await apiClient.fetchBuildContainers(
-        buildContainerBaseName, numBuildContainers
-      );
+      const containers = await apiClient.fetchBuildContainersByLabel();
 
-      expect(containers).to.have.length(2);
-      expect(containers).to.deep.equal([container1, container2]);
+      expect(containers[0]).to.deep.equal({
+        guid: 'guid',
+        name: 'name',
+        state: 'state',
+        containerName: app.metadata.labels.name,
+        command: app.metadata.annotations.command,
+      });
     });
   });
 
@@ -145,38 +127,11 @@ describe('CloudFoundryAPIClient', () => {
       mockListAppStatsRequest('456def', { 0: { state: 'RUNNING' } });
 
       const apiClient = new CloudFoundryAPIClient();
-      const state = await apiClient.getBuildContainersState(
-        buildContainerBaseName, numBuildContainers
-      );
+      const state = await apiClient.getBuildContainersState();
 
       expect(state).to.deep.equal({
-        expected: 2,
         found: 2,
         started: 2,
-      });
-    });
-
-    it('should resolve with an error if there are too few build containers', async () => {
-      mockTokenRequest();
-      mockListAppsRequest([
-        {
-          guid: '123abc',
-          name: 'test-builder-1',
-          state: 'STARTED',
-        },
-      ]);
-      mockListAppStatsRequest('123abc', { 0: { state: 'RUNNING' } });
-
-      const apiClient = new CloudFoundryAPIClient();
-      const state = await apiClient.getBuildContainersState(
-        buildContainerBaseName, numBuildContainers
-      );
-
-      expect(state).to.deep.equal({
-        error: [
-          'Expected 2 build containers but only 1 found.',
-          'Not all build containers are in the STARTED state.',
-        ].join('\n'),
       });
     });
 
@@ -198,9 +153,7 @@ describe('CloudFoundryAPIClient', () => {
       mockListAppStatsRequest('456def', { 0: { state: 'RUNNING' } });
 
       const apiClient = new CloudFoundryAPIClient();
-      const state = await apiClient.getBuildContainersState(
-        buildContainerBaseName, numBuildContainers
-      );
+      const state = await apiClient.getBuildContainersState();
 
       expect(state).to.deep.equal({
         error: 'Not all build containers are in the STARTED state.',
@@ -230,9 +183,7 @@ describe('CloudFoundryAPIClient', () => {
       });
 
       const apiClient = new CloudFoundryAPIClient();
-      const state = await apiClient.getBuildContainersState(
-        buildContainerBaseName, numBuildContainers
-      );
+      const state = await apiClient.getBuildContainersState();
 
       expect(state).to.deep.equal({
         error: 'test-builder-2:\tNot all instances for are running. {"RUNNING":1,"CRASHED":1}',
@@ -260,9 +211,7 @@ describe('CloudFoundryAPIClient', () => {
     mockListAppStatsRequest('456def', {});
 
     const apiClient = new CloudFoundryAPIClient();
-    const state = await apiClient.getBuildContainersState(
-      buildContainerBaseName, numBuildContainers
-    );
+    const state = await apiClient.getBuildContainersState();
 
     expect(state).to.deep.equal({
       error: 'test-builder-2 has 0 running instances',
@@ -301,8 +250,7 @@ describe('CloudFoundryAPIClient', () => {
     });
   });
 
-  describe('.fetchActiveTasksForApp', () => {
-    const appGUID = 'abc123';
+  describe('.fetchActiveTasks', () => {
     const activeTasks = [
       { name: 'pending', state: 'PENDING' },
       { name: 'running', state: 'RUNNING' },
@@ -324,20 +272,20 @@ describe('CloudFoundryAPIClient', () => {
 
     describe('when there are active tasks for the app', () => {
       it('resolves with only the active tasks', async () => {
-        mockV3ListTasksRequest(appGUID, allTasks);
+        mockV3ListTasksRequest(allTasks);
 
         const apiClient = new CloudFoundryAPIClient();
-        const result = await apiClient.fetchActiveTasksForApp(appGUID);
+        const result = await apiClient.fetchActiveTasks();
         expect(result).to.have.deep.members(activeTasks);
       });
     });
 
     describe('when there are NO active tasks for the app', () => {
       it('resolves with an empty array', async () => {
-        mockV3ListTasksRequest(appGUID, inactiveTasks);
+        mockV3ListTasksRequest(inactiveTasks);
 
         const apiClient = new CloudFoundryAPIClient();
-        const result = await apiClient.fetchActiveTasksForApp(appGUID);
+        const result = await apiClient.fetchActiveTasks();
 
         expect(result).to.deep.eq([]);
       });
