@@ -1,4 +1,5 @@
-version: 2
+version: 2.1
+
 jobs:
   build:
     docker:
@@ -28,11 +29,58 @@ jobs:
           command: yarn eslint
       - run:
           name: Test
-          command: yarn test
+          command: yarn test:cover
       - run:
           name: Report test coverage
           # Attempt to submit coverage. Use `|| true` to always succeed even if that submission fails.
           command: ./cc-test-reporter after-build --exit-code $? < coverage/lcov.info || true
+
+  deploy:
+    machine: true    
+    environment:
+      CF_MANIFEST: ./.cloudgov/manifest.yml
+    steps:
+      - checkout
+      - restore_cache:
+          key: dependency-cache-{{ checksum "yarn.lock" }}
+      - when:
+          condition:
+            equal: [ staging, << pipeline.git.branch >> ]
+          steps:
+            run:
+              name: Setup Staging Environment
+              command: |
+                echo "export CF_USERNAME=$CF_USERNAME_STAGING" >> $BASH_ENV
+                echo "export CF_PASSWORD=$CF_PASSWORD_STAGING" >> $BASH_ENV
+                echo "export CF_SPACE=staging" >> $BASH_ENV
+                echo "export CF_APP=federalist-builder-staging" >> $BASH_ENV
+                echo "export CF_VARS_FILE=./.cloudgov/vars/staging.yml" >> $BASH_ENV
+      - when:
+          condition:
+            equal: [ main, << pipeline.git.branch >> ]
+          steps:
+            run:
+              name: Setup Production Environment
+              command: |
+                echo "export CF_USERNAME=$CF_USERNAME_PRODUCTION" >> $BASH_ENV
+                echo "export CF_PASSWORD=$CF_PASSWORD_PRODUCTION" >> $BASH_ENV
+                echo "export CF_SPACE=production" >> $BASH_ENV
+                echo "export CF_APP=federalist-builder" >> $BASH_ENV
+                echo "export CF_VARS_FILE=./.cloudgov/vars/production.yml" >> $BASH_ENV
       - deploy:
-          name: Deploy to cloud.gov
-          command: ./scripts/deploy-circle.sh
+          command: ./.cloudgov/deploy.sh
+
+
+workflows:
+  version: 2
+  build-test-deploy:
+    jobs:
+      - build
+      - deploy:
+          requires:
+            - build
+          filters:
+            branches:
+              only:
+                - staging
+                - main

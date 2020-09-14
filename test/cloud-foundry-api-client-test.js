@@ -3,14 +3,17 @@ const nock = require('nock');
 
 const CloudFoundryAPIClient = require('../src/cloud-foundry-api-client');
 
-const mockListAppsRequest = require('./nocks/cloud-foundry-list-apps-nock');
+const mockListAppsRequest = require('./nocks/cloud-foundry-list-apps-by-label-nock');
 const mockListAppStatsRequest = require('./nocks/cloud-foundry-list-app-stats-nock');
 const mockRestageAppRequest = require('./nocks/cloud-foundry-restage-app-nock');
 const mockTokenRequest = require('./nocks/cloud-foundry-oauth-token-nock');
 const mockUpdateAppRequest = require('./nocks/cloud-foundry-update-app-nock');
-
+const mockV3ListAppsRequest = require('./nocks/cloud-foundry-v3-list-apps-nock');
+const mockV3ListTasksRequest = require('./nocks/cloud-foundry-v3-list-tasks-nock');
 
 describe('CloudFoundryAPIClient', () => {
+  const buildContainerBaseName = 'test-builder';
+
   afterEach(() => nock.cleanAll());
 
   describe('.fetchAppStats()', () => {
@@ -39,60 +42,46 @@ describe('CloudFoundryAPIClient', () => {
     });
   });
 
-  describe('.fetchBuildContainers()', () => {
-    it('should resolve with an empty array if there are no apps', (done) => {
+  describe('.fetchBuildContainersByLabel()', () => {
+    it('should resolve with an empty array if there are no apps', async () => {
       mockTokenRequest();
       mockListAppsRequest([]);
 
       const apiClient = new CloudFoundryAPIClient();
-      apiClient.fetchBuildContainers()
-        .then((containers) => {
-          expect(containers).to.deep.equal([]);
-          done();
-        });
+      const containers = await apiClient.fetchBuildContainersByLabel();
+
+      expect(containers).to.deep.equal([]);
     });
 
-    it('should resolve with an empty array if there are no containers running the build image', (done) => {
-      mockTokenRequest();
-      mockListAppsRequest([
-        { dockerImage: null },
-        { dockerImage: 'library/registry:2' },
-      ]);
-
-      const apiClient = new CloudFoundryAPIClient();
-      apiClient.fetchBuildContainers()
-        .then((containers) => {
-          expect(containers).to.deep.equal([]);
-          done();
-        });
-    });
-
-    it('should resolve with filtered containers running the build image', (done) => {
-      mockTokenRequest();
-      mockListAppsRequest([
-        { dockerImage: null },
-        { dockerImage: 'library/registry:2' },
-        {
-          guid: '123abc',
-          name: 'builder-1',
-          state: 'STATE',
-          dockerImage: 'example.com:5000/builder/1',
+    it('should resolve with appropriate schema', async () => {
+      const app = {
+        guid: 'guid',
+        name: 'name',
+        state: 'state',
+        metadata: {
+          labels: {
+            type: 'type',
+            name: 'name',
+          },
+          annotations: {
+            command: 'command',
+          },
         },
-      ]);
+      };
+
+      mockTokenRequest();
+      mockListAppsRequest([app]);
 
       const apiClient = new CloudFoundryAPIClient();
-      apiClient.fetchBuildContainers()
-        .then((containers) => {
-          expect(containers).to.have.length(1);
-          expect(containers).to.deep.equal([{
-            guid: '123abc',
-            url: '/v2/apps/123abc',
-            name: 'builder-1',
-            state: 'STATE',
-            dockerImage: 'example.com:5000/builder/1',
-          }]);
-          done();
-        });
+      const containers = await apiClient.fetchBuildContainersByLabel();
+
+      expect(containers[0]).to.deep.equal({
+        guid: 'guid',
+        name: 'name',
+        state: 'state',
+        containerName: app.metadata.labels.name,
+        command: app.metadata.annotations.command,
+      });
     });
   });
 
@@ -119,22 +108,18 @@ describe('CloudFoundryAPIClient', () => {
   });
 
   describe('.getBuildContainersState()', () => {
-    // these tests rely on the EXPECTED_NUM_BUILD_CONTAINERS env var
-    // that is set in ./test/env.js
-    it('should resolve with the state of the build containers', (done) => {
+    it('should resolve with the state of the build containers', async () => {
       mockTokenRequest();
       mockListAppsRequest([
         {
           guid: '123abc',
-          name: 'builder-1',
+          name: 'test-builder-1',
           state: 'STARTED',
-          dockerImage: 'example.com:5000/builder/1',
         },
         {
           guid: '456def',
-          name: 'builder-2',
+          name: 'test-builder-2',
           state: 'STARTED',
-          dockerImage: 'example.com:5000/builder/1',
         },
       ]);
 
@@ -142,87 +127,51 @@ describe('CloudFoundryAPIClient', () => {
       mockListAppStatsRequest('456def', { 0: { state: 'RUNNING' } });
 
       const apiClient = new CloudFoundryAPIClient();
-      apiClient.getBuildContainersState()
-        .then((state) => {
-          expect(state).to.deep.equal({
-            expected: 2,
-            found: 2,
-            started: 2,
-          });
-          done();
-        })
-        .catch(done);
+      const state = await apiClient.getBuildContainersState();
+
+      expect(state).to.deep.equal({
+        found: 2,
+        started: 2,
+      });
     });
 
-    it('should resolve with an error if there are too few build containers', (done) => {
+    it('should resolve with an error if not all containers are started', async () => {
       mockTokenRequest();
       mockListAppsRequest([
         {
           guid: '123abc',
-          name: 'builder-1',
-          state: 'STARTED',
-          dockerImage: 'example.com:5000/builder/1',
-        },
-      ]);
-      mockListAppStatsRequest('123abc', { 0: { state: 'RUNNING' } });
-
-      const apiClient = new CloudFoundryAPIClient();
-      apiClient.getBuildContainersState()
-        .then((state) => {
-          expect(state).to.deep.equal({
-            error: [
-              'Expected 2 build containers but only 1 found.',
-              'Not all build containers are in the STARTED state.',
-            ].join('\n'),
-          });
-          done();
-        })
-        .catch(done);
-    });
-
-    it('should resolve with an error if not all containers are started', (done) => {
-      mockTokenRequest();
-      mockListAppsRequest([
-        {
-          guid: '123abc',
-          name: 'builder-1',
+          name: 'test-builder-1',
           state: 'STOPPED',
-          dockerImage: 'example.com:5000/builder/1',
         },
         {
           guid: '456def',
-          name: 'builder-2',
+          name: 'test-builder-2',
           state: 'STARTED',
-          dockerImage: 'example.com:5000/builder/1',
         },
       ]);
 
       mockListAppStatsRequest('456def', { 0: { state: 'RUNNING' } });
 
       const apiClient = new CloudFoundryAPIClient();
-      apiClient.getBuildContainersState()
-        .then((state) => {
-          expect(state).to.deep.equal({
-            error: 'Not all build containers are in the STARTED state.',
-          });
-          done();
-        });
+      const state = await apiClient.getBuildContainersState();
+
+      expect(state).to.deep.equal({
+        error: 'Not all build containers are in the STARTED state.',
+      });
     });
 
-    it("should resolve with an error if any started containers' instances are failing", (done) => {
+    it("should resolve with an error if any started containers' instances are failing", async () => {
       mockTokenRequest();
       mockListAppsRequest([
         {
           guid: '123abc',
-          name: 'builder-1',
+          name: 'test-builder-1',
           state: 'STARTED',
-          dockerImage: 'example.com:5000/builder/1',
         },
         {
           guid: '456def',
-          name: 'builder-2',
+          name: 'test-builder-2',
           state: 'STARTED',
-          dockerImage: 'example.com:5000/builder/1',
         },
       ]);
 
@@ -234,30 +183,26 @@ describe('CloudFoundryAPIClient', () => {
       });
 
       const apiClient = new CloudFoundryAPIClient();
-      apiClient.getBuildContainersState()
-        .then((state) => {
-          expect(state).to.deep.equal({
-            error: 'builder-2:\tNot all instances for are running. {"RUNNING":1,"CRASHED":1}',
-          });
-          done();
-        });
+      const state = await apiClient.getBuildContainersState();
+
+      expect(state).to.deep.equal({
+        error: 'test-builder-2:\tNot all instances for are running. {"RUNNING":1,"CRASHED":1}',
+      });
     });
   });
 
-  it("should resolve with an error if any started containers' have no instances", (done) => {
+  it("should resolve with an error if any started containers' have no instances", async () => {
     mockTokenRequest();
     mockListAppsRequest([
       {
         guid: '123abc',
-        name: 'builder-1',
+        name: 'test-builder-1',
         state: 'STARTED',
-        dockerImage: 'example.com:5000/builder/1',
       },
       {
         guid: '456def',
-        name: 'builder-2',
+        name: 'test-builder-2',
         state: 'STARTED',
-        dockerImage: 'example.com:5000/builder/1',
       },
     ]);
 
@@ -266,13 +211,142 @@ describe('CloudFoundryAPIClient', () => {
     mockListAppStatsRequest('456def', {});
 
     const apiClient = new CloudFoundryAPIClient();
-    apiClient.getBuildContainersState()
-      .then((state) => {
-        expect(state).to.deep.equal({
-          error: 'builder-2 has 0 running instances',
-        });
-        done();
-      })
-      .catch(done);
+    const state = await apiClient.getBuildContainersState();
+
+    expect(state).to.deep.equal({
+      error: 'test-builder-2 has 0 running instances',
+    });
+  });
+
+  describe('.fetchAppByName', () => {
+    const appName = 'my-app';
+    const app = { name: appName };
+
+    beforeEach(() => {
+      mockTokenRequest();
+    });
+
+    describe('when the app is found', () => {
+      it('resolves with the app', async () => {
+        mockV3ListAppsRequest(appName, [app]);
+
+        const apiClient = new CloudFoundryAPIClient();
+        const result = await apiClient.fetchAppByName(appName);
+
+        expect(result.name).to.eq(appName);
+      });
+    });
+
+    describe('when the app is NOT found', () => {
+      it('resolves with undefined', async () => {
+        const fakeAppName = 'foobar';
+        mockV3ListAppsRequest(fakeAppName, [app]);
+
+        const apiClient = new CloudFoundryAPIClient();
+        const result = await apiClient.fetchAppByName(fakeAppName);
+
+        expect(result).but.be.undefined;
+      });
+    });
+  });
+
+  describe('.fetchActiveTasks', () => {
+    const activeTasks = [
+      { name: 'pending', state: 'PENDING' },
+      { name: 'running', state: 'RUNNING' },
+      { name: 'canceling', state: 'CANCELING' },
+    ];
+
+    const inactiveTasks = [
+      { name: 'failed', state: 'FAILED' },
+    ];
+
+    const allTasks = [
+      ...activeTasks,
+      ...inactiveTasks,
+    ];
+
+    beforeEach(() => {
+      mockTokenRequest();
+    });
+
+    describe('when there are active tasks for the app', () => {
+      it('resolves with only the active tasks', async () => {
+        mockV3ListTasksRequest(allTasks);
+
+        const apiClient = new CloudFoundryAPIClient();
+        const result = await apiClient.fetchActiveTasks();
+        expect(result).to.have.deep.members(activeTasks);
+      });
+    });
+
+    describe('when there are NO active tasks for the app', () => {
+      it('resolves with an empty array', async () => {
+        mockV3ListTasksRequest(inactiveTasks);
+
+        const apiClient = new CloudFoundryAPIClient();
+        const result = await apiClient.fetchActiveTasks();
+
+        expect(result).to.deep.eq([]);
+      });
+    });
+  });
+
+  describe('._filterAppsResponse', () => {
+    const response = {
+      resources: [
+        {
+          metadata: { guid: '', url: '' },
+          entity: { name: `${buildContainerBaseName}`, state: '' },
+        },
+        {
+          metadata: { guid: '', url: '' },
+          entity: { name: `${buildContainerBaseName}-1`, state: '' },
+        },
+        {
+          metadata: { guid: '', url: '' },
+          entity: { name: `${buildContainerBaseName}-2`, state: '' },
+        },
+      ],
+    };
+
+    describe('when there is one build container', () => {
+      const _numBuildContainers = 1;
+
+      it('returns containers with the exact build container base name', () => {
+        const apiClient = new CloudFoundryAPIClient();
+
+        const result = apiClient._filterAppsResponse(
+          buildContainerBaseName, _numBuildContainers, response
+        );
+
+        expect(result).to.deep.have.members([
+          {
+            guid: '', url: '', name: `${buildContainerBaseName}`, state: '',
+          },
+        ]);
+      });
+    });
+
+    describe('when there are many build containers', () => {
+      const _numBuildContainers = 3;
+
+      it('returns containers with incremented build container base name', () => {
+        const apiClient = new CloudFoundryAPIClient();
+
+        const result = apiClient._filterAppsResponse(
+          buildContainerBaseName, _numBuildContainers, response
+        );
+
+        expect(result).to.deep.have.members([
+          {
+            guid: '', url: '', name: `${buildContainerBaseName}-1`, state: '',
+          },
+          {
+            guid: '', url: '', name: `${buildContainerBaseName}-2`, state: '',
+          },
+        ]);
+      });
+    });
   });
 });

@@ -1,5 +1,4 @@
 const logger = require('../logger');
-
 const CloudFoundryAuthClient = require('../cloud-foundry-auth-client');
 const CloudFoundryApiClient = require('../cloud-foundry-api-client');
 

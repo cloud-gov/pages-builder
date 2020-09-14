@@ -1,1 +1,29 @@
-.gitignore
+################################
+##  Everything in .gitignore  ##
+################################
+*.log
+pids
+*.pid
+*.seed
+coverage
+.nyc_output
+node_modules
+.env
+.env.json
+.helpers
+
+#######################
+##  Everything else  ##
+#######################
+.circleci
+.cloudgov
+.dependabot
+test
+codeclimate.yml
+.env-sample
+.env-sample.json
+.eslintignore
+.eslintrc.yml
+CONTRIBUTING.md
+LICENSE.md
+README.md

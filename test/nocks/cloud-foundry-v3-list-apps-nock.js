@@ -9,25 +9,22 @@ const expandResource = (resource, idx) => {
   const state = resource.state || randString();
 
   return {
-    metadata: {
-      guid,
-      url: `/v2/apps/${guid}`,
-    },
-    entity: {
-      name,
-      state,
-    },
+    guid,
+    name,
+    state,
   };
 };
 
-const mockListAppsRequest = resources => nock('https://api.example.com', {
+const mockV3ListAppsRequest = (appName, resources) => nock('https://api.example.com', {
   reqheaders: {
     authorization: /Bearer .+/,
   },
 }).get(
-  '/v2/spaces/123abc-456def-789ghi/apps'
+  `/v3/apps?names=${appName}`
 ).reply(200, {
-  resources: resources.map(expandResource),
+  resources: resources
+    .map(expandResource)
+    .filter(resource => resource.name === appName),
 });
 
-module.exports = mockListAppsRequest;
+module.exports = mockV3ListAppsRequest;

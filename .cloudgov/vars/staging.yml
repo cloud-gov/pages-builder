@@ -1,0 +1,4 @@
+name: federalist-builder-staging
+env: staging
+env_postfix: -staging
+task_max_mem: 20

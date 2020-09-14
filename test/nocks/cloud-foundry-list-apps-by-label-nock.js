@@ -7,16 +7,14 @@ const expandResource = (resource, idx) => {
   const guid = resource.guid || randString();
   const name = resource.name || `test-builder-${idx + 1}`;
   const state = resource.state || randString();
+  const metadata = resource.metadata || { labels: {}, annotations: {} };
 
   return {
-    metadata: {
-      guid,
-      url: `/v2/apps/${guid}`,
-    },
-    entity: {
-      name,
-      state,
-    },
+    guid,
+    name,
+    state,
+    url: `/v3/apps/${guid}`,
+    metadata,
   };
 };
 
@@ -25,7 +23,7 @@ const mockListAppsRequest = resources => nock('https://api.example.com', {
     authorization: /Bearer .+/,
   },
 }).get(
-  '/v2/spaces/123abc-456def-789ghi/apps'
+  '/v3/apps/?label_selector=type==build-container'
 ).reply(200, {
   resources: resources.map(expandResource),
 });

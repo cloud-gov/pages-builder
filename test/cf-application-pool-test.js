@@ -2,7 +2,7 @@ const { expect } = require('chai');
 const nock = require('nock');
 const url = require('url');
 
-const Cluster = require('../src/cluster');
+const CFApplicationPool = require('../src/cf-application-pool');
 
 const mockBuildLogCallback = require('./nocks/build-log-callback-nock');
 const mockBuildStatusCallback = require('./nocks/build-status-callback-nock');
@@ -12,6 +12,22 @@ const mockRestageAppRequest = require('./nocks/cloud-foundry-restage-app-nock');
 const mockTokenRequest = require('./nocks/cloud-foundry-oauth-token-nock');
 const mockUpdateAppRequest = require('./nocks/cloud-foundry-update-app-nock');
 
+const defaults = {
+  buildContainerBaseName: 'test-builder',
+  numBuildContainers: 2,
+  buildTimeout: 21 * 60,
+};
+
+function startPool(params = {}) {
+  const args = {
+    ...defaults,
+    ...params,
+  };
+  const builderPool = new CFApplicationPool(args);
+  builderPool.start();
+  return builderPool;
+}
+
 function mockContainers(num) {
   mockListAppsRequest(Array(num).fill({}));
 
@@ -20,34 +36,42 @@ function mockContainers(num) {
   }
 }
 
-describe('Cluster', () => {
+describe('CFApplicationPool', () => {
   const logCallbackURL = url.parse('https://www.example.gov/log');
   const statusCallbackURL = url.parse('https://www.example.gov/status');
   let logCallbackNock;
   let statusCallbackNock;
+  let buildStatus;
+  let output;
 
   beforeEach(() => {
-    logCallbackNock = mockBuildLogCallback(logCallbackURL);
-    statusCallbackNock = mockBuildStatusCallback(statusCallbackURL);
+    buildStatus = 'error';
+    output = `Build status updated to ${buildStatus}: The build timed out`;
+    logCallbackNock = mockBuildLogCallback(logCallbackURL, output);
+    statusCallbackNock = mockBuildStatusCallback(statusCallbackURL, buildStatus);
   });
 
   afterEach(() => {
     process.env.BUILD_TIMEOUT_SECONDS = undefined;
+    nock.abortPendingRequests();
     nock.cleanAll();
   });
 
   describe('._countAvailableContainers()', () => {
     it('should return the number of available containers', (done) => {
-      const numContainers = 10;
+      const numBuildContainers = 10;
+
+      // const origNumBuildContainers = process.env.NUM_BUILD_CONTAINERS;
+      // process.env.NUM_BUILD_CONTAINERS = numContainers;
 
       mockTokenRequest();
-      mockContainers(numContainers);
+      mockContainers(numBuildContainers);
 
-      const cluster = new Cluster();
-      cluster.start();
+      const builderPool = startPool({ numBuildContainers });
 
       setTimeout(() => {
-        expect(cluster._countAvailableContainers()).to.eq(numContainers);
+        expect(builderPool._countAvailableContainers()).to.eq(numBuildContainers);
+        // process.env.NUM_BUILD_CONTAINERS = origNumBuildContainers;
         done();
       }, 50);
     });
@@ -61,11 +85,10 @@ describe('Cluster', () => {
       const mockedUpdateRequest = mockUpdateAppRequest();
       const mockedRestageRequest = mockRestageAppRequest();
 
-      const cluster = new Cluster();
-      cluster.start();
+      const builderPool = startPool();
 
       setTimeout(() => {
-        cluster.startBuild({
+        builderPool.startBuild({
           buildID: '123abc',
           containerEnvironment: {},
         });
@@ -83,17 +106,79 @@ describe('Cluster', () => {
       mockUpdateAppRequest();
       mockRestageAppRequest();
 
-      const cluster = new Cluster();
-      cluster.start();
+      const builderPool = startPool();
 
       setTimeout(() => {
-        expect(cluster._countAvailableContainers()).to.eq(1);
-        cluster.startBuild({
+        expect(builderPool._countAvailableContainers()).to.eq(1);
+        builderPool.startBuild({
           buildID: '123abc',
           containerEnvironment: {},
         });
         setTimeout(() => {
-          expect(cluster._countAvailableContainers()).to.eq(0);
+          expect(builderPool._countAvailableContainers()).to.eq(0);
+          done();
+        }, 50);
+      }, 50);
+    });
+
+    it('should update build status to staged', (done) => {
+      buildStatus = 'staged';
+      output = `Build status updated to ${buildStatus}`;
+      logCallbackNock = mockBuildLogCallback(logCallbackURL, output);
+      statusCallbackNock = mockBuildStatusCallback(statusCallbackURL, buildStatus);
+      mockTokenRequest();
+      mockListAppsRequest([{}]);
+
+      mockUpdateAppRequest();
+      mockRestageAppRequest();
+
+      const builderPool = startPool();
+
+      setTimeout(() => {
+        expect(logCallbackNock.isDone()).to.be.false;
+        expect(statusCallbackNock.isDone()).to.be.false;
+        builderPool.startBuild({
+          buildID: '123abc',
+          containerEnvironment: {
+            LOG_CALLBACK: logCallbackURL.href,
+            STATUS_CALLBACK: statusCallbackURL.href,
+          },
+        });
+        setTimeout(() => {
+          expect(logCallbackNock.isDone()).to.be.true;
+          expect(statusCallbackNock.isDone()).to.be.true;
+          done();
+        }, 50);
+      }, 50);
+    });
+
+    it('should NOT update build status to staged if build fails', (done) => {
+      buildStatus = 'staged';
+      output = `Build status updated to ${buildStatus}`;
+      logCallbackNock = mockBuildLogCallback(logCallbackURL, output);
+      statusCallbackNock = mockBuildStatusCallback(statusCallbackURL, buildStatus);
+      mockTokenRequest();
+      mockListAppsRequest([{ guid: 'fake-container' }]);
+
+      mockUpdateAppRequest();
+
+      nock('https://api.example.com').post(
+        '/v2/apps/fake-container/restage'
+      ).reply(500);
+
+      const builderPool = startPool();
+
+      setTimeout(() => {
+        builderPool.startBuild({
+          buildID: '123abc',
+          containerEnvironment: {
+            LOG_CALLBACK: logCallbackURL.href,
+            STATUS_CALLBACK: statusCallbackURL.href,
+          },
+        }).catch(e => e);
+        setTimeout(() => {
+          expect(logCallbackNock.isDone()).to.be.false;
+          expect(statusCallbackNock.isDone()).to.be.false;
           done();
         }, 50);
       }, 50);
@@ -108,12 +193,11 @@ describe('Cluster', () => {
         '/v2/apps/fake-container/restage'
       ).reply(500);
 
-      const cluster = new Cluster();
-      cluster.start();
+      const builderPool = startPool();
 
       setTimeout(() => {
-        expect(cluster._countAvailableContainers()).to.eq(1);
-        cluster.startBuild({
+        expect(builderPool._countAvailableContainers()).to.eq(1);
+        builderPool.startBuild({
           buildID: '123abc',
           containerEnvironment: {},
         }).catch(() => {
@@ -121,7 +205,7 @@ describe('Cluster', () => {
           // Adding the catch to make sure all promise rejections are handled
         });
         setTimeout(() => {
-          expect(cluster._countAvailableContainers()).to.eq(1);
+          expect(builderPool._countAvailableContainers()).to.eq(1);
           done();
         }, 50);
       }, 50);
@@ -134,23 +218,21 @@ describe('Cluster', () => {
       mockUpdateAppRequest();
       mockRestageAppRequest();
 
-      process.env.BUILD_TIMEOUT_SECONDS = -1;
+      const builderPool = startPool({ buildTimeout: -1 });
 
-      const cluster = new Cluster();
-      cluster.stopBuild = (buildID) => {
+      builderPool.stopBuild = (buildID) => {
         expect(buildID).to.equal('123abc');
         done();
       };
-      cluster.start();
 
       setTimeout(() => {
-        cluster.startBuild({
+        builderPool.startBuild({
           buildID: '123abc',
           containerEnvironment: {
             LOG_CALLBACK: logCallbackURL.href,
             STATUS_CALLBACK: statusCallbackURL.href,
           },
-        });
+        }).catch();
       }, 50);
     });
 
@@ -160,13 +242,10 @@ describe('Cluster', () => {
       mockUpdateAppRequest();
       mockRestageAppRequest();
 
-      process.env.BUILD_TIMEOUT_SECONDS = -1;
-
-      const cluster = new Cluster();
-      cluster.start();
+      const builderPool = startPool({ buildTimeout: -1 });
 
       setTimeout(() => {
-        cluster.startBuild({
+        builderPool.startBuild({
           buildID: '123abc',
           containerEnvironment: {
             LOG_CALLBACK: logCallbackURL.href,
@@ -184,9 +263,9 @@ describe('Cluster', () => {
 
   describe('.stopBuild(buildID)', () => {
     it('should make the build for the given buildID available', () => {
-      const cluster = new Cluster();
+      const builderPool = new CFApplicationPool(defaults);
 
-      cluster._containers = [
+      builderPool._containers = [
         {
           guid: '123abc',
           build: {
@@ -203,18 +282,18 @@ describe('Cluster', () => {
         },
       ];
 
-      cluster.stopBuild('456def');
+      builderPool.stopBuild('456def');
 
-      const container = cluster._containers.find(c => c.guid === '123abc');
+      const container = builderPool._containers.find(c => c.guid === '123abc');
 
       expect(container).to.be.a('object');
       expect(container.build).to.be.undefined;
     });
 
     it("should not send a request to the build's log and status callback", (done) => {
-      const cluster = new Cluster();
+      const builderPool = new CFApplicationPool(defaults);
 
-      cluster._containers = [
+      builderPool._containers = [
         {
           guid: '123abc',
           build: {
@@ -227,7 +306,7 @@ describe('Cluster', () => {
         },
       ];
 
-      cluster.stopBuild('456def');
+      builderPool.stopBuild('456def');
 
       setTimeout(() => {
         expect(logCallbackNock.isDone()).to.be.false;
@@ -238,30 +317,24 @@ describe('Cluster', () => {
   });
 
   describe('.canStartBuild()', () => {
-    it('returns true if there are available containers', (done) => {
+    it('returns true if there are available containers', async () => {
       mockTokenRequest();
       mockContainers(1);
 
-      const cluster = new Cluster();
-      cluster.start();
+      const builderPool = new CFApplicationPool(defaults);
+      await builderPool.start();
 
-      setTimeout(() => {
-        expect(cluster.canStartBuild()).to.be.true;
-        done();
-      }, 50);
+      expect(await builderPool.canStartBuild()).to.be.true;
     });
 
-    it('returns false if there are no available containers', (done) => {
+    it('returns false if there are no available containers', async () => {
       mockTokenRequest();
       mockContainers(0);
 
-      const cluster = new Cluster();
-      cluster.start();
+      const builderPool = new CFApplicationPool(defaults);
+      await builderPool.start();
 
-      setTimeout(() => {
-        expect(cluster.canStartBuild()).to.be.false;
-        done();
-      }, 50);
+      expect(await builderPool.canStartBuild()).to.be.false;
     });
   });
 });

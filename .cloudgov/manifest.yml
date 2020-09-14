@@ -1,0 +1,21 @@
+---
+applications:
+  - name: ((name))
+    routes:
+      - route: federalist-builder((env_postfix)).fr.cloud.gov
+    disk_quota: 512M
+    memory: 128M
+    instances: 1
+    services:
+      - federalist-((env))-sqs-creds
+      - federalist-deploy-user
+    env:
+      TASK_MEM_GB: 2
+      TASK_DISK_GB: 4
+      TASK_MAX_MEM_GB: ((task_max_mem))
+      TASK_CUSTOM_MEM_GB: 8
+      TASK_CUSTOM_DISK_GB: 6
+      BUILD_TIMEOUT_SECONDS: 2700 # 10 * 60 seconds = 10 minutes
+      CLOUD_FOUNDRY_OAUTH_TOKEN_URL: https://login.fr.cloud.gov/oauth/token
+      LOG_LEVEL: verbose
+      CUSTOM_TASK_MEM_REPOS: '["gsa/digitalgov.gov", "onrr/doi-extractives-data", "gsa/interimperformance-dot-gov-2018", "gsa/ussm", "gsa/pic_dot_gov", "gsa/cfo.gov", "davemcorwin/interimperformance-dot-gov-2018"]'
