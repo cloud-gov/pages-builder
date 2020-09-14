@@ -3,6 +3,7 @@ const nock = require('nock');
 const url = require('url');
 
 const CFApplicationPool = require('../src/cf-application-pool');
+const Build = require('../src/build');
 
 const mockBuildLogCallback = require('./nocks/build-log-callback-nock');
 const mockBuildStatusCallback = require('./nocks/build-status-callback-nock');
@@ -88,10 +89,9 @@ describe('CFApplicationPool', () => {
       const builderPool = startPool();
 
       setTimeout(() => {
-        builderPool.startBuild({
-          buildID: '123abc',
-          containerEnvironment: {},
-        });
+        builderPool.startBuild(
+          new Build({ Body: JSON.stringify({ environment: [] }) })
+        );
         setTimeout(() => {
           expect(mockedUpdateRequest.isDone()).to.eq(true);
           expect(mockedRestageRequest.isDone()).to.eq(true);
@@ -110,10 +110,7 @@ describe('CFApplicationPool', () => {
 
       setTimeout(() => {
         expect(builderPool._countAvailableContainers()).to.eq(1);
-        builderPool.startBuild({
-          buildID: '123abc',
-          containerEnvironment: {},
-        });
+        builderPool.startBuild(new Build({ Body: JSON.stringify({ environment: [] }) }));
         setTimeout(() => {
           expect(builderPool._countAvailableContainers()).to.eq(0);
           done();
@@ -137,13 +134,17 @@ describe('CFApplicationPool', () => {
       setTimeout(() => {
         expect(logCallbackNock.isDone()).to.be.false;
         expect(statusCallbackNock.isDone()).to.be.false;
-        builderPool.startBuild({
-          buildID: '123abc',
-          containerEnvironment: {
-            LOG_CALLBACK: logCallbackURL.href,
-            STATUS_CALLBACK: statusCallbackURL.href,
-          },
-        });
+        builderPool.startBuild(
+          new Build({
+            Body: JSON
+              .stringify({
+                environment: [
+                  { name: 'LOG_CALLBACK', value: logCallbackURL.href },
+                  { name: 'STATUS_CALLBACK', value: statusCallbackURL.href },
+                ],
+              }),
+          })
+        );
         setTimeout(() => {
           expect(logCallbackNock.isDone()).to.be.true;
           expect(statusCallbackNock.isDone()).to.be.true;
@@ -169,13 +170,15 @@ describe('CFApplicationPool', () => {
       const builderPool = startPool();
 
       setTimeout(() => {
-        builderPool.startBuild({
-          buildID: '123abc',
-          containerEnvironment: {
-            LOG_CALLBACK: logCallbackURL.href,
-            STATUS_CALLBACK: statusCallbackURL.href,
-          },
-        }).catch(e => e);
+        builderPool.startBuild(new Build({
+          Body: JSON
+            .stringify({
+              environment: [
+                { name: 'LOG_CALLBACK', value: logCallbackURL.href },
+                { name: 'STATUS_CALLBACK', value: statusCallbackURL.href },
+              ],
+            }),
+        })).catch(e => e);
         setTimeout(() => {
           expect(logCallbackNock.isDone()).to.be.false;
           expect(statusCallbackNock.isDone()).to.be.false;
@@ -197,10 +200,15 @@ describe('CFApplicationPool', () => {
 
       setTimeout(() => {
         expect(builderPool._countAvailableContainers()).to.eq(1);
-        builderPool.startBuild({
-          buildID: '123abc',
-          containerEnvironment: {},
-        }).catch(() => {
+        builderPool.startBuild(new Build({
+          Body: JSON
+            .stringify({
+              environment: [
+                { name: 'LOG_CALLBACK', value: logCallbackURL.href },
+                { name: 'STATUS_CALLBACK', value: statusCallbackURL.href },
+              ],
+            }),
+        })).catch(() => {
           // This promise rejects, but we're not testing this right now
           // Adding the catch to make sure all promise rejections are handled
         });
@@ -220,19 +228,25 @@ describe('CFApplicationPool', () => {
 
       const builderPool = startPool({ buildTimeout: -1 });
 
+      const build = new Build({
+        Body: JSON
+          .stringify({
+            environment: [
+              { name: 'LOG_CALLBACK', value: logCallbackURL.href },
+              { name: 'STATUS_CALLBACK', value: statusCallbackURL.href },
+            ],
+          }),
+      });
+
+      build.buildID = '123abc';
+
       builderPool.stopBuild = (buildID) => {
         expect(buildID).to.equal('123abc');
         done();
       };
 
       setTimeout(() => {
-        builderPool.startBuild({
-          buildID: '123abc',
-          containerEnvironment: {
-            LOG_CALLBACK: logCallbackURL.href,
-            STATUS_CALLBACK: statusCallbackURL.href,
-          },
-        }).catch();
+        builderPool.startBuild(build).catch();
       }, 50);
     });
 
@@ -245,13 +259,15 @@ describe('CFApplicationPool', () => {
       const builderPool = startPool({ buildTimeout: -1 });
 
       setTimeout(() => {
-        builderPool.startBuild({
-          buildID: '123abc',
-          containerEnvironment: {
-            LOG_CALLBACK: logCallbackURL.href,
-            STATUS_CALLBACK: statusCallbackURL.href,
-          },
-        });
+        builderPool.startBuild(new Build({
+          Body: JSON
+            .stringify({
+              environment: [
+                { name: 'LOG_CALLBACK', value: logCallbackURL.href },
+                { name: 'STATUS_CALLBACK', value: statusCallbackURL.href },
+              ],
+            }),
+        }));
         setTimeout(() => {
           expect(logCallbackNock.isDone()).to.be.true;
           expect(statusCallbackNock.isDone()).to.be.true;
