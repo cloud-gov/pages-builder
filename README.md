@@ -8,29 +8,19 @@ This application is used to launch build tasks for Federalist in containers on c
 
 ## The Build Scheduler
 
-The Build Scheduler is the component of this app that recursively monitors SQS for new messages.
-When a new messages is received, it checks the cluster to see if a container is available on which to run a build in response to the message.
-If a container is available, it tells the cluster to start the build.
+The Build Scheduler is the component of this app that recursively monitors SQS for new messages. When a new messages is received, it checks the cluster to see if enough resources are available to run a build, and if so, starts the build as a Cloud Foundry "Task".
 
-## The Cluster
+## The Task Pool
 
-The Cluster is responsible for being aware of what is going on in cloud.gov.
+The Task Pool is responsible for being aware of what is going on in cloud.gov.
 It does the following:
 
-- Maintains a list of what build containers are running in cloud.gov, and which ones are running builds
-- Starts new builds on an available container
-- Marks containers as available when a build is complete
-- Stops builds if they run for more than 5 minutes without calling back
+- Starts new build task if resources are available
+- Stops build tasks if they run for more than 5 minutes without calling back
 
-The Cluster regularly queries cloud.gov's API for apps running a [federalist-garden-build](https://github.com/18F/federalist-garden-build) container and keeps a list of them.
+The Task Pool starts a build as a Cloud Foundry "Task" with the contents of the build message.
 
-When a build is started, it finds an available container and associates the build with the container.
-Then it uses the Cloud Foundry API to update the container's environment to match the environment specified by the build and restages the container's app.
-
-When a build is complete, the container will callback to an HTTP hook on this app with its `buildID`.
-When this happens, the cluster looks up the container running the build and dissociates the build from the container.
-
-If a build runs on a container for more than 5 minutes, the cluster will consider the build a failure, and dissociate the build from the container without a callback.
+If a build task runs for more than 5 minutes, the cluster will consider the build a failure, and dissociate the build from the container without a callback.
 
 ## Installation and configuration
 
@@ -66,12 +56,16 @@ Configuration values for NEW RELIC are set in the app's Cloud Foundry environmen
 
 Additional configuration is set up through environment variables:
 
-- `BUILD_CONTAINER_BASE_NAME`: (required) the base name of garden build application
 - `BUILD_TIMEOUT_SECONDS`: (required) number of seconds to let a build run before timing out
 - `CLOUD_FOUNDRY_OAUTH_TOKEN_URL`: (required) the OAuth2 token URL for Cloud Foundry, e.g. `https://login.fr.cloud.gov`
 - `LOG_LEVEL`: the log level for [winston](https://github.com/winstonjs/winston#logging-levels). Defaults to "info".
-- `NUM_BUILD_CONTAINERS`: (required) the expected number of build containers to be running
 - `PORT`: (local/test only) the port for the server that handles healthcheck pings and build callbacks
+- `TASK_MEM_GB`: default memory allocated to a build task in GB
+- `TASK_DISK_GB`: default disk allocated to a build task in GB
+- `TASK_MAX_MEM_GB`: total memory allowed to be allocated for build tasks in GB
+- `TASK_CUSTOM_MEM_GB`: memory allocated to a `large` build task in GB
+- `TASK_CUSTOM_DISK_GB`: disk allocated to a `large` build task in GB
+- `CUSTOM_TASK_MEM_REPOS`: allow list of `owner/repository`s that require larger build container. Soon to be deprecated by `containerConfig` in the admin GUI.
 
 ## Running locally
 
