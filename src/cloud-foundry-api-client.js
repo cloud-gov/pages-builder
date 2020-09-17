@@ -11,11 +11,6 @@ class CloudFoundryAPIClient {
     this._authClient = new CloudFoundryAuthClient();
   }
 
-  fetchBuildContainers(buildContainerBaseName, numBuildContainers) {
-    return this._authRequest('GET', `/v2/spaces/${appEnv.spaceGUID}/apps`)
-      .then(body => this._filterAppsResponse(buildContainerBaseName, numBuildContainers, body));
-  }
-
   fetchBuildContainersByLabel() {
     return this._authRequest('GET', '/v3/apps/?label_selector=type==build-container')
       .then(body => body.resources.map(app => ({
@@ -57,13 +52,6 @@ class CloudFoundryAPIClient {
         });
         return instanceErrors;
       });
-  }
-
-  // Assumes credentials only have access to the current space
-  fetchAppByName(appName) {
-    const params = `names=${appName}`;
-    return this._authRequest('GET', `/v3/apps?${params}`)
-      .then(data => data.resources.find(app => app.name === appName));
   }
 
   fetchActiveTasks() {
@@ -113,42 +101,6 @@ class CloudFoundryAPIClient {
     };
   }
 
-  updateBuildContainer(container, environment) {
-    return this._authRequest(
-      'PUT',
-      container.url,
-      { environment_json: environment }
-    )
-      .then(() => this._authRequest('POST', `${container.url}/restage`));
-  }
-
-  _buildContainerNames(buildContainerBaseName, numBuildContainers) {
-    if (numBuildContainers <= 1) {
-      return [buildContainerBaseName];
-    }
-
-    return Array(numBuildContainers)
-      .fill()
-      .map((_, idx) => `${buildContainerBaseName}-${idx + 1}`);
-  }
-
-  _filterAppsResponse(buildContainerBaseName, numBuildContainers, response) {
-    return response.resources
-      .map(resource => this._buildContainerFromAppResponse(resource))
-      .filter(buildContainer => this
-        ._buildContainerNames(buildContainerBaseName, numBuildContainers)
-        .includes(buildContainer.name));
-  }
-
-  _buildContainerFromAppResponse(appResponse) {
-    return {
-      guid: appResponse.metadata.guid,
-      url: appResponse.metadata.url,
-      name: appResponse.entity.name,
-      state: appResponse.entity.state,
-    };
-  }
-
   _appInstanceStates(statsResponse) {
     const instances = Object.keys(statsResponse).map(i => statsResponse[i]);
     const statesCount = {};
@@ -177,10 +129,6 @@ class CloudFoundryAPIClient {
       data: json,
     })
       .then(response => response.data);
-  }
-
-  _numBuildContainers() {
-    return parseInt(process.env.NUM_BUILD_CONTAINERS, 10);
   }
 
   _authRequest(method, path, json) {

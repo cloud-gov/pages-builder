@@ -44,6 +44,10 @@ class Build {
     this.containerName = containerName;
     this.containerSize = containerSize;
   }
+
+  federalistBuildId() {
+    return this.containerEnvironment.BUILD_ID;
+  }
 }
 
 module.exports = Build;
