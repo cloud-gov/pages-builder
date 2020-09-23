@@ -4,6 +4,7 @@ const CloudFoundryAPIClient = require('./cloud-foundry-api-client');
 const logger = require('./logger');
 
 class TaskStartError extends Error {}
+class TaskStopError extends Error {}
 
 class CFTaskPool {
   constructor({
@@ -63,15 +64,18 @@ class CFTaskPool {
     return true;
   }
 
-  stopBuild(buildID) {
-    logger.info('Stopping build', buildID);
+  async stopBuild(buildID) {
     const { taskGUID, timeout } = this._builds[buildID];
     clearTimeout(timeout);
     delete this._builds[buildID];
-    return this._apiClient.stopTask(taskGUID)
-      .catch(() => {
-        // This will fail if the task has already completed
-      });
+    try {
+      await this._apiClient.stopTask(taskGUID);
+      logger.info('Stopped build', buildID);
+      return;
+    } catch (_) {
+      // This will fail if the task has already completed
+      throw new TaskStopError('Build already completed');
+    }
   }
 
   _buildTask(build, command) {
@@ -100,10 +104,14 @@ class CFTaskPool {
     return (allocMemory + requestedMemory) < this._maxTaskMemory;
   }
 
-  _timeoutBuild(build) {
-    logger.warn('Build %s timed out', build.buildID);
-    this.stopBuild(build.buildID);
-    this._buildStatusReporter.reportBuildStatus(build, 'error');
+  async _timeoutBuild(build) {
+    try {
+      await this.stopBuild(build.buildID);
+      logger.warn('Build %s timed out', build.buildID);
+      this._buildStatusReporter.reportBuildStatus(build, 'error');
+    } catch (_) {
+      // The task already completed, do nothing
+    }
   }
 
   _requiresCustom(build) {
