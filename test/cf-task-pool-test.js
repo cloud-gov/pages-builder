@@ -180,14 +180,15 @@ describe('CFTaskPool', () => {
       sinon.assert.calledWith(builderPool._apiClient.stopTask, taskGUID);
     });
 
-    it('ignores rejections from CF Api', async () => {
+    it('throws on rejections from CF Api', async () => {
       sinon.stub(builderPool._apiClient, 'stopTask').rejects();
 
-      await builderPool.stopBuild(buildID);
+      const error = await builderPool.stopBuild(buildID).catch(e => e);
 
       expect(builderPool._builds[buildID]).to.be.undefined;
       sinon.assert.calledWith(sinon.clock.clearTimeout, timeout);
       sinon.assert.calledWith(builderPool._apiClient.stopTask, taskGUID);
+      expect(error).to.be.an('error');
     });
   });
 
@@ -290,23 +291,37 @@ describe('CFTaskPool', () => {
     const build = { buildID: 1 };
 
     let builderPool;
+    let stopBuildStub;
 
     beforeEach(() => {
       builderPool = createPool();
-      sinon.stub(builderPool, 'stopBuild');
+      stopBuildStub = sinon.stub(builderPool, 'stopBuild');
       sinon.stub(builderPool._buildStatusReporter, 'reportBuildStatus');
     });
 
-    it('calls `this.stopBuild` with the buildID of the build', () => {
-      builderPool._timeoutBuild(build);
+    it('calls `this.stopBuild` with the buildID of the build', async () => {
+      stopBuildStub.resolves();
+      await builderPool._timeoutBuild(build);
 
       sinon.assert.calledWith(builderPool.stopBuild, build.buildID);
     });
 
-    it('reports the build timeout', () => {
-      builderPool._timeoutBuild(build);
+    context('when successful', () => {
+      it('reports the build timeout', async () => {
+        stopBuildStub.resolves();
+        await builderPool._timeoutBuild(build);
 
-      sinon.assert.calledWith(builderPool._buildStatusReporter.reportBuildStatus, build, 'error');
+        sinon.assert.calledWith(builderPool._buildStatusReporter.reportBuildStatus, build, 'error');
+      });
+    });
+
+    context('when failure', () => {
+      it('does not report the build timeout', async () => {
+        stopBuildStub.rejects();
+        await builderPool._timeoutBuild(build);
+
+        sinon.assert.notCalled(builderPool._buildStatusReporter.reportBuildStatus);
+      });
     });
   });
 
