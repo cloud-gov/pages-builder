@@ -4,7 +4,6 @@ const sinon = require('sinon');
 const CFTaskPool = require('../src/cf-task-pool');
 
 const defaults = {
-  buildTimeout: 1000,
   maxTaskMemory: 30 * 1024,
   taskDisk: 4 * 1024,
   taskMemory: 2 * 1024,
@@ -51,7 +50,6 @@ describe('CFTaskPool', () => {
   });
 
   describe('.startBuild', () => {
-    const timeOutHandle = 1;
     const task = {
       name: 'task',
       guid: 'def987',
@@ -69,7 +67,6 @@ describe('CFTaskPool', () => {
 
       const buildTaskSpy = sinon.spy(builderPool, '_buildTask');
       sinon.spy(builderPool._buildStatusReporter, 'reportBuildStatus');
-      sinon.stub(builderPool, '_createBuildTimeout').returns(timeOutHandle);
 
       getBuildTask = () => buildTaskSpy.getCall(0).returnValue;
     });
@@ -115,12 +112,11 @@ describe('CFTaskPool', () => {
         sinon.assert.notCalled(builderPool._buildStatusReporter.reportBuildStatus);
         expect(result).be.a('error');
         expect(result.message).to.eq('uh oh');
-        expect(builderPool._builds[build.buildID]).to.be.undefined;
       });
     });
 
     describe('when successful', () => {
-      it('starts the task in CF and adds the build GUID and timeout to an in-memory cache', async () => {
+      it('starts the task in CF and adds the build GUID to an in-memory cache', async () => {
         const container = {
           containerName: 'default',
           guid: 'abc123',
@@ -129,66 +125,13 @@ describe('CFTaskPool', () => {
         sinon.stub(builderPool._apiClient, 'fetchBuildContainersByLabel').resolves([container]);
         sinon.stub(builderPool._apiClient, 'startTaskForApp').resolves(task);
 
-        expect(builderPool._builds[build.buildID]).to.be.undefined;
-
         await builderPool.startBuild(build);
 
         sinon.assert.calledWith(builderPool._buildTask, build);
         sinon.assert.calledWith(
           builderPool._apiClient.startTaskForApp, getBuildTask(), container.guid
         );
-
-        expect(builderPool._builds[build.buildID]).to.deep.equal({
-          taskGUID: 'def987',
-          timeout: timeOutHandle,
-        });
       });
-    });
-  });
-
-  describe('.stop', () => {
-    it('does nothing and returns true', () => {
-      const builderPool = createPool();
-      expect(builderPool.stop()).to.be.true;
-    });
-  });
-
-  describe('.stopBuild', () => {
-    const buildID = 123;
-    const taskGUID = 'abc123';
-    const timeout = 1;
-    const build = { taskGUID, timeout };
-
-    let builderPool;
-
-    beforeEach(() => {
-      sinon.useFakeTimers();
-
-      builderPool = createPool();
-      builderPool._builds[buildID] = build;
-
-      sinon.spy(sinon.clock, 'clearTimeout');
-    });
-
-    it('removes the build, clears the timeout and stops the task', async () => {
-      sinon.stub(builderPool._apiClient, 'stopTask').resolves();
-
-      await builderPool.stopBuild(buildID);
-
-      expect(builderPool._builds[buildID]).to.be.undefined;
-      sinon.assert.calledWith(sinon.clock.clearTimeout, timeout);
-      sinon.assert.calledWith(builderPool._apiClient.stopTask, taskGUID);
-    });
-
-    it('throws on rejections from CF Api', async () => {
-      sinon.stub(builderPool._apiClient, 'stopTask').rejects();
-
-      const error = await builderPool.stopBuild(buildID).catch(e => e);
-
-      expect(builderPool._builds[buildID]).to.be.undefined;
-      sinon.assert.calledWith(sinon.clock.clearTimeout, timeout);
-      sinon.assert.calledWith(builderPool._apiClient.stopTask, taskGUID);
-      expect(error).to.be.an('error');
     });
   });
 
@@ -241,22 +184,6 @@ describe('CFTaskPool', () => {
     });
   });
 
-  describe('._createBuildTimeout', () => {
-    it('times the build after `buildTimeout` mills', () => {
-      const clock = sinon.useFakeTimers();
-
-      const buildTimeout = 1000;
-      const build = {};
-      const builderPool = createPool({ buildTimeout });
-      sinon.stub(builderPool, '_timeoutBuild');
-
-      builderPool._createBuildTimeout(build);
-      sinon.assert.notCalled(builderPool._timeoutBuild);
-      clock.tick(buildTimeout);
-      sinon.assert.calledWith(builderPool._timeoutBuild, build);
-    });
-  });
-
   describe('._hasAvailableMemory', () => {
     const taskMemory = 2 * 1024;
     const maxTaskMemory = 5 * 1024;
@@ -283,44 +210,6 @@ describe('CFTaskPool', () => {
 
         const hasAvailableMemory = await builderPool._hasAvailableMemory(taskMemory);
         expect(hasAvailableMemory).to.be.true;
-      });
-    });
-  });
-
-  describe('._timeoutBuild', () => {
-    const build = { buildID: 1 };
-
-    let builderPool;
-    let stopBuildStub;
-
-    beforeEach(() => {
-      builderPool = createPool();
-      stopBuildStub = sinon.stub(builderPool, 'stopBuild');
-      sinon.stub(builderPool._buildStatusReporter, 'reportBuildStatus');
-    });
-
-    it('calls `this.stopBuild` with the buildID of the build', async () => {
-      stopBuildStub.resolves();
-      await builderPool._timeoutBuild(build);
-
-      sinon.assert.calledWith(builderPool.stopBuild, build.buildID);
-    });
-
-    context('when successful', () => {
-      it('reports the build timeout', async () => {
-        stopBuildStub.resolves();
-        await builderPool._timeoutBuild(build);
-
-        sinon.assert.calledWith(builderPool._buildStatusReporter.reportBuildStatus, build, 'error');
-      });
-    });
-
-    context('when failure', () => {
-      it('does not report the build timeout', async () => {
-        stopBuildStub.rejects();
-        await builderPool._timeoutBuild(build);
-
-        sinon.assert.notCalled(builderPool._buildStatusReporter.reportBuildStatus);
       });
     });
   });

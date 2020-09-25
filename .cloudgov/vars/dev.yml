@@ -2,3 +2,4 @@ name: federalist-builder-dev
 env: dev
 env_postfix: -dev
 task_max_mem: 20
+instances: 1

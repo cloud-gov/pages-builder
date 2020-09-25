@@ -71,10 +71,6 @@ class CloudFoundryAPIClient {
     return this._authRequest('POST', `/v3/apps/${appGUID}/tasks`, taskParams);
   }
 
-  stopTask(taskGUID) {
-    return this._authRequest('POST', `/v3/tasks/${taskGUID}/actions/cancel`);
-  }
-
   async getBuildContainersState() {
     const containerErrors = [];
 
