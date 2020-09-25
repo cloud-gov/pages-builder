@@ -116,7 +116,7 @@ describe('CFTaskPool', () => {
     });
 
     describe('when successful', () => {
-      it('starts the task in CF and adds the build GUID to an in-memory cache', async () => {
+      it('starts the task in CF', async () => {
         const container = {
           containerName: 'default',
           guid: 'abc123',
