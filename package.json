@@ -19,7 +19,7 @@
   "license": "CC0-1.0",
   "dependencies": {
     "@hapi/hapi": "^20.0.0",
-    "aws-sdk": "^2.756.0",
+    "aws-sdk": "^2.761.0",
     "axios": "^0.20.0",
     "cfenv": "^1.2.3",
     "jsonwebtoken": "^8.5.1",
