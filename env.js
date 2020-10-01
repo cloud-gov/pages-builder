@@ -1,7 +1,6 @@
 const cfenv = require('cfenv');
 
 const {
-  BUILD_TIMEOUT_SECONDS,
   CLOUD_FOUNDRY_OAUTH_TOKEN_URL,
   NODE_ENV,
   TASK_DISK_GB,
@@ -30,8 +29,6 @@ appEnv.cloudFoundryApiHost = cfApiHost;
 
 appEnv.sqsCreds = sqsCreds;
 appEnv.sqsUrl = sqsCreds.sqs_url;
-
-appEnv.buildTimeout = 1000 * (parseInt(BUILD_TIMEOUT_SECONDS, 10) || 21 * 60); // milliseconds
 
 // Task Builder Pool
 appEnv.taskDisk = TASK_DISK_GB && parseInt(TASK_DISK_GB, 10) * 1024;

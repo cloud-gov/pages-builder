@@ -7,7 +7,7 @@ const mockTokenRequest = require('./nocks/cloud-foundry-oauth-token-nock');
 const mockListAppsRequest = require('./nocks/cloud-foundry-list-apps-by-label-nock');
 const mockListAppStatsRequest = require('./nocks/cloud-foundry-list-app-stats-nock');
 
-const mockCluster = () => ({ stopBuild: () => {} });
+const mockCluster = () => ({ });
 const mockBuildQueue = (sqs = {}) => new SQSClient(sqs, 'QUEUE_URL');
 
 describe('server', () => {
@@ -241,39 +241,6 @@ describe('server', () => {
 
           expect(response.statusCode).to.eq(200);
           expect(response.result).to.deep.equal(expected);
-        });
-    });
-  });
-
-  describe('DELETE /builds/{buildID}/callback', () => {
-    it('should respond with a 200', () => {
-      const testServer = server(mockCluster(), mockBuildQueue());
-
-      return testServer.inject({
-        method: 'DELETE',
-        url: '/builds/123abc/callback',
-      })
-        .then((response) => {
-          expect(response.statusCode).to.eq(200);
-        });
-    });
-
-    it('should call stopBuild(buildID) on the cluster', () => {
-      let stopBuildArg;
-      const cluster = {
-        stopBuild: (buildID) => {
-          stopBuildArg = buildID;
-        },
-      };
-
-      const testServer = server(cluster, mockBuildQueue());
-
-      return testServer.inject({
-        method: 'DELETE',
-        url: '/builds/123abc/callback',
-      })
-        .then(() => {
-          expect(stopBuildArg).to.eq('123abc');
         });
     });
   });

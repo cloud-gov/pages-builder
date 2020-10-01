@@ -16,7 +16,6 @@ The Task Pool is responsible for being aware of what is going on in cloud.gov.
 It does the following:
 
 - Starts new build task if resources are available
-- Stops build tasks if they run for more than 5 minutes without calling back
 
 The Task Pool starts a build as a Cloud Foundry "Task" with the contents of the build message.
 
@@ -56,7 +55,6 @@ Configuration values for NEW RELIC are set in the app's Cloud Foundry environmen
 
 Additional configuration is set up through environment variables:
 
-- `BUILD_TIMEOUT_SECONDS`: (required) number of seconds to let a build run before timing out
 - `CLOUD_FOUNDRY_OAUTH_TOKEN_URL`: (required) the OAuth2 token URL for Cloud Foundry, e.g. `https://login.fr.cloud.gov`
 - `LOG_LEVEL`: the log level for [winston](https://github.com/winstonjs/winston#logging-levels). Defaults to "info".
 - `PORT`: (local/test only) the port for the server that handles healthcheck pings and build callbacks
