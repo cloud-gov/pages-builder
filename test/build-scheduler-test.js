@@ -23,8 +23,6 @@ const mockBuilderPool = pool => ({
   canStartBuild: () => false,
   start: () => undefined,
   startBuild: () => Promise.resolve(),
-  stop: () => undefined,
-  stopBuild: () => undefined,
   ...pool,
 });
 

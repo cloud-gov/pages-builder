@@ -4,17 +4,15 @@ const CloudFoundryAPIClient = require('./cloud-foundry-api-client');
 const logger = require('./logger');
 
 class TaskStartError extends Error {}
-class TaskStopError extends Error {}
 
 class CFTaskPool {
   constructor({
-    buildTimeout, maxTaskMemory, taskDisk, taskMemory, url,
+    maxTaskMemory, taskDisk, taskMemory, url,
     customTaskMemRepos, taskCustomMemory, taskCustomDisk,
   }) {
     this._apiClient = new CloudFoundryAPIClient();
     this._buildStatusReporter = BuildStatusReporter;
 
-    this._buildTimeout = buildTimeout;
     this._maxTaskMemory = maxTaskMemory;
     this._taskDisk = taskDisk;
     this._taskMemory = taskMemory;
@@ -22,9 +20,6 @@ class CFTaskPool {
     this._customTaskMemRepos = customTaskMemRepos;
     this._taskCustomMemory = taskCustomMemory;
     this._taskCustomDisk = taskCustomDisk;
-
-    this._builds = {};
-    this._taskAppGUID = null;
   }
 
   canStartBuild(build) {
@@ -49,32 +44,10 @@ class CFTaskPool {
     try {
       const task = await this._apiClient.startTaskForApp(buildTask, container.guid);
       logger.info('Started build %s in task %s guid %s', build.buildID, task.name, task.guid);
-      this._builds[build.buildID] = {
-        taskGUID: task.guid,
-        timeout: this._createBuildTimeout(build),
-      };
       this._buildStatusReporter.reportBuildStatus(build, 'tasked');
       return undefined;
     } catch (error) {
       throw new TaskStartError(error.message);
-    }
-  }
-
-  stop() {
-    return true;
-  }
-
-  async stopBuild(buildID) {
-    const { taskGUID, timeout } = this._builds[buildID];
-    clearTimeout(timeout);
-    delete this._builds[buildID];
-    try {
-      await this._apiClient.stopTask(taskGUID);
-      logger.info('Stopped build', buildID);
-      return;
-    } catch (_) {
-      // This will fail if the task has already completed
-      throw new TaskStopError('Build already completed');
     }
   }
 
@@ -91,27 +64,11 @@ class CFTaskPool {
     };
   }
 
-  _createBuildTimeout(build) {
-    return setTimeout(
-      () => this._timeoutBuild(build), this._buildTimeout
-    );
-  }
-
   async _hasAvailableMemory(requestedMemory) {
     const tasks = await this._apiClient.fetchActiveTasks();
     const allocMemory = tasks.reduce((mem, task) => mem + task.memory_in_mb, 0);
 
     return (allocMemory + requestedMemory) < this._maxTaskMemory;
-  }
-
-  async _timeoutBuild(build) {
-    try {
-      await this.stopBuild(build.buildID);
-      logger.warn('Build %s timed out', build.buildID);
-      this._buildStatusReporter.reportBuildStatus(build, 'error');
-    } catch (_) {
-      // The task already completed, do nothing
-    }
   }
 
   _requiresCustom(build) {

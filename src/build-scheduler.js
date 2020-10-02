@@ -16,7 +16,6 @@ class BuildScheduler {
 
   stop() {
     this._server.stop();
-    this._builderPool.stop();
     this.running = false;
   }
 

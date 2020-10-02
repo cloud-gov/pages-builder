@@ -26,25 +26,6 @@ function createServer(builderPool, buildQueue) {
     handler: createHealthcheckHandler(buildQueue),
   });
 
-  server.route({
-    method: 'DELETE',
-    path: '/builds/{buildID}/callback',
-    handler: (request, h) => {
-      try {
-        builderPool.stopBuild(request.params.buildID);
-      } catch (error) {
-        logger.error(`Error stopping build${request}`, error);
-      }
-
-      const response = h.response('Callback registered');
-      response.type('text/plain');
-      response.code(200);
-
-      logger.info('GET %s - 200', request.url.path);
-      return response;
-    },
-  });
-
   return server;
 }
 
