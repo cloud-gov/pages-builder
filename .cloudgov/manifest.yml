@@ -2,7 +2,7 @@
 applications:
   - name: ((name))
     routes:
-      - route: federalist-builder((env_postfix)).18f.gov
+      - route: federalist-builder((env_postfix)).app.cloud.gov
     disk_quota: 512M
     memory: 128M
     instances: ((instances))
