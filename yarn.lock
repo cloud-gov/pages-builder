@@ -2315,10 +2315,10 @@ natural-compare@^1.4.0:
   resolved "https://registry.yarnpkg.com/natural-compare/-/natural-compare-1.4.0.tgz#4abebfeed7541f2c27acfb29bdbbd15c8d5ba4f7"
   integrity sha1-Sr6/7tdUHywnrPspvbvRXI1bpPc=
 
-newrelic@^7.0.1:
-  version "7.0.1"
-  resolved "https://registry.yarnpkg.com/newrelic/-/newrelic-7.0.1.tgz#281085a03af42c955ff06f7c5c5a11e209e763d7"
-  integrity sha512-DMuznXjT4Eh4nXpM5CIxnuY+3Lv6imVdsjOwgPSPD6aKzrPuXg1qpqhh07WjGkUA3XpuAaiwDmxjz4WHrSfJUg==
+newrelic@^7.0.2:
+  version "7.0.2"
+  resolved "https://registry.yarnpkg.com/newrelic/-/newrelic-7.0.2.tgz#91c1a22cbbdc03b334283f7d8b1b2990743ca360"
+  integrity sha512-C3GF5GzFRMuvY/gq6W8BMpoOp2lF4lX0/Xes4vT0p49fzGu4TQmSkdAk0xPlQrKbx+dGgkfHLvrykzK1LcFH3Q==
   dependencies:
     "@grpc/grpc-js" "1.2.0"
     "@grpc/proto-loader" "^0.5.5"
