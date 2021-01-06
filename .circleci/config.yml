@@ -1,5 +1,87 @@
 version: 2.1
 
+##################################
+##            Commands          ##
+##################################
+commands:
+  deploy-to-cg:
+    description: Deploy a cloud foundry app to cloud.gov
+    parameters:
+      manifest:
+        type: string
+        default: ./.cloudgov/manifest.yml
+      action:
+        type: enum
+        enum: ["deploy", "restage"]
+        default: "deploy"
+      app:
+        type: string
+    steps:
+      - run:
+          name: Setup environment
+          command: |
+            if [ "$CIRCLE_BRANCH" = "main" ]; then
+              echo "export CF_SPACE=production" >> $BASH_ENV
+              echo "export CF_USERNAME=$CF_USERNAME_PRODUCTION" >> $BASH_ENV
+              echo "export CF_PASSWORD=$CF_PASSWORD_PRODUCTION" >> $BASH_ENV
+            else
+              echo "export CF_SPACE=staging" >> $BASH_ENV
+              echo "export CF_USERNAME=$CF_USERNAME_STAGING" >> $BASH_ENV
+              echo "export CF_PASSWORD=$CF_PASSWORD_STAGING" >> $BASH_ENV  
+            fi
+
+      - run:
+          name: Install cloud foundry cli
+          command: |
+            curl -L "https://packages.cloudfoundry.org/stable?release=linux64-binary&version=v7&source=github" | tar -zx
+            sudo mv cf7 /usr/local/bin/cf
+            cf version
+
+      - run:
+          name: Log into cloud.gov
+          command: |
+            cf api https://api.fr.cloud.gov
+            cf login -u $CF_USERNAME -p $CF_PASSWORD -o gsa-18f-federalist -s $CF_SPACE
+
+      - when:
+          condition:
+            equal: ["deploy", << parameters.action >> ]
+          steps:
+            - run:
+                name: Deploy app '<< parameters.app >>'
+                command: |
+                  set +e
+
+                  onerr() {
+                    echo "Deployment failed, cancelling."
+                    cf cancel-deployment << parameters.app >>
+                    cf logout
+                    exit 1
+                  }
+                  trap 'onerr' ERR
+
+                  cf push << parameters.app >> \
+                    --strategy rolling \
+                    --vars-file "./.cloudgov/vars/${CF_SPACE}.yml" \
+                    -f << parameters.manifest >>
+
+      - when:
+          condition:
+            equal: ["restage", << parameters.action >> ]
+          steps:
+            - run:
+                name: Restage app '<< parameters.app >>'
+                command: |
+                  cf restage << parameters.app >> --strategy rolling
+
+      - run:
+          name: Log out from cloud.gov
+          command: cf logout
+
+
+##################################
+##             Jobs             ##
+##################################
 jobs:
   build:
     docker:
@@ -36,41 +118,36 @@ jobs:
           command: ./cc-test-reporter after-build --exit-code $? < coverage/lcov.info || true
 
   deploy:
-    machine: true    
-    environment:
-      CF_MANIFEST: ./.cloudgov/manifest.yml
+    docker:
+      - image: cimg/base:2020.01
+    parameters:
+      app:
+        type: string      
     steps:
       - checkout
       - restore_cache:
           key: dependency-cache-{{ checksum "yarn.lock" }}
-      - when:
-          condition:
-            equal: [ staging, << pipeline.git.branch >> ]
-          steps:
-            run:
-              name: Setup Staging Environment
-              command: |
-                echo "export CF_USERNAME=$CF_USERNAME_STAGING" >> $BASH_ENV
-                echo "export CF_PASSWORD=$CF_PASSWORD_STAGING" >> $BASH_ENV
-                echo "export CF_SPACE=staging" >> $BASH_ENV
-                echo "export CF_APP=federalist-builder-staging" >> $BASH_ENV
-                echo "export CF_VARS_FILE=./.cloudgov/vars/staging.yml" >> $BASH_ENV
-      - when:
-          condition:
-            equal: [ main, << pipeline.git.branch >> ]
-          steps:
-            run:
-              name: Setup Production Environment
-              command: |
-                echo "export CF_USERNAME=$CF_USERNAME_PRODUCTION" >> $BASH_ENV
-                echo "export CF_PASSWORD=$CF_PASSWORD_PRODUCTION" >> $BASH_ENV
-                echo "export CF_SPACE=production" >> $BASH_ENV
-                echo "export CF_APP=federalist-builder" >> $BASH_ENV
-                echo "export CF_VARS_FILE=./.cloudgov/vars/production.yml" >> $BASH_ENV
-      - deploy:
-          command: ./.cloudgov/deploy.sh
+
+      - deploy-to-cg:
+          app: << parameters.app >>          
+
+  restage:
+    docker:
+      - image: cimg/base:2020.01
+    parameters:
+      app:
+        type: string
+    steps:
+      - checkout
+
+      - deploy-to-cg:
+          app: << parameters.app >>
+          action: restage
 
 
+##################################
+##          Workflows           ##
+##################################
 workflows:
   version: 2
   build-test-deploy:
@@ -79,8 +156,40 @@ workflows:
       - deploy:
           requires:
             - build
+          name: Deploy federalist-builder
+          app: federalist-builder
+          filters:
+            branches:
+              only: main
+      - deploy:
+          requires:
+            - build
+          name: Deploy federalist-builder-staging
+          app: federalist-builder-staging
+          filters:
+            branches:
+              only: staging
+
+  nightly:
+    triggers:
+      - schedule:
+          cron: "0 5 * * *"
           filters:
             branches:
               only:
                 - staging
                 - main
+    jobs:
+      - restage:
+          name: Restage federalist-builder
+          app: federalist-builder
+          filters:
+            branches:
+              only: main
+
+      - restage:
+          name: Restage federalist-build-staging
+          app: federalist-builder-staging
+          filters:
+            branches:
+              only: staging      
