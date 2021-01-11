@@ -23,7 +23,7 @@
     "axios": "^0.21.1",
     "cfenv": "^1.2.3",
     "jsonwebtoken": "^8.5.1",
-    "newrelic": "^7.0.2",
+    "newrelic": "^7.1.0",
     "winston": "^3.3.3"
   },
   "devDependencies": {
