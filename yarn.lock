@@ -144,12 +144,12 @@
     minimatch "^3.0.4"
     strip-json-comments "^3.1.1"
 
-"@grpc/grpc-js@1.2.0":
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/@grpc/grpc-js/-/grpc-js-1.2.0.tgz#4ff1ac4cdf7eb2af80d3c67316be9c2308d8d9bf"
-  integrity sha512-09H50V7rmz0gFrGz6IbP49z9A8+2p4yZYcNDEb7bytr90vWn52VBQE1a+LMBlrucmNN0wSsiCr3TJx+dStHTng==
+"@grpc/grpc-js@^1.2.5":
+  version "1.2.6"
+  resolved "https://registry.yarnpkg.com/@grpc/grpc-js/-/grpc-js-1.2.6.tgz#579c433ab9b9dda8a62080db1ac0c86dce58bbaa"
+  integrity sha512-wfYwFy7CvVEmBKzeDX1kQQYrv5NBpe8Z+VwXipFvqof3lCXKch7k+4T3grKtptaH5GQ5KP9iKwPr9hMDSynIUw==
   dependencies:
-    "@types/node" "^12.12.47"
+    "@types/node" ">=12.12.47"
     google-auth-library "^6.1.1"
     semver "^6.2.0"
 
@@ -565,10 +565,10 @@
   resolved "https://registry.yarnpkg.com/@types/long/-/long-4.0.1.tgz#459c65fa1867dafe6a8f322c4c51695663cc55e9"
   integrity sha512-5tXH6Bx/kNGd3MgffdmP4dy2Z+G4eaXw0SE81Tq3BNadtnMR5/ySMzX4SLEzHJzSmPNn4HIdpQsBvXMUykr58w==
 
-"@types/node@^12.12.47":
-  version "12.19.3"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-12.19.3.tgz#a6e252973214079155f749e8bef99cc80af182fa"
-  integrity sha512-8Jduo8wvvwDzEVJCOvS/G6sgilOLvvhn1eMmK3TW8/T217O7u1jdrK6ImKLv80tVryaPSVeKu6sjDEiFjd4/eg==
+"@types/node@>=12.12.47":
+  version "14.14.25"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-14.14.25.tgz#15967a7b577ff81383f9b888aa6705d43fbbae93"
+  integrity sha512-EPpXLOVqDvisVxtlbvzfyqSsFeQxltFbluZNRndIb8tr9KiBnYNLzrc1N3pyKUCww2RNrfHDViqDWWE1LCJQtQ==
 
 "@types/node@^13.7.0":
   version "13.13.4"
@@ -2307,12 +2307,12 @@ natural-compare@^1.4.0:
   resolved "https://registry.yarnpkg.com/natural-compare/-/natural-compare-1.4.0.tgz#4abebfeed7541f2c27acfb29bdbbd15c8d5ba4f7"
   integrity sha1-Sr6/7tdUHywnrPspvbvRXI1bpPc=
 
-newrelic@^7.0.2:
-  version "7.0.2"
-  resolved "https://registry.yarnpkg.com/newrelic/-/newrelic-7.0.2.tgz#91c1a22cbbdc03b334283f7d8b1b2990743ca360"
-  integrity sha512-C3GF5GzFRMuvY/gq6W8BMpoOp2lF4lX0/Xes4vT0p49fzGu4TQmSkdAk0xPlQrKbx+dGgkfHLvrykzK1LcFH3Q==
+newrelic@^7.1.1:
+  version "7.1.1"
+  resolved "https://registry.yarnpkg.com/newrelic/-/newrelic-7.1.1.tgz#fd4db4c94a6c41fa33cdcaf56890664c5501090a"
+  integrity sha512-aESSdT4mOXsdLbUp/Mcn+LkEx5qkgRvI1Y7k7netnis6qjn2i1dAkS780Wjy+IsK8Wr/bqnJCbSAVZH1iVrryg==
   dependencies:
-    "@grpc/grpc-js" "1.2.0"
+    "@grpc/grpc-js" "^1.2.5"
     "@grpc/proto-loader" "^0.5.5"
     "@newrelic/aws-sdk" "^3.0.0"
     "@newrelic/koa" "^5.0.0"
