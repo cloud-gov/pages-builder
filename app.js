@@ -20,7 +20,7 @@ if (NEW_RELIC_APP_NAME && NEW_RELIC_LICENSE_KEY) {
 const builderPool = new BuilderPool(appEnv);
 const buildSQSQueue = new SQSClient(new AWS.SQS(), appEnv.sqsUrl);
 const buildBullQueue = new QueueClient(appEnv.queueName);
-const server = createServer(builderPool, buildQueue);
+const server = createServer(builderPool, buildSQSQueue);
 
 const buildScheduler = new BuildScheduler(
   builderPool,
