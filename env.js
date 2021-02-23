@@ -1,6 +1,7 @@
 const cfenv = require('cfenv');
 
 const {
+  CIRCLECI,
   CLOUD_FOUNDRY_OAUTH_TOKEN_URL,
   NODE_ENV,
   TASK_DISK_GB,
@@ -29,8 +30,11 @@ appEnv.cloudFoundryCreds = {
 appEnv.cloudFoundryApiHost = cfApiHost;
 
 appEnv.queueName = `federalist-${spaceName}-queue`;
-appEnv.redisCreds = redisCreds;
-appEnv.redisUrl = redisCreds.uri;
+if (CIRCLECI) {
+  appEnv.redisUrl = 'redis://localhost:6379';
+} else {
+  appEnv.redisUrl = redisCreds.uri;
+}
 appEnv.sqsCreds = sqsCreds;
 appEnv.sqsUrl = sqsCreds.sqs_url;
 

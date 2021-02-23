@@ -91,7 +91,6 @@ jobs:
       - image: circleci/redis
         environment:
           REDIS_PORT: 6379
-          REDIS_HOST: redis
     steps:
       - checkout
       - run:
