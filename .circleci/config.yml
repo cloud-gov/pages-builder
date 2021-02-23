@@ -27,7 +27,7 @@ commands:
             else
               echo "export CF_SPACE=staging" >> $BASH_ENV
               echo "export CF_USERNAME=$CF_USERNAME_STAGING" >> $BASH_ENV
-              echo "export CF_PASSWORD=$CF_PASSWORD_STAGING" >> $BASH_ENV  
+              echo "export CF_PASSWORD=$CF_PASSWORD_STAGING" >> $BASH_ENV
             fi
 
       - run:
@@ -88,6 +88,10 @@ jobs:
       - image: circleci/node:14.15.0
         environment:
           CC_TEST_REPORTER_ID: 4c0674ab7fa1efa186ac5998f89136640d924fabcc0b99ed764bd9fc85043b97
+      - image: circleci/redis
+        environment:
+          REDIS_PORT: 6379
+          REDIS_HOST: redis
     steps:
       - checkout
       - run:
@@ -122,14 +126,14 @@ jobs:
       - image: cimg/base:2020.01
     parameters:
       app:
-        type: string      
+        type: string
     steps:
       - checkout
       - restore_cache:
           key: dependency-cache-{{ checksum "yarn.lock" }}
 
       - deploy-to-cg:
-          app: << parameters.app >>          
+          app: << parameters.app >>
 
   restage:
     docker:
@@ -192,4 +196,4 @@ workflows:
           app: federalist-builder-staging
           filters:
             branches:
-              only: staging      
+              only: staging

@@ -18,6 +18,7 @@ const { cf_api: cfApiHost, space_name: spaceName } = appEnv.app;
 
 const cfCreds = appEnv.getServiceCreds('federalist-deploy-user');
 const sqsCreds = appEnv.getServiceCreds(`federalist-${spaceName}-sqs-creds`);
+const redisCreds = appEnv.getServiceCreds(`federalist-${spaceName}-redis`);
 
 // Some helpful attributes
 appEnv.cloudFoundryOAuthTokenUrl = CLOUD_FOUNDRY_OAUTH_TOKEN_URL;
@@ -27,6 +28,9 @@ appEnv.cloudFoundryCreds = {
 };
 appEnv.cloudFoundryApiHost = cfApiHost;
 
+appEnv.queueName = `federalist-${spaceName}-queue`;
+appEnv.redisCreds = redisCreds;
+appEnv.redisUrl = redisCreds.uri;
 appEnv.sqsCreds = sqsCreds;
 appEnv.sqsUrl = sqsCreds.sqs_url;
 

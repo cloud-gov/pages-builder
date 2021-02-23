@@ -76,6 +76,20 @@ yarn
 yarn test
 ```
 
+### Using docker to test locally
+
+Since `federalist-builder` has tightly coupled build process, a dependence on the Cloud Foundry platform, and third party services, running tests locally with `docker-compose` can make the development experience a bit simpler.
+
+To build the containers run:
+`$ docker-compose build`
+
+To install the dependencies run:
+`$ docker-compose run app yarn`
+
+To test the builder run:
+`$ docker-compose run app yarn test`
+
+
 ## Public domain
 
 This project is in the worldwide [public domain](LICENSE.md). As stated in [CONTRIBUTING](CONTRIBUTING.md):
