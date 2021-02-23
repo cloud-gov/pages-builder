@@ -1,5 +1,6 @@
 const { expect } = require('chai');
 const BuildScheduler = require('../src/build-scheduler');
+const QueueClient = require('../src/queue-client');
 const SQSClient = require('../src/sqs-client');
 
 const mockServer = {
@@ -13,10 +14,19 @@ const mockedSQSReceiveMessage = (params, callback) => callback(null, {
 
 const mockedSQSDeleteMessage = (params, callback) => callback();
 
-const mockBuildQueue = sqs => new SQSClient({
+const mockBuildSQSQueue = sqs => new SQSClient({
   receiveMessage: mockedSQSReceiveMessage,
   deleteMessage: mockedSQSDeleteMessage,
   ...sqs,
+});
+
+const mockedBullReceiveMessage = message => message;
+const mockedBullDeleteMessage = () => new Promise(resolve => resolve({}));
+
+const mockBuildBullQueue = bull => new QueueClient({
+  process: mockedBullReceiveMessage,
+  getJob: mockedBullDeleteMessage,
+  ...bull,
 });
 
 const mockBuilderPool = pool => ({
@@ -29,19 +39,21 @@ const mockBuilderPool = pool => ({
 describe('BuildScheduler', () => {
   it('it should start a build when a message is received from SQS and then delete the message', (done) => {
     const sqs = {};
+    const bull = {};
+    const data = {
+      environment: [
+        { name: 'OVERRIDE_A', value: 'Value A' },
+      ],
+    };
 
-    let hasReceivedMessage = false;
+    let hasReceivedSQSMessage = false;
     sqs.receiveMessage = (params, callback) => {
-      if (!hasReceivedMessage) {
-        hasReceivedMessage = true;
+      if (!hasReceivedSQSMessage) {
+        hasReceivedSQSMessage = true;
         callback(null, {
           Messages: [
             {
-              Body: JSON.stringify({
-                environment: [
-                  { name: 'OVERRIDE_A', value: 'Value A' },
-                ],
-              }),
+              Body: JSON.stringify(data),
             },
           ],
         });
@@ -50,11 +62,30 @@ describe('BuildScheduler', () => {
       }
     };
 
-    let hasDeletedMessage = false;
+    let hasReceivedBullMessage = false;
+    bull.receiveMessage = () => new Promise((resolve) => {
+      if (!hasReceivedBullMessage) {
+        hasReceivedBullMessage = true;
+        resolve({
+          id: 'bull-job-1',
+          data,
+        });
+      } else {
+        resolve({});
+      }
+    });
+
+    let hasDeletedSQSMessage = false;
     sqs.deleteMessage = (params, callback) => {
-      hasDeletedMessage = true;
+      hasDeletedSQSMessage = true;
       mockedSQSDeleteMessage(params, callback);
     };
+
+    let hasDeletedBullMessage = false;
+    bull.deleteMessage = () => new Promise((resolve) => {
+      hasDeletedBullMessage = true;
+      resolve();
+    });
 
     const cluster = {};
 
@@ -77,16 +108,19 @@ describe('BuildScheduler', () => {
 
     const buildScheduler = new BuildScheduler(
       mockBuilderPool(cluster),
-      mockBuildQueue(sqs),
+      mockBuildSQSQueue(sqs),
+      bull,
       mockServer
     );
 
     buildScheduler.start();
 
     setImmediate(() => {
-      expect(hasReceivedMessage).to.equal(true);
+      expect(hasReceivedSQSMessage).to.equal(true);
+      expect(hasReceivedBullMessage).to.equal(true);
       expect(hasStartedBuild).to.equal(true);
-      expect(hasDeletedMessage).to.equal(true);
+      expect(hasDeletedSQSMessage).to.equal(true);
+      expect(hasDeletedBullMessage).to.equal(true);
       buildScheduler.stop();
       done();
     });
@@ -94,22 +128,38 @@ describe('BuildScheduler', () => {
 
   it('should not run more tasks than the cluster can handle', (done) => {
     const sqs = {};
+    const bull = {};
+    const data = {
+      environment: [
+        { name: 'OVERRIDE_A', value: 'Value A' },
+      ],
+    };
 
-    let receivedMessageCount = 0;
+    let receivedSQSMessageCount = 0;
     sqs.receiveMessage = (params, callback) => {
-      receivedMessageCount += 1;
+      receivedSQSMessageCount += 1;
       callback(null, {
         Messages: [
           {
-            Body: JSON.stringify({
-              environment: [
-                { name: 'OVERRIDE_A', value: 'Value A' },
-              ],
-            }),
+            Body: JSON.stringify(data),
           },
         ],
       });
     };
+
+    let receivedBullMessageCount = 0;
+    bull.receiveMessage = () => new Promise((resolve) => {
+      receivedBullMessageCount += 1;
+      resolve({
+        id: 'bull-job-2',
+        data,
+      });
+    });
+
+    bull.deleteMessage = () => new Promise((resolve) => {
+      receivedBullMessageCount += 1;
+      resolve();
+    });
 
     const cluster = {};
 
@@ -123,14 +173,16 @@ describe('BuildScheduler', () => {
 
     const buildScheduler = new BuildScheduler(
       mockBuilderPool(cluster),
-      mockBuildQueue(sqs),
+      mockBuildSQSQueue(sqs),
+      bull,
       mockServer
     );
 
     buildScheduler.start();
 
     setTimeout(() => {
-      expect(receivedMessageCount).to.be.above(10);
+      expect(receivedSQSMessageCount).to.be.above(10);
+      expect(receivedBullMessageCount).to.be.above(10);
       expect(runningBuildCount).to.equal(10);
       buildScheduler.stop();
       done();
@@ -139,19 +191,21 @@ describe('BuildScheduler', () => {
 
   it('should not delete the message if the build fails to start', (done) => {
     const sqs = {};
+    const bull = {};
+    const data = {
+      environment: [
+        { name: 'OVERRIDE_A', value: 'Value A' },
+      ],
+    };
 
-    let hasReceivedMessage = false;
+    let hasReceivedSQSMessage = false;
     sqs.receiveMessage = (params, callback) => {
-      if (!hasReceivedMessage) {
-        hasReceivedMessage = true;
+      if (!hasReceivedSQSMessage) {
+        hasReceivedSQSMessage = true;
         callback(null, {
           Messages: [
             {
-              Body: JSON.stringify({
-                environment: [
-                  { name: 'OVERRIDE_A', value: 'Value A' },
-                ],
-              }),
+              Body: JSON.stringify(data),
             },
           ],
         });
@@ -160,11 +214,29 @@ describe('BuildScheduler', () => {
       }
     };
 
-    let hasDeletedMessage = false;
+    let hasReceivedBullMessage = false;
+    bull.process = () => new Promise((resolve) => {
+      if (!hasReceivedBullMessage) {
+        hasReceivedBullMessage = true;
+        resolve({
+          id: 'bull-job-1',
+          data,
+        });
+      }
+      resolve();
+    });
+
+    let hasDeletedSQSMessage = false;
     sqs.deleteMessage = (params, callback) => {
-      hasDeletedMessage = true;
+      hasDeletedSQSMessage = true;
       mockedSQSDeleteMessage(params, callback);
     };
+
+    let hasDeletedBullMessage = false;
+    bull.getJob = () => new Promise((resolve) => {
+      hasDeletedBullMessage = true;
+      resolve();
+    });
 
     const cluster = {};
 
@@ -177,16 +249,19 @@ describe('BuildScheduler', () => {
 
     const buildScheduler = new BuildScheduler(
       mockBuilderPool(cluster),
-      mockBuildQueue(sqs),
+      mockBuildSQSQueue(sqs),
+      mockBuildBullQueue(bull),
       mockServer
     );
 
     buildScheduler.start();
 
     setImmediate(() => {
-      expect(hasReceivedMessage).to.equal(true);
+      expect(hasReceivedSQSMessage).to.equal(true);
+      expect(hasReceivedBullMessage).to.equal(true);
       expect(hasAttemptedToStartedBuild).to.equal(true);
-      expect(hasDeletedMessage).to.equal(false);
+      expect(hasDeletedSQSMessage).to.equal(false);
+      expect(hasDeletedBullMessage).to.equal(false);
       buildScheduler.stop();
       done();
     });

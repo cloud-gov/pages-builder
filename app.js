@@ -4,6 +4,7 @@ const BuildScheduler = require('./src/build-scheduler');
 const logger = require('./src/logger');
 const createServer = require('./src/server');
 const SQSClient = require('./src/sqs-client');
+const QueueClient = require('./src/queue-client');
 const BuilderPool = require('./src/cf-task-pool');
 
 const {
@@ -17,12 +18,14 @@ if (NEW_RELIC_APP_NAME && NEW_RELIC_LICENSE_KEY) {
 }
 
 const builderPool = new BuilderPool(appEnv);
-const buildQueue = new SQSClient(new AWS.SQS(), appEnv.sqsUrl);
+const buildSQSQueue = new SQSClient(new AWS.SQS(), appEnv.sqsUrl);
+const buildBullQueue = new QueueClient(appEnv.queueName);
 const server = createServer(builderPool, buildQueue);
 
 const buildScheduler = new BuildScheduler(
   builderPool,
-  buildQueue,
+  buildSQSQueue,
+  buildBullQueue,
   server
 );
 

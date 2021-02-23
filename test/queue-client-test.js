@@ -1,6 +1,6 @@
 const { expect } = require('chai');
-const bullQueue = require('../src/bull-queue');
 const QueueClient = require('../src/queue-client');
+const { testAddJobsToQueue, testEmptyQueue } = require('./helpers');
 
 const jobKeys = [
   'id',
@@ -14,21 +14,6 @@ const mockQueue = (queue, output) => ({
   getJobCounts: () => new Promise(resolve => resolve(output)),
   ...queue,
 });
-
-const addJobsToQueue = (queueName, jobData, testMethod) => {
-  const testQueue = bullQueue(queueName);
-  return testQueue.addBulk(jobData)
-    .then(() => testMethod(testQueue))
-    .then(() => testQueue.empty())
-    .then(() => testQueue.close());
-};
-
-const createQueue = (queueName, testMethod) => {
-  const testQueue = bullQueue(queueName);
-  return testMethod(testQueue)
-    .then(() => testQueue.empty())
-    .then(() => testQueue.close());
-};
 
 describe('QueueClient', () => {
   describe('.receiveMessage()', () => {
@@ -46,7 +31,7 @@ describe('QueueClient', () => {
           });
       };
 
-      return addJobsToQueue(queueName, jobData, testMethod);
+      return testAddJobsToQueue(queueName, jobData, testMethod);
     });
 
     it('should receive a the FIFO message from the queue', () => {
@@ -67,7 +52,7 @@ describe('QueueClient', () => {
           });
       };
 
-      return addJobsToQueue(queueName, jobData, testMethod);
+      return testAddJobsToQueue(queueName, jobData, testMethod);
     });
 
     it('should respond with undefined if there are no messages after 1 second', () => {
@@ -80,7 +65,7 @@ describe('QueueClient', () => {
           });
       };
 
-      return createQueue(queueName, testMethod);
+      return testEmptyQueue(queueName, testMethod);
     });
   });
 
@@ -105,7 +90,7 @@ describe('QueueClient', () => {
           });
       };
 
-      return addJobsToQueue(queueName, jobData, testMethod);
+      return testAddJobsToQueue(queueName, jobData, testMethod);
     });
 
     it('should reject with an error if queue job does not exist', () => {
@@ -126,7 +111,7 @@ describe('QueueClient', () => {
           });
       };
 
-      return addJobsToQueue(queueName, jobData, testMethod);
+      return testAddJobsToQueue(queueName, jobData, testMethod);
     });
   });
 
@@ -250,7 +235,7 @@ describe('QueueClient', () => {
         });
       };
 
-      return addJobsToQueue(queueName, jobData, testMethod);
+      return testAddJobsToQueue(queueName, jobData, testMethod);
     });
   });
 });
