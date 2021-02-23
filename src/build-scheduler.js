@@ -71,7 +71,7 @@ class BuildScheduler {
     logger.verbose('Starting build %s', build.federalistBuildId());
 
     return this._builderPool.startBuild(build)
-      .then(() => this._buildQueue.deleteMessage(build.sqsMessage));
+      .then(() => this._buildQueue.deleteMessage(build.queueMessage));
   }
 }
 
