@@ -29,7 +29,7 @@ appEnv.cloudFoundryCreds = {
 };
 appEnv.cloudFoundryApiHost = cfApiHost;
 
-appEnv.queueName = `federalist-${spaceName}-queue`;
+appEnv.queueName = 'site-build-queue';
 if (CIRCLECI) {
   appEnv.redisUrl = 'redis://localhost:6379';
 } else {
