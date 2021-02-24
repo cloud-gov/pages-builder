@@ -9,7 +9,7 @@ const testAddJobsToQueue = (queueName, jobData, testMethod) => {
 };
 
 const testEmptyQueue = (queueName, testMethod) => {
-  const testQueue = bullQueue(queueName);
+  const testQueue = bullQueue(queueName, { settings: { drainDelay: 1 } });
   return testMethod(testQueue)
     .then(() => testQueue.empty())
     .then(() => testQueue.close());

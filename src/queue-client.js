@@ -2,9 +2,8 @@ const QUEUE_ATTRIBUTES_FALLBACK = 'Queue attributes unavailable.';
 const jobNotFound = id => `Job ${id} not found.`;
 
 class QueueClient {
-  constructor(bullQueue, queueTimeout = 5000) {
+  constructor(bullQueue) {
     this._queue = bullQueue;
-    this._queueTimeout = queueTimeout;
   }
 
   deleteMessage(message) {
@@ -31,9 +30,10 @@ class QueueClient {
   }
 
   receiveMessage() {
-    return new Promise((resolve) => {
-      setTimeout(() => resolve(undefined), this._queueTimeout);
-      this._queue.process((job) => {
+    return this._queue.getNextJob()
+      .then((job) => {
+        if (!job) return undefined;
+
         const {
           id,
           data,
@@ -42,15 +42,14 @@ class QueueClient {
           failedReason,
         } = job;
 
-        resolve({
+        return {
           id,
           data,
           timestamp,
           processedOn,
           failedReason,
-        });
+        };
       });
-    });
   }
 
   _queueAvailableAttributes(jobCounts, attributesArray) {

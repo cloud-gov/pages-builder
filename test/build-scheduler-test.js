@@ -20,11 +20,11 @@ const mockBuildSQSQueue = sqs => new SQSClient({
   ...sqs,
 });
 
-const mockedBullReceiveMessage = message => message;
+const mockedBullReceiveMessage = () => new Promise(resolve => resolve({}));
 const mockedBullDeleteMessage = () => new Promise(resolve => resolve({}));
 
 const mockBuildBullQueue = bull => new QueueClient({
-  process: mockedBullReceiveMessage,
+  getNextJob: mockedBullReceiveMessage,
   getJob: mockedBullDeleteMessage,
   ...bull,
 });
@@ -186,7 +186,7 @@ describe('BuildScheduler', () => {
       expect(runningBuildCount).to.equal(10);
       buildScheduler.stop();
       done();
-    }, 50);
+    }, 90);
   });
 
   it('should not delete the message if the build fails to start', (done) => {
@@ -215,7 +215,7 @@ describe('BuildScheduler', () => {
     };
 
     let hasReceivedBullMessage = false;
-    bull.process = () => new Promise((resolve) => {
+    bull.getNextJob = () => new Promise((resolve) => {
       if (!hasReceivedBullMessage) {
         hasReceivedBullMessage = true;
         resolve({

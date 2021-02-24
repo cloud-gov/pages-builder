@@ -58,7 +58,7 @@ describe('QueueClient', () => {
     it('should respond with undefined if there are no messages after 1 second', () => {
       const queueName = 'no-messages';
       const testMethod = (queue) => {
-        const queueClient = new QueueClient(queue, 1000);
+        const queueClient = new QueueClient(queue);
         return queueClient.receiveMessage()
           .then((response) => {
             expect(response).to.deep.be.undefined;

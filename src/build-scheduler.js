@@ -21,7 +21,7 @@ class BuildScheduler {
   }
 
   _run() {
-    Promise.allSettled([
+    Promise.all([
       this._findAndScheduleNewBuild(this._bullQueue, true),
       this._findAndScheduleNewBuild(this._sqsQueue),
     ])
