@@ -9,6 +9,7 @@ applications:
     services:
       - federalist-((env))-sqs-creds
       - federalist-deploy-user
+      - federalist-((env))-redis
     env:
       TASK_MEM_GB: 2
       TASK_DISK_GB: 4
