@@ -13,11 +13,12 @@ const bullQueue = (
   } = {}
 ) => {
   const redisUrl = appEnv.redisUrl;
+  const updatedRedis = { tls: appEnv.redisTls, ...redis };
   const updatedSettings = { drainDelay: 20, ...settings };
 
   return new Queue(queueName, redisUrl, {
     createClient,
-    redis,
+    redis: updatedRedis,
     limiter,
     prefix,
     defaultJobOptions,

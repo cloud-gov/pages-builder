@@ -35,6 +35,13 @@ if (CIRCLECI) {
 } else {
   appEnv.redisUrl = redisCreds.uri;
 }
+
+if (spaceName === 'staging' || spaceName === 'production') {
+  appEnv.redisTls = {};
+} else {
+  appEnv.redisTls = null;
+}
+
 appEnv.sqsCreds = sqsCreds;
 appEnv.sqsUrl = sqsCreds.sqs_url;
 
