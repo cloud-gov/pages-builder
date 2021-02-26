@@ -2,9 +2,6 @@ const logger = require('../logger');
 const CloudFoundryAuthClient = require('../cloud-foundry-auth-client');
 const CloudFoundryApiClient = require('../cloud-foundry-api-client');
 
-const ATTR_NUM_MESSAGES = 'ApproximateNumberOfMessages';
-const ATTR_NUM_MESSAGES_DELAYED = 'ApproximateNumberOfMessagesDelayed';
-
 function replyOk(buildContainers, queueAttributes) {
   return {
     ok: true,
@@ -42,7 +39,7 @@ function createHealthcheckHandler(queueClient) {
     // Array of promises returned from methods we want included in the healthcheck
     const checkPromises = [
       authClient.accessToken(), // make sure we can authenticate with cloud.gov
-      queueClient.getQueueAttributes([ATTR_NUM_MESSAGES, ATTR_NUM_MESSAGES_DELAYED]),
+      queueClient.getQueueAttributes(),
       apiClient.getBuildContainersState(),
     ];
 
