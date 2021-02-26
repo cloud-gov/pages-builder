@@ -3,12 +3,13 @@ const url = require('url');
 const appEnv = require('../env');
 
 class Build {
-  constructor(sqsMessage) {
-    this.sqsMessage = sqsMessage;
+  constructor(queueMessage, isBullQueue = false) {
+    this.queueMessage = queueMessage;
     this.buildID = this._generateBuildID();
     this._resolveContainerEnvironment(
       this.buildID,
-      this.sqsMessage
+      this.queueMessage,
+      isBullQueue
     );
   }
 
@@ -23,12 +24,24 @@ class Build {
       .replace(/=/g, '');
   }
 
-  _resolveContainerEnvironment(buildID, sqsMessage) {
-    const {
-      containerName,
-      containerSize,
-      environment,
-    } = JSON.parse(sqsMessage.Body);
+  _resolveContainerEnvironment(buildID, queueMessage, isBullQueue) {
+    let containerName;
+    let containerSize;
+    let environment;
+
+    if (isBullQueue) {
+      ({
+        containerName,
+        containerSize,
+        environment,
+      } = queueMessage.data);
+    } else {
+      ({
+        containerName,
+        containerSize,
+        environment,
+      } = JSON.parse(queueMessage.Body));
+    }
 
     const containerEnvironment = environment.reduce(
       (env, { name, value }) => ({ ...env, [name]: value }),

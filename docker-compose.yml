@@ -1,0 +1,20 @@
+version: '3'
+services:
+  app:
+    build:
+      dockerfile: Dockerfile
+      context: .
+    command: ["yarn", "dev"]
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+    ports:
+      - 8000:8000
+    environment:
+      PORT: 8000
+      REDIS_HOST: redis
+  redis:
+    image: redis
+    ports:
+      - 6379:6379
