@@ -87,7 +87,9 @@ describe('QueueClient', () => {
         return queueClient.deleteMessage(message)
           .then((response) => {
             expect(response).to.deep.equal(message);
-          });
+          })
+          .then(() => queue.getJobCounts())
+          .then(counts => expect(counts.completed).to.equal(1));
       };
 
       return testAddJobsToQueue(queueName, jobData, testMethod);
