@@ -15,7 +15,7 @@ class QueueClient {
           throw new Error(error);
         }
 
-        return job.remove();
+        return job.moveToCompleted(`Job ${id} completed`, true, true);
       })
       .then(() => message);
   }
