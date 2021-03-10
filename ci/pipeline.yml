@@ -25,6 +25,11 @@ cf-image: &cf-image
       repository: 18fgsa/concourse-task
 
 test: &test
+  - in_parallel:
+    - get: redis
+      params: {save: true}
+    - get: node
+      params: {save: true}
   - task: prepare
     config:
       <<: *node-image
@@ -39,13 +44,33 @@ test: &test
             yarn --pure-lockfile
             yarn eslint
   - task: test
-    config:
-      <<: *node-image
-      inputs: [name: src]
-      run:
-        path: src/ci/tasks/test.sh
-      params:
-        CC_TEST_REPORTER_ID: 4c0674ab7fa1efa186ac5998f89136640d924fabcc0b99ed764bd9fc85043b97
+      privileged: true
+      config:
+        platform: linux
+        image_resource:
+          type: docker-image
+          source:
+            repository: karlkfi/concourse-dcind
+        inputs:
+          - name: src
+          - name: redis
+          - name: node
+        run:
+          dir: src
+          path: ci/docker/entrypoint.sh
+          args:
+            - bash
+            - -ceux
+            - |
+              pushd ..
+                docker load -i redis/image
+                docker tag "$(cat redis/image-id)" "$(cat redis/repository):$(cat redis/tag)"
+                docker load -i node/image
+                docker tag "$(cat node/image-id)" "$(cat node/repository):$(cat node/tag)"
+              popd
+              docker-compose -f ci/docker/docker-compose.yml run app app/ci/tasks/test.sh
+              docker-compose -f ci/docker/docker-compose.yml down
+              docker volume rm $(docker volume ls -q)    
 
 
 ############################
@@ -192,6 +217,18 @@ resources:
       start: 12:00 AM
       stop: 1:00 AM
       location: America/New_York
+
+  - name: redis
+    type: docker-image
+    source:
+      repository: redis
+      tag: 5-alpine
+
+  - name: node
+    type: docker-image
+    source:
+      repository: node
+      tag: 14
 
   - name: slack
     type: slack-notification
