@@ -44,33 +44,33 @@ test: &test
             yarn --pure-lockfile
             yarn eslint
   - task: test
-      privileged: true
-      config:
-        platform: linux
-        image_resource:
-          type: docker-image
-          source:
-            repository: karlkfi/concourse-dcind
-        inputs:
-          - name: src
-          - name: redis
-          - name: node
-        run:
-          dir: src
-          path: ci/docker/entrypoint.sh
-          args:
-            - bash
-            - -ceux
-            - |
-              pushd ..
-                docker load -i redis/image
-                docker tag "$(cat redis/image-id)" "$(cat redis/repository):$(cat redis/tag)"
-                docker load -i node/image
-                docker tag "$(cat node/image-id)" "$(cat node/repository):$(cat node/tag)"
-              popd
-              docker-compose -f ci/docker/docker-compose.yml run app app/ci/tasks/test.sh
-              docker-compose -f ci/docker/docker-compose.yml down
-              docker volume rm $(docker volume ls -q)    
+    privileged: true
+    config:
+      platform: linux
+      image_resource:
+        type: docker-image
+        source:
+          repository: karlkfi/concourse-dcind
+      inputs:
+        - name: src
+        - name: redis
+        - name: node
+      run:
+        dir: src
+        path: ci/docker/entrypoint.sh
+        args:
+          - bash
+          - -ceux
+          - |
+            pushd ..
+              docker load -i redis/image
+              docker tag "$(cat redis/image-id)" "$(cat redis/repository):$(cat redis/tag)"
+              docker load -i node/image
+              docker tag "$(cat node/image-id)" "$(cat node/repository):$(cat node/tag)"
+            popd
+            docker-compose -f ci/docker/docker-compose.yml run app app/ci/tasks/test.sh
+            docker-compose -f ci/docker/docker-compose.yml down
+            docker volume rm $(docker volume ls -q)    
 
 
 ############################
