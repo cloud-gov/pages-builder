@@ -24,10 +24,6 @@ commands:
               echo "export CF_SPACE=production" >> $BASH_ENV
               echo "export CF_USERNAME=$CF_USERNAME_PRODUCTION" >> $BASH_ENV
               echo "export CF_PASSWORD=$CF_PASSWORD_PRODUCTION" >> $BASH_ENV
-            else
-              echo "export CF_SPACE=staging" >> $BASH_ENV
-              echo "export CF_USERNAME=$CF_USERNAME_STAGING" >> $BASH_ENV
-              echo "export CF_PASSWORD=$CF_PASSWORD_STAGING" >> $BASH_ENV
             fi
 
       - run:
@@ -164,14 +160,6 @@ workflows:
           filters:
             branches:
               only: main
-      - deploy:
-          requires:
-            - build
-          name: Deploy federalist-builder-staging
-          app: federalist-builder-staging
-          filters:
-            branches:
-              only: staging
 
   nightly:
     triggers:
@@ -180,7 +168,6 @@ workflows:
           filters:
             branches:
               only:
-                - staging
                 - main
     jobs:
       - restage:
@@ -189,10 +176,3 @@ workflows:
           filters:
             branches:
               only: main
-
-      - restage:
-          name: Restage federalist-build-staging
-          app: federalist-builder-staging
-          filters:
-            branches:
-              only: staging
