@@ -179,6 +179,7 @@ jobs:
       - task: restage
         config:
           <<: *cf-image
+          inputs: [src]
           run:
             path: src/ci/tasks/restage.sh
         params:
