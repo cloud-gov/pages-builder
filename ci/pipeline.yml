@@ -78,34 +78,34 @@ test: &test
 
 jobs:
 
-  - name: test
-    plan:
-      - get: src
-        resource: src-all
-        trigger: true
-        params: {depth: 1}
-      - put: gh-status
-        inputs: [src]
-        params: {state: pending}
-      - do: *test
-    on_failure:
-      in_parallel:
-        - put: gh-status
-          inputs: [src]
-          params: {state: failure}      
-        - put: slack
-          params:
-            text: |
-              :x: FAILED: pages builder tests
-              ((build-url))
-              <@U01J8B463T5> <@U01J0M3E8NS> <@U01J7LKV5MZ>
-            channel: ((slack-channel))
-            username: ((slack-username))
-            icon_url: ((slack-icon-url))
-    on_success:
-      put: gh-status
-      inputs: [src]
-      params: {state: success}
+  # - name: test
+  #   plan:
+  #     - get: src
+  #       resource: src-all
+  #       trigger: true
+  #       params: {depth: 1}
+  #     - put: gh-status
+  #       inputs: [src]
+  #       params: {state: pending}
+  #     - do: *test
+  #   on_failure:
+  #     in_parallel:
+  #       - put: gh-status
+  #         inputs: [src]
+  #         params: {state: failure}      
+  #       - put: slack
+  #         params:
+  #           text: |
+  #             :x: FAILED: pages builder tests
+  #             ((build-url))
+  #             <@U01J8B463T5> <@U01J0M3E8NS> <@U01J7LKV5MZ>
+  #           channel: ((slack-channel))
+  #           username: ((slack-username))
+  #           icon_url: ((slack-icon-url))
+  #   on_success:
+  #     put: gh-status
+  #     inputs: [src]
+  #     params: {state: success}
       
   - name: test-and-deploy-staging
     plan:
@@ -179,6 +179,7 @@ jobs:
       - task: restage
         config:
           <<: *cf-image
+          inputs: [name: src]
           run:
             path: src/ci/tasks/restage.sh
         params:
@@ -190,19 +191,18 @@ jobs:
 
 resources:
 
-  - name: src-all
-    type: git
-    icon: github
-    source:
-      uri: https://github.com/18F/federalist-builder
+  # - name: src-all
+  #   type: git
+  #   icon: github
+  #   source:
+  #     uri: https://github.com/18F/federalist-builder
 
   - name: src-staging
     type: git
     icon: github
     source:
       uri: https://github.com/18F/federalist-builder
-      # branch: staging
-      branch: dc/concourse
+      branch: staging
 
   # - name: src-production
   #   type: git
