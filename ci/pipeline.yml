@@ -196,6 +196,7 @@ resources:
     icon: github
     source:
       uri: https://github.com/18F/federalist-builder
+      tag_filter: "*"
 
   - name: src-staging
     type: git
