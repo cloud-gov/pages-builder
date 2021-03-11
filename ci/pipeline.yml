@@ -201,8 +201,7 @@ resources:
     icon: github
     source:
       uri: https://github.com/18F/federalist-builder
-      # branch: staging
-      branch: dc/concourse
+      branch: staging
 
   # - name: src-production
   #   type: git
