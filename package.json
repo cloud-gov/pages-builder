@@ -18,25 +18,26 @@
   "author": "dhcole",
   "license": "CC0-1.0",
   "dependencies": {
-    "@hapi/hapi": "^20.0.3",
-    "aws-sdk": "^2.817.0",
+    "@hapi/hapi": "^20.1.0",
+    "aws-sdk": "^2.820.0",
     "axios": "^0.21.1",
+    "bull": "^3.20.1",
     "cfenv": "^1.2.3",
     "jsonwebtoken": "^8.5.1",
-    "newrelic": "^7.0.2",
+    "newrelic": "^7.1.2",
     "winston": "^3.3.3"
   },
   "devDependencies": {
-    "chai": "^4.2.0",
+    "chai": "^4.3.0",
     "dotenv": "^8.2.0",
-    "eslint": "^7.16.0",
+    "eslint": "^7.21.0",
     "eslint-config-airbnb-base": "^14.2.1",
     "eslint-plugin-import": "^2.22.1",
     "eslint-plugin-no-only-tests": "^2.4.0",
-    "mocha": "^8.2.1",
-    "nock": "^13.0.5",
+    "mocha": "^8.3.0",
+    "nock": "^13.0.9",
     "nyc": "^15.1.0",
-    "sinon": "^9.2.2"
+    "sinon": "^9.2.4"
   },
   "engines": {
     "node": "14.x.x",

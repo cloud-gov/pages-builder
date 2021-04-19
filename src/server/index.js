@@ -3,7 +3,7 @@ const logger = require('../logger');
 
 const createHealthcheckHandler = require('./healthcheck');
 
-function createServer(builderPool, buildQueue) {
+function createServer(builderPool, buildSQSQueue, buildBullQueue) {
   const server = new Hapi.Server({ port: process.env.PORT || 8080 });
 
   server.route({
@@ -23,7 +23,7 @@ function createServer(builderPool, buildQueue) {
     // Exposes an endpoint to report builder health
     method: 'GET',
     path: '/healthcheck',
-    handler: createHealthcheckHandler(buildQueue),
+    handler: createHealthcheckHandler(buildSQSQueue, buildBullQueue),
   });
 
   return server;
