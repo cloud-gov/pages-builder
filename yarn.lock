@@ -148,19 +148,19 @@
     minimatch "^3.0.4"
     strip-json-comments "^3.1.1"
 
-"@grpc/grpc-js@^1.2.5":
-  version "1.2.8"
-  resolved "https://registry.yarnpkg.com/@grpc/grpc-js/-/grpc-js-1.2.8.tgz#7e1aab8fd4d576b8ee6e73bba475d94a67ffd07d"
-  integrity sha512-9C1xiCbnYe/3OFpSuRqz2JgFSOxv6+SlqFhXgRC1nHfXYbLnXvtmsI/NpaMs6k9ZNyV4gyaOOh5Z4McfegQGew==
+"@grpc/grpc-js@^1.2.11":
+  version "1.2.12"
+  resolved "https://registry.yarnpkg.com/@grpc/grpc-js/-/grpc-js-1.2.12.tgz#0153f27512acf69184bb52c0a1035ca91d6c14b0"
+  integrity sha512-+gPCklP1eqIgrNPyzddYQdt9+GvZqPlLpIjIo+TveE+gbtp74VV1A2ju8ExeO8ma8f7MbpaGZx/KJPYVWL9eDw==
   dependencies:
     "@types/node" ">=12.12.47"
     google-auth-library "^6.1.1"
     semver "^6.2.0"
 
-"@grpc/proto-loader@^0.5.5":
-  version "0.5.5"
-  resolved "https://registry.yarnpkg.com/@grpc/proto-loader/-/proto-loader-0.5.5.tgz#6725e7a1827bdf8e92e29fbf4e9ef0203c0906a9"
-  integrity sha512-WwN9jVNdHRQoOBo9FDH7qU+mgfjPc8GygPYms3M+y3fbQLfnCe/Kv/E01t7JRgnrsOHH8euvSbed3mIalXhwqQ==
+"@grpc/proto-loader@^0.5.6":
+  version "0.5.6"
+  resolved "https://registry.yarnpkg.com/@grpc/proto-loader/-/proto-loader-0.5.6.tgz#1dea4b8a6412b05e2d58514d507137b63a52a98d"
+  integrity sha512-DT14xgw3PSzPxwS13auTEwxhMMOoz33DPUKNtmYK/QYbBSpLXJy78FGGs5yVoxVobEqPm4iW9MOIoz0A3bLTRQ==
   dependencies:
     lodash.camelcase "^4.3.0"
     protobufjs "^6.8.6"
@@ -2474,13 +2474,13 @@ natural-compare@^1.4.0:
   resolved "https://registry.yarnpkg.com/natural-compare/-/natural-compare-1.4.0.tgz#4abebfeed7541f2c27acfb29bdbbd15c8d5ba4f7"
   integrity sha1-Sr6/7tdUHywnrPspvbvRXI1bpPc=
 
-newrelic@^7.1.2:
-  version "7.1.2"
-  resolved "https://registry.yarnpkg.com/newrelic/-/newrelic-7.1.2.tgz#1fa3273a5241ffa1ea7e19de6e8e517103c48980"
-  integrity sha512-kYfDtEi+4rOrGKmd+WKw6Lx+HQ8zuuOeoPaRbeZMNmDCCNQlfzSMayuvqAox3GUiKNk7aLZvIg+d720010KGEg==
+newrelic@^7.3.1:
+  version "7.3.1"
+  resolved "https://registry.yarnpkg.com/newrelic/-/newrelic-7.3.1.tgz#2ab15cf057c7b27b3899f12add643bcc752101fb"
+  integrity sha512-PtFIJqaZnrj8+blZrE/kEpOYsL4rYZjs2L2mWRgfdAl7KJfmbAalRHFyae7Pn2o5wYSXGrIoUqHJY7hcKZNXKQ==
   dependencies:
-    "@grpc/grpc-js" "^1.2.5"
-    "@grpc/proto-loader" "^0.5.5"
+    "@grpc/grpc-js" "^1.2.11"
+    "@grpc/proto-loader" "^0.5.6"
     "@newrelic/aws-sdk" "^3.1.0"
     "@newrelic/koa" "^5.0.0"
     "@newrelic/superagent" "^4.0.0"
