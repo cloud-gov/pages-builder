@@ -813,16 +813,16 @@ buffer@4.9.2:
     ieee754 "^1.1.4"
     isarray "^1.0.0"
 
-bull@^3.20.1:
-  version "3.20.1"
-  resolved "https://registry.yarnpkg.com/bull/-/bull-3.20.1.tgz#97c4156f48001565baf3c04b81267a5604f40754"
-  integrity sha512-wDwpVu47WKaGhiguEPa/US5UMrtGLPKNPiGFPo4OgVs3EEGzJEWwv3LRPfjJVIf1COdMAN/yowGhZwYmoOonjQ==
+bull@^3.22.4:
+  version "3.22.4"
+  resolved "https://registry.yarnpkg.com/bull/-/bull-3.22.4.tgz#1bda418d2aebdf892413d0c45d75c8ea5e0fc984"
+  integrity sha512-CV78TuSKyDj3SuZvySTOFXqZBtHxebhctLTq2Ff9Jrn51XOaxkEDioIDzq2LIUKEhTW8l3rFK5bIWNwweY0LXQ==
   dependencies:
     cron-parser "^2.13.0"
     debuglog "^1.0.0"
     get-port "^5.1.1"
     ioredis "^4.22.0"
-    lodash "^4.17.19"
+    lodash "^4.17.21"
     p-timeout "^3.2.0"
     promise.prototype.finally "^3.1.2"
     semver "^7.3.2"
@@ -2332,10 +2332,10 @@ lodash.set@^4.3.2:
   resolved "https://registry.yarnpkg.com/lodash.set/-/lodash.set-4.3.2.tgz#d8757b1da807dde24816b0d6a84bea1a76230b23"
   integrity sha1-2HV7HagH3eJIFrDWqEvqGnYjCyM=
 
-lodash@^4.17.13, lodash@^4.17.19, lodash@^4.17.20:
-  version "4.17.20"
-  resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.20.tgz#b44a9b6297bcb698f1c51a3545a2b3b368d59c52"
-  integrity sha512-PlhdFcillOINfeV7Ni6oF1TAEayyZBoZ8bcshTHqOYJYlrqzRK5hagpagky5o4HfCzzd1TRkXPMFq6cKk9rGmA==
+lodash@^4.17.13, lodash@^4.17.20, lodash@^4.17.21:
+  version "4.17.21"
+  resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.21.tgz#679591c564c3bffaae8454cf0b3df370c3d6911c"
+  integrity sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==
 
 log-symbols@4.0.0:
   version "4.0.0"
