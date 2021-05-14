@@ -839,14 +839,14 @@ camelcase@^6.0.0:
   resolved "https://registry.yarnpkg.com/camelcase/-/camelcase-6.1.0.tgz#27dc176173725fb0adf8a48b647f4d7871944d78"
   integrity sha512-WCMml9ivU60+8rEJgELlFp1gxFcEGxwYleE3bziHEDeqsqAWGHdimB7beBFGjLzVNgPGyDsfgXLQEYMpmIFnVQ==
 
-cfenv@^1.2.3:
-  version "1.2.3"
-  resolved "https://registry.yarnpkg.com/cfenv/-/cfenv-1.2.3.tgz#37c4fb92e8faae96a6f42418b6693fb121dc09b0"
-  integrity sha512-RDXQdRAVk7NxA4+/7ARr6RWkRnLQGH6o2+W0EQehc4vltfJYsyhRNYiivbfHu7Eh77yG9Rdn6JO/Wz/AuFE46Q==
+cfenv@^1.2.4:
+  version "1.2.4"
+  resolved "https://registry.yarnpkg.com/cfenv/-/cfenv-1.2.4.tgz#4f34b431038fd899b370abd5e3f5046a6a451908"
+  integrity sha512-jWQ+3UXZauYyOXwHpMm74C0wM7+LDQmgMxWBGchg4as7+YyTL0pyx/CZ3dEvJyZVOB4SgKATc5naJky6cd9zYw==
   dependencies:
-    js-yaml "3.13.x"
+    js-yaml "4.0.x"
     ports "1.1.x"
-    underscore "1.9.x"
+    underscore "1.12.x"
 
 chai@^4.3.4:
   version "4.3.4"
@@ -2047,15 +2047,7 @@ js-tokens@^4.0.0:
   resolved "https://registry.yarnpkg.com/js-tokens/-/js-tokens-4.0.0.tgz#19203fb59991df98e3a287050d4647cdeaf32499"
   integrity sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==
 
-js-yaml@3.13.x:
-  version "3.13.1"
-  resolved "https://registry.yarnpkg.com/js-yaml/-/js-yaml-3.13.1.tgz#aff151b30bfdfa8e49e05da22e7415e9dfa37847"
-  integrity sha512-YfbcO7jXDdyj0DGxYVSlSeQNHbD7XPWvrVWeVUujrQEoZzWJIRrCPoyk6kL6IAjAG2IolMK4T0hNUe0HOUs5Jw==
-  dependencies:
-    argparse "^1.0.7"
-    esprima "^4.0.0"
-
-js-yaml@4.0.0:
+js-yaml@4.0.0, js-yaml@4.0.x:
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/js-yaml/-/js-yaml-4.0.0.tgz#f426bc0ff4b4051926cd588c71113183409a121f"
   integrity sha512-pqon0s+4ScYUvX30wxQi3PogGFAlUyH0awepWvwkj4jD4v+ova3RiYw8bmA6x2rDrEaj8i/oWKoRxpVNW+Re8Q==
@@ -3352,10 +3344,10 @@ unbox-primitive@^1.0.0:
     has-symbols "^1.0.2"
     which-boxed-primitive "^1.0.2"
 
-underscore@1.9.x:
-  version "1.9.1"
-  resolved "https://registry.yarnpkg.com/underscore/-/underscore-1.9.1.tgz#06dce34a0e68a7babc29b365b8e74b8925203961"
-  integrity sha512-5/4etnCkd9c8gwgowi5/om/mYO5ajCaOgdzj/oW+0eQV9WxKBDZw5+ycmKmeaTXjInS/W0BzpGLo2xR2aBwZdg==
+underscore@1.12.x:
+  version "1.12.1"
+  resolved "https://registry.yarnpkg.com/underscore/-/underscore-1.12.1.tgz#7bb8cc9b3d397e201cf8553336d262544ead829e"
+  integrity sha512-hEQt0+ZLDVUMhebKxL4x1BTtDY7bavVofhZ9KZ4aI26X9SRaE+Y3m83XUL1UP2jn8ynjndwCCpEHdUG+9pP1Tw==
 
 uri-js@^4.2.2:
   version "4.2.2"
