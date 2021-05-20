@@ -33,7 +33,7 @@ appEnv.cloudFoundryApiHost = cfApiHost;
 appEnv.queueName = 'site-build-queue';
 
 appEnv.redisUrl = CIRCLECI ? 'redis://localhost:6379' : redisCreds.uri;
-appEnv.redisTls = CLOUD_GOV ? {} : null;
+appEnv.redisTls = CLOUD_GOV === 'true' ? {} : null;
 
 appEnv.sqsCreds = sqsCreds;
 appEnv.sqsUrl = sqsCreds.sqs_url;
