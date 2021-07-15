@@ -2,15 +2,11 @@ const logger = require('../logger');
 const CloudFoundryAuthClient = require('../cloud-foundry-auth-client');
 const CloudFoundryApiClient = require('../cloud-foundry-api-client');
 
-const ATTR_NUM_MESSAGES = 'ApproximateNumberOfMessages';
-const ATTR_NUM_MESSAGES_DELAYED = 'ApproximateNumberOfMessagesDelayed';
-
-function replyOk(buildContainers, queueSQSAttributes, queueBullAttributes) {
+function replyOk(buildContainers, ...queueAttributes) {
   return {
     ok: true,
     buildContainers,
-    queueSQSAttributes,
-    queueBullAttributes,
+    queueAttributes,
   };
 }
 
@@ -18,28 +14,25 @@ function replyNotOk(reasons) {
   return { ok: false, reasons };
 }
 
-function checkForErrors(token, queueSQSAttributes, queueBullAttributes, buildContainersState) {
+function checkForErrors(token, buildContainersState, ...queueAttributes) {
   const errorReasons = [];
   if (!token) {
     errorReasons.push('No cloud foundry token received.');
   }
 
-  if (queueSQSAttributes.error) {
-    errorReasons.push(queueSQSAttributes.error);
-  }
-
-  if (queueBullAttributes.error) {
-    errorReasons.push(queueBullAttributes.error);
-  }
-
   if (buildContainersState.error) {
     errorReasons.push(buildContainersState.error);
   }
+
+  queueAttributes
+    .filter(queueAttribute => queueAttribute.error)
+    .forEach(queueAttribute => errorReasons.push(queueAttribute.error));
+
   return errorReasons;
 }
 
 // Route handler for builder healthcheck
-function createHealthcheckHandler(buildSQSClient, buildBullClient) {
+function createHealthcheckHandler(queues) {
   return function healthcheckHandler(request, h) {
     const authClient = new CloudFoundryAuthClient();
     const apiClient = new CloudFoundryApiClient();
@@ -47,21 +40,18 @@ function createHealthcheckHandler(buildSQSClient, buildBullClient) {
     // Array of promises returned from methods we want included in the healthcheck
     const checkPromises = [
       authClient.accessToken(), // make sure we can authenticate with cloud.gov
-      buildSQSClient.getQueueAttributes([ATTR_NUM_MESSAGES, ATTR_NUM_MESSAGES_DELAYED]),
-      buildBullClient.getQueueAttributes(),
       apiClient.getBuildContainersState(),
+      ...queues.map(queue => queue.getQueueAttributes()),
     ];
 
     let reply;
     return Promise.all(checkPromises)
-      .then(([token, queueSQSAttributes, queueBullAttributes, buildContainersState]) => {
-        const errorReasons = checkForErrors(
-          token, queueSQSAttributes, queueBullAttributes, buildContainersState
-        );
+      .then(([token, buildContainersState, ...queueAttributes]) => {
+        const errorReasons = checkForErrors(token, buildContainersState, ...queueAttributes);
         if (errorReasons.length) {
           reply = replyNotOk(errorReasons);
         } else {
-          reply = replyOk(buildContainersState, queueSQSAttributes, queueBullAttributes);
+          reply = replyOk(buildContainersState, ...queueAttributes);
         }
       })
       .catch((err) => {

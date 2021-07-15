@@ -177,4 +177,24 @@ describe('SQSClient', () => {
       });
     });
   });
+
+  describe('.extractMessageData(message)', () => {
+    it('returns the build data', () => {
+      const sqsClient = new SQSClient(mockSQS(), queueURL);
+
+      const message = {
+        Body: JSON.stringify({
+          environment: [
+            { name: 'key', value: 'value' },
+          ],
+          name: 'builder',
+        }),
+      };
+
+      const data = sqsClient.extractMessageData(message);
+
+      expect(data.name).to.eq('builder');
+      expect(data.environment[0].name).to.eq('key');
+    });
+  });
 });

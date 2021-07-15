@@ -2,10 +2,9 @@ const Build = require('./build');
 const logger = require('./logger');
 
 class BuildScheduler {
-  constructor(builderPool, sqsQueue, bullQueue, server) {
+  constructor(builderPool, queues, server) {
     this._builderPool = builderPool;
-    this._sqsQueue = sqsQueue;
-    this._bullQueue = bullQueue;
+    this._queues = queues;
     this._server = server;
   }
 
@@ -21,10 +20,9 @@ class BuildScheduler {
   }
 
   _run() {
-    Promise.all([
-      this._findAndScheduleNewBuild(this._bullQueue, true),
-      this._findAndScheduleNewBuild(this._sqsQueue),
-    ])
+    Promise.all(
+      this._queues.map(queue => this._findAndScheduleNewBuild(queue))
+    )
       .catch((error) => {
         logger.error(error);
       })
@@ -37,11 +35,11 @@ class BuildScheduler {
       });
   }
 
-  async _attemptToStartBuild(build, queue) {
+  async _attemptToStartBuild(build, queue, message) {
     logger.verbose('Attempting to start build %s', build.federalistBuildId());
 
     if (await this._builderPool.canStartBuild(build)) {
-      return this._startBuildAndDeleteMessage(build, queue);
+      return this._startBuildAndDeleteMessage(build, queue, message);
     }
 
     logger.info(
@@ -52,30 +50,28 @@ class BuildScheduler {
     return Promise.resolve(null);
   }
 
-  _findAndScheduleNewBuild(queue, isBullQueue = false) {
+  _findAndScheduleNewBuild(queue) {
     logger.verbose('Waiting for message');
 
     return queue.receiveMessage()
       .then((message) => {
         if (message) {
           logger.verbose('Received message');
-          const build = new Build(message, isBullQueue);
-          const owner = build.containerEnvironment.OWNER;
-          const repo = build.containerEnvironment.REPOSITORY;
-          const branch = build.containerEnvironment.BRANCH;
-          logger.info('New build %s/%s/%s - %s', owner, repo, branch, build.federalistBuildId());
+          const build = new Build(queue.extractMessageData(message));
+          const { BRANCH, OWNER, REPOSITORY } = build.containerEnvironment;
+          logger.info('New build %s/%s/%s - %s', OWNER, REPOSITORY, BRANCH, build.federalistBuildId());
 
-          return this._attemptToStartBuild(build, queue);
+          return this._attemptToStartBuild(build, queue, message);
         }
         return null;
       });
   }
 
-  _startBuildAndDeleteMessage(build, queue) {
+  _startBuildAndDeleteMessage(build, queue, message) {
     logger.verbose('Starting build %s', build.federalistBuildId());
 
     return this._builderPool.startBuild(build)
-      .then(() => queue.deleteMessage(build.queueMessage));
+      .then(() => queue.deleteMessage(message));
   }
 }
 

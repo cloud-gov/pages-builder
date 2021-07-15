@@ -20,7 +20,7 @@ describe('server', () => {
 
   describe('GET /', () => {
     it('should respond with a 200', (done) => {
-      const testServer = server(mockCluster(), mockSQSBuildQueue());
+      const testServer = server(mockCluster(), [mockSQSBuildQueue()]);
 
       testServer.inject({
         method: 'GET',
@@ -63,12 +63,12 @@ describe('server', () => {
 
       const testServer = server(
         mockCluster(),
-        mockSQSBuildQueue({
+        [mockSQSBuildQueue({
           getQueueAttributes: (_, cb) => cb(null, queueSQSAttributes),
         }),
         mockBullBuildQueue({
           getJobCounts: () => new Promise(resolve => resolve(queueBullAttributes)),
-        })
+        })]
       );
 
       mockTokenRequest().persist();
@@ -85,8 +85,10 @@ describe('server', () => {
               found: 2,
               started: 2,
             },
-            queueSQSAttributes: queueSQSAttributes.Attributes,
-            queueBullAttributes,
+            queueAttributes: [
+              queueSQSAttributes.Attributes,
+              queueBullAttributes,
+            ],
           };
 
           expect(response.statusCode).to.eq(200);
@@ -97,12 +99,12 @@ describe('server', () => {
     it('should not be ok when an access token cannot be retrieved', () => {
       const testServer = server(
         mockCluster(),
-        mockSQSBuildQueue({
+        [mockSQSBuildQueue({
           getQueueAttributes: (_, cb) => cb(null, {}),
         }),
         mockBullBuildQueue({
           getJobCounts: () => new Promise(resolve => resolve({})),
-        })
+        })]
       );
       mockTokenRequest('badtoken');
       mockTokenRequest(); // nock another request for fetching build containers
@@ -135,12 +137,12 @@ describe('server', () => {
 
       const testServer = server(
         mockCluster(),
-        mockSQSBuildQueue({
+        [mockSQSBuildQueue({
           getQueueAttributes: (_, cb) => cb(null, queueSQSAttributes),
         }),
         mockBullBuildQueue({
           getJobCounts: () => new Promise(resolve => resolve(queueBullAttributes)),
-        })
+        })]
       );
       mockTokenRequest('emptytoken');
       mockTokenRequest(); // nock another request for fetching build containers
@@ -165,12 +167,12 @@ describe('server', () => {
       const error = { error: 'Queue attributes unavailable.' };
       const testServer = server(
         mockCluster(),
-        mockSQSBuildQueue({
+        [mockSQSBuildQueue({
           getQueueAttributes: (_, cb) => cb(error),
         }),
         mockBullBuildQueue({
           getJobCounts: () => Promise.reject(error),
-        })
+        })]
       );
 
       mockTokenRequest().persist();
@@ -206,12 +208,12 @@ describe('server', () => {
 
       const testServer = server(
         mockCluster(),
-        mockSQSBuildQueue({
+        [mockSQSBuildQueue({
           getQueueAttributes: (_, cb) => cb(null, queueSQSAttributes),
         }),
         mockBullBuildQueue({
           getJobCounts: () => new Promise(resolve => resolve(queueBullAttributes)),
-        })
+        })]
       );
 
       mockTokenRequest().persist();
@@ -248,12 +250,12 @@ describe('server', () => {
 
       const testServer = server(
         mockCluster(),
-        mockSQSBuildQueue({
+        [mockSQSBuildQueue({
           getQueueAttributes: (_, cb) => cb(null, queueSQSAttributes),
         }),
         mockBullBuildQueue({
           getJobCounts: () => new Promise(resolve => resolve(queueBullAttributes)),
-        })
+        })]
       );
 
       mockTokenRequest().persist();
@@ -289,12 +291,12 @@ describe('server', () => {
       const error = { error: 'Queue attributes unavailable.' };
       const testServer = server(
         mockCluster(),
-        mockSQSBuildQueue({
+        [mockSQSBuildQueue({
           getQueueAttributes: (_, cb) => cb(error),
         }),
         mockBullBuildQueue({
           getJobCounts: () => Promise.reject(error),
-        })
+        })]
       );
 
       mockTokenRequest().persist();
@@ -309,11 +311,11 @@ describe('server', () => {
           const expected = {
             ok: false,
             reasons: [
-              error.error,
-              error.error,
               [
                 'Not all build containers are in the STARTED state.',
               ].join('\n'),
+              error.error,
+              error.error,
             ],
           };
 
