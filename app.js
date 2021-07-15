@@ -23,10 +23,11 @@ const buildSQSQueue = new SQSClient(new AWS.SQS(), appEnv.sqsUrl);
 const buildBullQueue = new QueueClient(bullQueue(appEnv.queueName));
 const server = createServer(builderPool, buildSQSQueue, buildBullQueue);
 
+const queues = [buildSQSQueue, buildBullQueue];
+
 const buildScheduler = new BuildScheduler(
   builderPool,
-  buildSQSQueue,
-  buildBullQueue,
+  queues,
   server
 );
 

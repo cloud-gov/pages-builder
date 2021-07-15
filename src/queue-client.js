@@ -52,6 +52,10 @@ class QueueClient {
       });
   }
 
+  extractMessageData(message) {
+    return message.data;
+  }
+
   _queueAvailableAttributes(jobCounts, attributesArray) {
     const output = {};
     const availableAttributes = Object.keys(jobCounts)

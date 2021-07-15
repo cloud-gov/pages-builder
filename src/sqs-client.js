@@ -45,6 +45,10 @@ class SQSClient {
     });
   }
 
+  extractMessageData(message) {
+    return JSON.parse(message.Body);
+  }
+
   deleteMessage(message) {
     const params = this._sqsDeleteMessageParams(message);
 
