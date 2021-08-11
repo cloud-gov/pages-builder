@@ -100,7 +100,6 @@ jobs:
           CF_APP_NAME: pages-builder-staging
           CF_MANIFEST: .cloudgov/manifest.yml
           CF_VARS_FILE: .cloudgov/vars/pages-staging.yml
-          CF_PATH: src
         on_failure:
           try:
             task: cancel-api-deployment
