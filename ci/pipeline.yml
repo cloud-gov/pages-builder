@@ -4,10 +4,10 @@
 
 staging-cf: &staging-cf
   CF_API: https://api.fr.cloud.gov
-  CF_USERNAME: ((staging-cf-username))
-  CF_PASSWORD: ((staging-cf-password))
+  CF_USERNAME: ((pages-staging-cf-username))
+  CF_PASSWORD: ((pages-staging-cf-password))
   CF_ORG: gsa-18f-federalist
-  CF_SPACE: staging
+  CF_SPACE: pages-staging
 
 node-image: &node-image
   platform: linux
@@ -93,12 +93,13 @@ jobs:
           <<: *cf-image
           inputs: [name: src]
           run:
-            path: src/ci/tasks/deploy.sh
+            dir: src
+            path: ci/tasks/deploy.sh
         params:
           <<: *staging-cf
-          CF_APP_NAME: federalist-builder-staging
-          CF_MANIFEST: src/.cloudgov/manifest.yml
-          CF_VARS_FILE: src/.cloudgov/vars/staging.yml
+          CF_APP_NAME: pages-builder-staging
+          CF_MANIFEST: .cloudgov/manifest.yml
+          CF_VARS_FILE: .cloudgov/vars/pages-staging.yml
           CF_PATH: src
         on_failure:
           try:
@@ -107,10 +108,11 @@ jobs:
               <<: *cf-image
               inputs: [name: src]
               run:
-                path: src/ci/tasks/cancel-deployment.sh
+                dir: src
+                path: ci/tasks/cancel-deployment.sh
             params:
               <<: *staging-cf
-              CF_APP_NAME: federalist-builder-staging
+              CF_APP_NAME: pages-builder-staging
     on_failure:
       in_parallel:
         - put: gh-status
@@ -155,7 +157,7 @@ jobs:
             path: src/ci/tasks/restage.sh
         params:
           <<: *staging-cf
-          CF_APP_NAME: federalist-builder-staging
+          CF_APP_NAME: pages-builder-staging
 
 ############################
 #  RESOURCES
