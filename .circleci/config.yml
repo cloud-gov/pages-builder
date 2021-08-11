@@ -25,6 +25,11 @@ commands:
               echo "export CF_USERNAME=$CF_USERNAME_PRODUCTION" >> $BASH_ENV
               echo "export CF_PASSWORD=$CF_PASSWORD_PRODUCTION" >> $BASH_ENV
             fi
+            if [ "$CIRCLE_BRANCH" = "staging" ]; then
+              echo "export CF_SPACE=staging" >> $BASH_ENV
+              echo "export CF_USERNAME=$CF_USERNAME_STAGING" >> $BASH_ENV
+              echo "export CF_PASSWORD=$CF_PASSWORD_STAGING" >> $BASH_ENV
+            fi
 
       - run:
           name: Install cloud foundry cli
@@ -152,6 +157,7 @@ workflows:
   build-test-deploy:
     jobs:
       - build
+
       - deploy:
           requires:
             - build
@@ -161,6 +167,15 @@ workflows:
             branches:
               only: main
 
+      - deploy:
+          requires:
+            - build
+          name: Deploy federalist-builder-staging
+          app: federalist-builder-staging
+          filters:
+            branches:
+              only: staging
+
   nightly:
     triggers:
       - schedule:
@@ -169,6 +184,7 @@ workflows:
             branches:
               only:
                 - main
+                - staging
     jobs:
       - restage:
           name: Restage federalist-builder
@@ -176,3 +192,10 @@ workflows:
           filters:
             branches:
               only: main
+
+      - restage:
+          name: Restage federalist-builder-staging
+          app: federalist-builder-staging
+          filters:
+            branches:
+              only: staging
