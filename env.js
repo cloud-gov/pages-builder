@@ -19,8 +19,11 @@ const appEnv = cfenv.getAppEnv({ vcapFile });
 const { cf_api: cfApiHost, space_name: spaceName } = appEnv.app;
 
 const cfCreds = appEnv.getServiceCreds('federalist-deploy-user');
-const sqsCreds = appEnv.getServiceCreds(`federalist-${spaceName}-sqs-creds`);
-const redisCreds = appEnv.getServiceCreds(`federalist-${spaceName}-redis`);
+
+// TODO - revisit our service naming conventions!!!!
+const servicePrefix = spaceName === 'pages-staging' ? spaceName : `federalist-${spaceName}`;
+const sqsCreds = appEnv.getServiceCreds(`${servicePrefix}-sqs-creds`);
+const redisCreds = appEnv.getServiceCreds(`${servicePrefix}-redis`);
 
 // Some helpful attributes
 appEnv.cloudFoundryOAuthTokenUrl = CLOUD_FOUNDRY_OAUTH_TOKEN_URL;
