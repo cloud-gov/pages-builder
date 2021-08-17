@@ -23,13 +23,5 @@ describe('Build', () => {
       expect(build.containerEnvironment).to.have.property('OVERRIDE_B', 'VALUE B');
       expect(build.containerEnvironment).to.have.property('OVERRIDE_C', 'VALUE C');
     });
-
-    it('should add the FEDERALIST_BUILDER_CALLBACK to the container environment', () => {
-      const build = new Build(params);
-      expect(build.containerEnvironment).to.have.property(
-        'FEDERALIST_BUILDER_CALLBACK',
-        `http://localhost:3000/builds/${build.buildID}/callback`
-      );
-    });
   });
 });

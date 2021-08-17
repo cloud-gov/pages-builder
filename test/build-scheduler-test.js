@@ -105,9 +105,6 @@ describe('BuildScheduler', () => {
         'OVERRIDE_A',
         'Value A'
       );
-      expect(build.containerEnvironment).to.have.property(
-        'FEDERALIST_BUILDER_CALLBACK'
-      );
       expect(build.buildID).to.be.a('String');
 
       hasStartedBuild = true;
