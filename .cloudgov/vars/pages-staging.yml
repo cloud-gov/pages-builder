@@ -5,3 +5,4 @@ instances: 1
 product: pages
 bull_queue: "true"
 sqs_queue: "false"
+domain: pages-staging.cloud.gov

@@ -5,3 +5,4 @@ instances: 1
 product: federalist
 bull_queue: "true"
 sqs_queue: "false"
+domain: app.cloud.gov

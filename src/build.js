@@ -31,8 +31,6 @@ class Build {
       {}
     );
 
-    containerEnvironment.FEDERALIST_BUILDER_CALLBACK = this._buildCallbackURL(buildID);
-
     // force a string, might no longer be necessary
     containerEnvironment.BUILD_ID = `${containerEnvironment.BUILD_ID}`;
 

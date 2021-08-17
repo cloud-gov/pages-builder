@@ -2,7 +2,7 @@
 applications:
   - name: ((product))-builder((env_postfix))
     routes:
-      - route: ((product))-builder((env_postfix)).app.cloud.gov
+      - route: ((product))-builder((env_postfix)).((domain))
     disk_quota: 512M
     memory: 128M
     instances: ((instances))
