@@ -24,7 +24,7 @@
     "bull": "^3.22.5",
     "cfenv": "^1.2.4",
     "jsonwebtoken": "^8.5.1",
-    "newrelic": "^7.4.0",
+    "newrelic": "^8.9.0",
     "winston": "^3.3.3"
   },
   "devDependencies": {
