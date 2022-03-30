@@ -107,7 +107,9 @@ describe('CFTaskPool', () => {
 
         sinon.assert.calledWith(builderPool._buildTask, build);
         sinon.assert.calledWith(
-          builderPool._apiClient.startTaskForApp, getBuildTask(), container.guid
+          builderPool._apiClient.startTaskForApp,
+          getBuildTask(),
+          container.guid
         );
         sinon.assert.notCalled(builderPool._buildStatusReporter.reportBuildStatus);
         expect(result).be.a('error');
@@ -129,7 +131,9 @@ describe('CFTaskPool', () => {
 
         sinon.assert.calledWith(builderPool._buildTask, build);
         sinon.assert.calledWith(
-          builderPool._apiClient.startTaskForApp, getBuildTask(), container.guid
+          builderPool._apiClient.startTaskForApp,
+          getBuildTask(),
+          container.guid
         );
       });
     });

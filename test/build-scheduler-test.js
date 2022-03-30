@@ -20,8 +20,8 @@ const mockBuildSQSQueue = sqs => new SQSClient({
   ...sqs,
 });
 
-const mockedBullReceiveMessage = () => new Promise(resolve => resolve({}));
-const mockedBullDeleteMessage = () => new Promise(resolve => resolve({}));
+const mockedBullReceiveMessage = () => new Promise((resolve) => { resolve({}); });
+const mockedBullDeleteMessage = () => new Promise((resolve) => { resolve({}); });
 
 const mockBuildBullQueue = bull => new QueueClient({
   getNextJob: mockedBullReceiveMessage,

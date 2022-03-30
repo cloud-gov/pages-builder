@@ -67,7 +67,7 @@ describe('server', () => {
           getQueueAttributes: (_, cb) => cb(null, queueSQSAttributes),
         }),
         mockBullBuildQueue({
-          getJobCounts: () => new Promise(resolve => resolve(queueBullAttributes)),
+          getJobCounts: () => new Promise((resolve) => { resolve(queueBullAttributes); }),
         })]
       );
 
@@ -103,7 +103,7 @@ describe('server', () => {
           getQueueAttributes: (_, cb) => cb(null, {}),
         }),
         mockBullBuildQueue({
-          getJobCounts: () => new Promise(resolve => resolve({})),
+          getJobCounts: () => new Promise((resolve) => { resolve({}); }),
         })]
       );
       mockTokenRequest('badtoken');
@@ -141,7 +141,7 @@ describe('server', () => {
           getQueueAttributes: (_, cb) => cb(null, queueSQSAttributes),
         }),
         mockBullBuildQueue({
-          getJobCounts: () => new Promise(resolve => resolve(queueBullAttributes)),
+          getJobCounts: () => new Promise((resolve) => { resolve(queueBullAttributes); }),
         })]
       );
       mockTokenRequest('emptytoken');
@@ -212,7 +212,7 @@ describe('server', () => {
           getQueueAttributes: (_, cb) => cb(null, queueSQSAttributes),
         }),
         mockBullBuildQueue({
-          getJobCounts: () => new Promise(resolve => resolve(queueBullAttributes)),
+          getJobCounts: () => new Promise((resolve) => { resolve(queueBullAttributes); }),
         })]
       );
 
@@ -254,7 +254,7 @@ describe('server', () => {
           getQueueAttributes: (_, cb) => cb(null, queueSQSAttributes),
         }),
         mockBullBuildQueue({
-          getJobCounts: () => new Promise(resolve => resolve(queueBullAttributes)),
+          getJobCounts: () => new Promise((resolve) => { resolve(queueBullAttributes); }),
         })]
       );
 
