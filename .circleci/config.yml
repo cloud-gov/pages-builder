@@ -86,7 +86,7 @@ commands:
 jobs:
   build:
     docker:
-      - image: circleci/node:14.15.0
+      - image: circleci/node:16.13.0
         environment:
           CC_TEST_REPORTER_ID: 4c0674ab7fa1efa186ac5998f89136640d924fabcc0b99ed764bd9fc85043b97
       - image: circleci/redis
