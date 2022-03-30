@@ -6,7 +6,9 @@ const mockListAppStatsRequest = (guid, resources) => nock('https://api.example.c
   },
 }).get(
   `/v2/apps/${guid}/stats`
-).reply(200,
-  resources);
+).reply(
+  200,
+  resources
+);
 
 module.exports = mockListAppStatsRequest;

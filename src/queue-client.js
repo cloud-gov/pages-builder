@@ -71,9 +71,9 @@ class QueueClient {
       throw new Error();
     }
 
-    availableAttributes.map(attribute => Object.assign(
-      output, { [attribute]: jobCounts[attribute] }
-    ));
+    availableAttributes.map(
+      attribute => Object.assign(output, { [attribute]: jobCounts[attribute] })
+    );
 
     return output;
   }

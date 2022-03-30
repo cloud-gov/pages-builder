@@ -11,7 +11,7 @@ const jobKeys = [
 ];
 
 const mockQueue = (queue, output) => ({
-  getJobCounts: () => new Promise(resolve => resolve(output)),
+  getJobCounts: () => new Promise((resolve) => { resolve(output); }),
   ...queue,
 });
 
@@ -120,7 +120,7 @@ describe('QueueClient', () => {
   describe('.getQueueAttributes', () => {
     it('returns an error object when Queue is unavailable', () => {
       const queueClient = new QueueClient(
-        mockQueue({ getJobCounts: () => new Promise((_, reject) => reject()) })
+        mockQueue({ getJobCounts: () => new Promise((_, reject) => { reject(); }) })
       );
 
       return queueClient.getQueueAttributes().then((response) => {
