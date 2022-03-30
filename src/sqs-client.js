@@ -1,4 +1,6 @@
 const QUEUE_ATTRIBUTES_FALLBACK = 'Queue attributes unavailable.';
+const ATTR_NUM_MESSAGES = 'ApproximateNumberOfMessages';
+const ATTR_NUM_MESSAGES_DELAYED = 'ApproximateNumberOfMessagesDelayed';
 
 class SQSClient {
   constructor(sqs, queueURL) {
@@ -6,7 +8,7 @@ class SQSClient {
     this._sqsQueueURL = queueURL;
   }
 
-  getQueueAttributes(attributesArray) {
+  getQueueAttributes(attributesArray = [ATTR_NUM_MESSAGES, ATTR_NUM_MESSAGES_DELAYED]) {
     // attributesArray should be an array of SQS attribute names
     // ref: https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_GetQueueAttributes.html
     return new Promise((resolve) => {
@@ -43,6 +45,10 @@ class SQSClient {
         }
       });
     });
+  }
+
+  extractMessageData(message) {
+    return JSON.parse(message.Body);
   }
 
   deleteMessage(message) {

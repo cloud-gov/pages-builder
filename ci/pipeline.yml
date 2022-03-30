@@ -4,8 +4,8 @@
 
 staging-cf: &staging-cf
   CF_API: https://api.fr.cloud.gov
-  CF_USERNAME: ((cf-username))
-  CF_PASSWORD: ((cf-password))
+  CF_USERNAME: ((staging-cf-username))
+  CF_PASSWORD: ((staging-cf-password))
   CF_ORG: gsa-18f-federalist
   CF_SPACE: staging
 
@@ -15,7 +15,7 @@ node-image: &node-image
     type: docker-image
     source:
       repository: node
-      tag: 14
+      tag: 16
 
 cf-image: &cf-image
   platform: linux
@@ -77,35 +77,6 @@ test: &test
 #  JOBS
 
 jobs:
-
-  # - name: test
-  #   plan:
-  #     - get: src
-  #       resource: src-all
-  #       trigger: true
-  #       params: {depth: 1}
-  #     - put: gh-status
-  #       inputs: [src]
-  #       params: {state: pending}
-  #     - do: *test
-  #   on_failure:
-  #     in_parallel:
-  #       - put: gh-status
-  #         inputs: [src]
-  #         params: {state: failure}      
-  #       - put: slack
-  #         params:
-  #           text: |
-  #             :x: FAILED: pages builder tests
-  #             ((build-url))
-  #             <@U01J8B463T5> <@U01J0M3E8NS> <@U01J7LKV5MZ>
-  #           channel: ((slack-channel))
-  #           username: ((slack-username))
-  #           icon_url: ((slack-icon-url))
-  #   on_success:
-  #     put: gh-status
-  #     inputs: [src]
-  #     params: {state: success}
       
   - name: test-and-deploy-staging
     plan:
@@ -122,13 +93,13 @@ jobs:
           <<: *cf-image
           inputs: [name: src]
           run:
-            path: src/ci/tasks/deploy.sh
+            dir: src
+            path: ci/tasks/deploy.sh
         params:
           <<: *staging-cf
-          CF_APP_NAME: federalist-builder-staging
-          CF_MANIFEST: src/.cloudgov/manifest.yml
-          CF_VARS_FILE: src/.cloudgov/vars/staging.yml
-          CF_PATH: src
+          CF_APP_NAME: pages-builder-staging
+          CF_MANIFEST: .cloudgov/manifest.yml
+          CF_VARS_FILE: .cloudgov/vars/pages-staging.yml
         on_failure:
           try:
             task: cancel-api-deployment
@@ -136,10 +107,11 @@ jobs:
               <<: *cf-image
               inputs: [name: src]
               run:
-                path: src/ci/tasks/cancel-deployment.sh
+                dir: src
+                path: ci/tasks/cancel-deployment.sh
             params:
               <<: *staging-cf
-              CF_APP_NAME: federalist-builder-staging
+              CF_APP_NAME: pages-builder-staging
     on_failure:
       in_parallel:
         - put: gh-status
@@ -149,8 +121,7 @@ jobs:
           params:
             text: |
               :x: FAILED: pages builder deployment on staging
-              ((build-url))
-              <@U01J8B463T5> <@U01J0M3E8NS> <@U01J7LKV5MZ>
+              <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
             channel: ((slack-channel))
             username: ((slack-username))
             icon_url: ((slack-icon-url))
@@ -163,8 +134,7 @@ jobs:
           params:
             text: |
               :white_check_mark: SUCCESS: Successfully deployed pages builder on staging
-              ((build-url))
-              <@U01J8B463T5> <@U01J0M3E8NS> <@U01J7LKV5MZ>
+              <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
             channel: ((slack-channel))
             username: ((slack-username))
             icon_url: ((slack-icon-url))
@@ -184,18 +154,12 @@ jobs:
             path: src/ci/tasks/restage.sh
         params:
           <<: *staging-cf
-          CF_APP_NAME: federalist-builder-staging
+          CF_APP_NAME: pages-builder-staging
 
 ############################
 #  RESOURCES
 
 resources:
-
-  # - name: src-all
-  #   type: git
-  #   icon: github
-  #   source:
-  #     uri: https://github.com/18F/federalist-builder
 
   - name: src-staging
     type: git
@@ -203,13 +167,6 @@ resources:
     source:
       uri: https://github.com/18F/federalist-builder
       branch: staging
-
-  # - name: src-production
-  #   type: git
-  #   icon: github
-  #   source:
-  #     uri: https://github.com/18F/federalist-builder
-  #     branch: main
 
   - name: nightly
     type: time
@@ -228,7 +185,7 @@ resources:
     type: docker-image
     source:
       repository: node
-      tag: 14
+      tag: 16
 
   - name: slack
     type: slack-notification

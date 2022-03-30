@@ -11,7 +11,7 @@ const jobKeys = [
 ];
 
 const mockQueue = (queue, output) => ({
-  getJobCounts: () => new Promise(resolve => resolve(output)),
+  getJobCounts: () => new Promise((resolve) => { resolve(output); }),
   ...queue,
 });
 
@@ -120,7 +120,7 @@ describe('QueueClient', () => {
   describe('.getQueueAttributes', () => {
     it('returns an error object when Queue is unavailable', () => {
       const queueClient = new QueueClient(
-        mockQueue({ getJobCounts: () => new Promise((_, reject) => reject()) })
+        mockQueue({ getJobCounts: () => new Promise((_, reject) => { reject(); }) })
       );
 
       return queueClient.getQueueAttributes().then((response) => {
@@ -238,6 +238,25 @@ describe('QueueClient', () => {
       };
 
       return testAddJobsToQueue(queueName, jobData, testMethod);
+    });
+  });
+
+  describe('.extractMessageData(message)', () => {
+    it('returns the build data', () => {
+      const queueClient = new QueueClient(null);
+      const message = {
+        data: {
+          environment: [
+            { name: 'key', value: 'value' },
+          ],
+          name: 'builder',
+        },
+      };
+
+      const data = queueClient.extractMessageData(message);
+
+      expect(data.name).to.eq('builder');
+      expect(data.environment[0].name).to.eq('key');
     });
   });
 });

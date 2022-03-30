@@ -2,7 +2,7 @@ env: staging
 env_postfix: -staging
 task_max_mem: 20
 instances: 1
-product: federalist
+product: pages
 bull_queue: "true"
 sqs_queue: "false"
-domain: app.cloud.gov
+domain: pages-staging.cloud.gov

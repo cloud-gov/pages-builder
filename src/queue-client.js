@@ -52,6 +52,10 @@ class QueueClient {
       });
   }
 
+  extractMessageData(message) {
+    return message.data;
+  }
+
   _queueAvailableAttributes(jobCounts, attributesArray) {
     const output = {};
     const availableAttributes = Object.keys(jobCounts)
@@ -67,9 +71,9 @@ class QueueClient {
       throw new Error();
     }
 
-    availableAttributes.map(attribute => Object.assign(
-      output, { [attribute]: jobCounts[attribute] }
-    ));
+    availableAttributes.map(
+      attribute => Object.assign(output, { [attribute]: jobCounts[attribute] })
+    );
 
     return output;
   }

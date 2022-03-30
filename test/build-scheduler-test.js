@@ -20,8 +20,8 @@ const mockBuildSQSQueue = sqs => new SQSClient({
   ...sqs,
 });
 
-const mockedBullReceiveMessage = () => new Promise(resolve => resolve({}));
-const mockedBullDeleteMessage = () => new Promise(resolve => resolve({}));
+const mockedBullReceiveMessage = () => new Promise((resolve) => { resolve({}); });
+const mockedBullDeleteMessage = () => new Promise((resolve) => { resolve({}); });
 
 const mockBuildBullQueue = bull => new QueueClient({
   getNextJob: mockedBullReceiveMessage,
@@ -38,8 +38,16 @@ const mockBuilderPool = pool => ({
 
 describe('BuildScheduler', () => {
   it('it should start a build when a message is received from SQS and then delete the message', (done) => {
-    const sqs = {};
-    const bull = {};
+    const sqs = {
+      extractMessageData(message) {
+        return JSON.parse(message.Body);
+      },
+    };
+    const bull = {
+      extractMessageData(message) {
+        return message.data;
+      },
+    };
     const data = {
       environment: [
         { name: 'OVERRIDE_A', value: 'Value A' },
@@ -97,9 +105,6 @@ describe('BuildScheduler', () => {
         'OVERRIDE_A',
         'Value A'
       );
-      expect(build.containerEnvironment).to.have.property(
-        'FEDERALIST_BUILDER_CALLBACK'
-      );
       expect(build.buildID).to.be.a('String');
 
       hasStartedBuild = true;
@@ -108,8 +113,7 @@ describe('BuildScheduler', () => {
 
     const buildScheduler = new BuildScheduler(
       mockBuilderPool(cluster),
-      mockBuildSQSQueue(sqs),
-      bull,
+      [mockBuildSQSQueue(sqs), bull],
       mockServer
     );
 
@@ -173,8 +177,7 @@ describe('BuildScheduler', () => {
 
     const buildScheduler = new BuildScheduler(
       mockBuilderPool(cluster),
-      mockBuildSQSQueue(sqs),
-      bull,
+      [mockBuildSQSQueue(sqs), bull],
       mockServer
     );
 
@@ -249,8 +252,7 @@ describe('BuildScheduler', () => {
 
     const buildScheduler = new BuildScheduler(
       mockBuilderPool(cluster),
-      mockBuildSQSQueue(sqs),
-      mockBuildBullQueue(bull),
+      [mockBuildSQSQueue(sqs), mockBuildBullQueue(bull)],
       mockServer
     );
 
