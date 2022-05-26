@@ -8,7 +8,6 @@ const defaults = {
   taskDisk: 4 * 1024,
   taskMemory: 2 * 1024,
   url: 'http://example.com',
-  customTaskMemRepos: [],
   taskCustomDisk: 6 * 1024,
   taskCustomMemory: 8 * 1024,
 };
@@ -37,13 +36,8 @@ describe('CFTaskPool', () => {
         .stub(builderPool, '_hasAvailableMemory')
         .resolves(foobar);
 
-      sinon
-        .stub(builderPool, '_requiresCustom')
-        .returns(false);
-
       const result = await builderPool.canStartBuild(build);
 
-      sinon.assert.calledOnceWithExactly(builderPool._requiresCustom, build);
       sinon.assert.calledOnceWithExactly(builderPool._hasAvailableMemory, builderPool._taskMemory);
       expect(result).to.eq(foobar);
     });
@@ -161,31 +155,6 @@ describe('CFTaskPool', () => {
       expect(result.memory_in_mb).to.eq(builderPool._taskMemory);
       expect(result.disk_in_mb).to.eq(builderPool._taskDisk);
     });
-
-    describe('when build requires custom resources', () => {
-      it('returns the custom memory', () => {
-        const expectedKeys = ['name', 'disk_in_mb', 'memory_in_mb', 'command'];
-        const buildId = 1234;
-        const command = 'command';
-
-        const build = {
-          containerEnvironment: {
-            BUILD_ID: buildId,
-            OWNER: 'owner',
-            REPOSITORY: 'REPO', // Checking case insensitivity as well
-          },
-        };
-        const builderPool = createPool({ customTaskMemRepos: ['owner/repo'] });
-        const result = builderPool._buildTask(build, command);
-
-        expect(result).to.be.an('object');
-        expectedKeys.forEach(key => expect(result[key]).to.exist);
-        expect(result.name).to.include(buildId);
-        expect(result.command).to.eq(`${command} '${JSON.stringify(build.containerEnvironment)}'`);
-        expect(result.memory_in_mb).to.eq(builderPool._taskCustomMemory);
-        expect(result.disk_in_mb).to.eq(builderPool._taskCustomDisk);
-      });
-    });
   });
 
   describe('._hasAvailableMemory', () => {
@@ -214,34 +183,6 @@ describe('CFTaskPool', () => {
 
         const hasAvailableMemory = await builderPool._hasAvailableMemory(taskMemory);
         expect(hasAvailableMemory).to.be.true;
-      });
-    });
-  });
-
-  describe('._requiresCustom', () => {
-    it('returns false', () => {
-      const builderPool = createPool();
-      const build = {
-        containerEnvironment: {
-          OWNER: 'owner',
-          REPOSITORY: 'REPO', // Checking case insensitivity as well
-        },
-      };
-      const result = builderPool._requiresCustom(build);
-      expect(result).to.be.false;
-    });
-
-    describe('when build requires custom memory', () => {
-      it('returns true', () => {
-        const builderPool = createPool({ customTaskMemRepos: ['owner/repo'] });
-        const build = {
-          containerEnvironment: {
-            OWNER: 'owner',
-            REPOSITORY: 'repo',
-          },
-        };
-        const result = builderPool._requiresCustom(build);
-        expect(result).to.be.true;
       });
     });
   });

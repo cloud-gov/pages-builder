@@ -63,7 +63,6 @@ Additional configuration is set up through environment variables:
 - `TASK_MAX_MEM_GB`: total memory allowed to be allocated for build tasks in GB
 - `TASK_CUSTOM_MEM_GB`: memory allocated to a `large` build task in GB
 - `TASK_CUSTOM_DISK_GB`: disk allocated to a `large` build task in GB
-- `CUSTOM_TASK_MEM_REPOS`: allow list of `owner/repository`s that require larger build container. Soon to be deprecated by `containerConfig` in the admin GUI.
 
 ## Running locally
 
