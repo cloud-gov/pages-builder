@@ -18,7 +18,6 @@ applications:
       TASK_CUSTOM_DISK_GB: 6
       CLOUD_FOUNDRY_OAUTH_TOKEN_URL: https://login.fr.cloud.gov/oauth/token
       LOG_LEVEL: verbose
-      CUSTOM_TASK_MEM_REPOS: '["gsa/digitalgov.gov", "onrr/doi-extractives-data", "gsa/interimperformance-dot-gov-2018", "gsa/ussm", "gsa/pic_dot_gov", "gsa/cfo.gov", "davemcorwin/interimperformance-dot-gov-2018"]'
       CLOUD_GOV: "true"
       USE_BULL_QUEUE: ((bull_queue))
       USE_SQS_QUEUE: ((sqs_queue))
