@@ -8,7 +8,7 @@ class TaskStartError extends Error {}
 class CFTaskPool {
   constructor({
     maxTaskMemory, taskDisk, taskMemory, url,
-    customTaskMemRepos, taskCustomMemory, taskCustomDisk,
+    taskCustomMemory, taskCustomDisk,
   }) {
     this._apiClient = new CloudFoundryAPIClient();
     this._buildStatusReporter = BuildStatusReporter;
@@ -17,7 +17,6 @@ class CFTaskPool {
     this._taskDisk = taskDisk;
     this._taskMemory = taskMemory;
     this._url = url;
-    this._customTaskMemRepos = customTaskMemRepos;
     this._taskCustomMemory = taskCustomMemory;
     this._taskCustomDisk = taskCustomDisk;
   }
@@ -71,14 +70,8 @@ class CFTaskPool {
     return (allocMemory + requestedMemory) < this._maxTaskMemory;
   }
 
-  _requiresCustom(build) {
-    const { OWNER, REPOSITORY } = build.containerEnvironment;
-    const repo = `${OWNER}/${REPOSITORY}`.toLowerCase();
-    return this._customTaskMemRepos.includes(repo);
-  }
-
   _containerSize(build) {
-    const isLargeContainer = (build.containerSize === 'large') || this._requiresCustom(build);
+    const isLargeContainer = (build.containerSize === 'large');
     return {
       disk_in_mb: isLargeContainer ? this._taskCustomDisk : this._taskDisk,
       memory_in_mb: isLargeContainer ? this._taskCustomMemory : this._taskMemory,

@@ -10,7 +10,6 @@ const {
   TASK_MEM_GB,
   TASK_CUSTOM_MEM_GB,
   TASK_CUSTOM_DISK_GB,
-  CUSTOM_TASK_MEM_REPOS,
 } = process.env;
 
 const vcapFile = NODE_ENV === 'test' ? './test/env.json' : '.env.json';
@@ -45,7 +44,6 @@ appEnv.sqsUrl = sqsCreds.sqs_url;
 appEnv.taskDisk = TASK_DISK_GB && parseInt(TASK_DISK_GB, 10) * 1024;
 appEnv.taskMemory = TASK_MEM_GB && parseInt(TASK_MEM_GB, 10) * 1024;
 appEnv.maxTaskMemory = TASK_MAX_MEM_GB && parseInt(TASK_MAX_MEM_GB, 10) * 1024;
-appEnv.customTaskMemRepos = JSON.parse(CUSTOM_TASK_MEM_REPOS || '[]');
 appEnv.taskCustomMemory = TASK_CUSTOM_MEM_GB && parseInt(TASK_CUSTOM_MEM_GB, 10) * 1024;
 appEnv.taskCustomDisk = TASK_CUSTOM_DISK_GB && parseInt(TASK_CUSTOM_DISK_GB, 10) * 1024;
 
