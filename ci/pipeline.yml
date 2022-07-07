@@ -81,7 +81,7 @@ jobs:
   - name: test-and-deploy
     plan:
       - get: src
-        resource: src
+        resource: src-((env))
         trigger: true
         params: {depth: 1}
       - put: gh-status
@@ -97,7 +97,7 @@ jobs:
             path: ci/tasks/deploy.sh
         params:
           <<: *cf
-          CF_APP_NAME: pages-builder-((env))
+          CF_APP_NAME: pages-builder
           CF_MANIFEST: .cloudgov/manifest.yml
           CF_VARS_FILE: .cloudgov/vars/pages-((env)).yml
         on_failure:
@@ -111,7 +111,7 @@ jobs:
                 path: ci/tasks/cancel-deployment.sh
             params:
               <<: *cf
-              CF_APP_NAME: pages-builder-((env))
+              CF_APP_NAME: pages-builder
     on_failure:
       in_parallel:
         - put: gh-status
@@ -142,7 +142,7 @@ jobs:
   - name: nightly-tasks
     plan:
       - get: src
-        resource: src
+        resource: src-((env))
         params: {depth: 1}
       - get: nightly
         trigger: true
@@ -154,19 +154,26 @@ jobs:
             path: src/ci/tasks/restage.sh
         params:
           <<: *cf
-          CF_APP_NAME: pages-builder-((env))
+          CF_APP_NAME: pages-builder
 
 ############################
 #  RESOURCES
 
 resources:
 
-  - name: src
+  - name: src-staging
     type: git
     icon: github
     source:
       uri: https://github.com/18F/federalist-builder
       branch: ((env))
+
+  - name: src-production
+    type: git
+    icon: github
+    source:
+      uri: https://github.com/18F/federalist-builder
+      branch: main
 
   - name: nightly
     type: time
