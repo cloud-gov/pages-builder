@@ -2,12 +2,12 @@
 ############################
 #  SHARED
 
-staging-cf: &staging-cf
+cf: &cf
   CF_API: https://api.fr.cloud.gov
-  CF_USERNAME: ((staging-cf-username))
-  CF_PASSWORD: ((staging-cf-password))
+  CF_USERNAME: ((cf-username))
+  CF_PASSWORD: ((cf-password))
   CF_ORG: gsa-18f-federalist
-  CF_SPACE: staging
+  CF_SPACE: ((cf-space))
 
 node-image: &node-image
   platform: linux
@@ -78,10 +78,10 @@ test: &test
 
 jobs:
       
-  - name: test-and-deploy-staging
+  - name: test-and-deploy
     plan:
       - get: src
-        resource: src-staging
+        resource: src
         trigger: true
         params: {depth: 1}
       - put: gh-status
@@ -96,10 +96,10 @@ jobs:
             dir: src
             path: ci/tasks/deploy.sh
         params:
-          <<: *staging-cf
-          CF_APP_NAME: pages-builder-staging
+          <<: *cf
+          CF_APP_NAME: pages-builder-((cf-space))
           CF_MANIFEST: .cloudgov/manifest.yml
-          CF_VARS_FILE: .cloudgov/vars/pages-staging.yml
+          CF_VARS_FILE: .cloudgov/vars/pages-((cf-space)).yml
         on_failure:
           try:
             task: cancel-api-deployment
@@ -110,8 +110,8 @@ jobs:
                 dir: src
                 path: ci/tasks/cancel-deployment.sh
             params:
-              <<: *staging-cf
-              CF_APP_NAME: pages-builder-staging
+              <<: *cf
+              CF_APP_NAME: pages-builder-((cf-space))
     on_failure:
       in_parallel:
         - put: gh-status
@@ -120,7 +120,7 @@ jobs:
         - put: slack
           params:
             text: |
-              :x: FAILED: pages builder deployment on staging
+              :x: FAILED: pages builder deployment on ((cf-space))
               <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
             channel: ((slack-channel))
             username: ((slack-username))
@@ -133,16 +133,16 @@ jobs:
         - put: slack
           params:
             text: |
-              :white_check_mark: SUCCESS: Successfully deployed pages builder on staging
+              :white_check_mark: SUCCESS: Successfully deployed pages builder on ((cf-space))
               <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
             channel: ((slack-channel))
             username: ((slack-username))
             icon_url: ((slack-icon-url))
 
-  - name: nightly-tasks-staging
+  - name: nightly-tasks
     plan:
       - get: src
-        resource: src-staging
+        resource: src
         params: {depth: 1}
       - get: nightly
         trigger: true
@@ -153,20 +153,20 @@ jobs:
           run:
             path: src/ci/tasks/restage.sh
         params:
-          <<: *staging-cf
-          CF_APP_NAME: pages-builder-staging
+          <<: *cf
+          CF_APP_NAME: pages-builder-((cf-space))
 
 ############################
 #  RESOURCES
 
 resources:
 
-  - name: src-staging
+  - name: src
     type: git
     icon: github
     source:
       uri: https://github.com/18F/federalist-builder
-      branch: staging
+      branch: ((cf-space))
 
   - name: nightly
     type: time
