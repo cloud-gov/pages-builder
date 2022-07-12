@@ -78,10 +78,10 @@ test: &test
 
 jobs:
       
-  - name: test-and-deploy-staging
+  - name: test-and-deploy-((env))
     plan:
       - get: src
-        resource: src-staging
+        resource: src-((branch))
         trigger: true
         params: {depth: 1}
       - put: gh-status
@@ -97,9 +97,9 @@ jobs:
             path: ci/tasks/deploy.sh
         params:
           <<: *cf
-          CF_APP_NAME: pages-builder-staging
+          CF_APP_NAME: pages-builder-((env))
           CF_MANIFEST: .cloudgov/manifest.yml
-          CF_VARS_FILE: .cloudgov/vars/pages-staging.yml
+          CF_VARS_FILE: .cloudgov/vars/pages-((env)).yml
         on_failure:
           try:
             task: cancel-api-deployment
@@ -111,7 +111,7 @@ jobs:
                 path: ci/tasks/cancel-deployment.sh
             params:
               <<: *cf
-              CF_APP_NAME: pages-builder-staging
+              CF_APP_NAME: pages-builder-((env))
     on_failure:
       in_parallel:
         - put: gh-status
@@ -120,7 +120,7 @@ jobs:
         - put: slack
           params:
             text: |
-              :x: FAILED: pages builder deployment on staging
+              :x: FAILED: pages builder deployment on ((env))
               <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
             channel: ((slack-channel))
             username: ((slack-username))
@@ -133,94 +133,77 @@ jobs:
         - put: slack
           params:
             text: |
-              :white_check_mark: SUCCESS: Successfully deployed pages builder on staging
+              :white_check_mark: SUCCESS: Successfully deployed pages builder on ((env))
               <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
             channel: ((slack-channel))
             username: ((slack-username))
             icon_url: ((slack-icon-url))
 
-  - name: test-and-deploy-production
-    plan:
-      - get: src
-        resource: src-production
-        trigger: true
-        params: {depth: 1}
-      - put: gh-status
-        inputs: [src]
-        params: {state: pending}
-      - do: *test
-      - task: deploy
-        config:
-          <<: *cf-image
-          inputs: [name: src]
-          run:
-            dir: src
-            path: ci/tasks/deploy.sh
-        params:
-          <<: *cf
-          CF_APP_NAME: pages-builder-production
-          CF_MANIFEST: .cloudgov/manifest.yml
-          CF_VARS_FILE: .cloudgov/vars/pages-production.yml
-        on_failure:
-          try:
-            task: cancel-api-deployment
-            config:
-              <<: *cf-image
-              inputs: [name: src]
-              run:
-                dir: src
-                path: ci/tasks/cancel-deployment.sh
-            params:
-              <<: *cf
-              CF_APP_NAME: pages-builder-production
-    on_failure:
-      in_parallel:
-        - put: gh-status
-          inputs: [src]
-          params: {state: failure}
-        - put: slack
-          params:
-            text: |
-              :x: FAILED: pages builder deployment on production
-              <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
-            channel: ((slack-channel))
-            username: ((slack-username))
-            icon_url: ((slack-icon-url))
-    on_success:
-      in_parallel:
-        - put: gh-status
-          inputs: [src]
-          params: {state: success}      
-        - put: slack
-          params:
-            text: |
-              :white_check_mark: SUCCESS: Successfully deployed pages builder on production
-              <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
-            channel: ((slack-channel))
-            username: ((slack-username))
-            icon_url: ((slack-icon-url))
+  # - name: test-and-deploy-production
+  #   plan:
+  #     - get: src
+  #       resource: src-production
+  #       trigger: true
+  #       params: {depth: 1}
+  #     - put: gh-status
+  #       inputs: [src]
+  #       params: {state: pending}
+  #     - do: *test
+  #     - task: deploy
+  #       config:
+  #         <<: *cf-image
+  #         inputs: [name: src]
+  #         run:
+  #           dir: src
+  #           path: ci/tasks/deploy.sh
+  #       params:
+  #         <<: *cf
+  #         CF_APP_NAME: pages-builder-production
+  #         CF_MANIFEST: .cloudgov/manifest.yml
+  #         CF_VARS_FILE: .cloudgov/vars/pages-production.yml
+  #       on_failure:
+  #         try:
+  #           task: cancel-api-deployment
+  #           config:
+  #             <<: *cf-image
+  #             inputs: [name: src]
+  #             run:
+  #               dir: src
+  #               path: ci/tasks/cancel-deployment.sh
+  #           params:
+  #             <<: *cf
+  #             CF_APP_NAME: pages-builder-production
+  #   on_failure:
+  #     in_parallel:
+  #       - put: gh-status
+  #         inputs: [src]
+  #         params: {state: failure}
+  #       - put: slack
+  #         params:
+  #           text: |
+  #             :x: FAILED: pages builder deployment on production
+  #             <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
+  #           channel: ((slack-channel))
+  #           username: ((slack-username))
+  #           icon_url: ((slack-icon-url))
+  #   on_success:
+  #     in_parallel:
+  #       - put: gh-status
+  #         inputs: [src]
+  #         params: {state: success}      
+  #       - put: slack
+  #         params:
+  #           text: |
+  #             :white_check_mark: SUCCESS: Successfully deployed pages builder on production
+  #             <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
+  #           channel: ((slack-channel))
+  #           username: ((slack-username))
+  #           icon_url: ((slack-icon-url))
 
-  - name: nightly-tasks-staging
+  - name: nightly-tasks-((env))
     plan:
       - get: src
-        resource: src-staging
-        params: {depth: 1}
-      - get: nightly
-        trigger: true
-      - task: restage
-        config:
-          <<: *cf-image
-          inputs: [name: src]
-          run:
-            path: src/ci/tasks/restage.sh
-        params:
-          <<: *cf
-          CF_APP_NAME: pages-builder-staging
-
-  - name: nightly-tasks-production
-    plan:
-      - get: src
-        resource: src-production
+        resource: src-((branch))
         params: {depth: 1}
       - get: nightly
         trigger: true
@@ -232,26 +215,43 @@ jobs:
             path: src/ci/tasks/restage.sh
         params:
           <<: *cf
-          CF_APP_NAME: pages-builder-production
+          CF_APP_NAME: pages-builder-((env))
+
+  # - name: nightly-tasks-production
+  #   plan:
+  #     - get: src
+  #       resource: src-production
+  #       params: {depth: 1}
+  #     - get: nightly
+  #       trigger: true
+  #     - task: restage
+  #       config:
+  #         <<: *cf-image
+  #         inputs: [name: src]
+  #         run:
+  #           path: src/ci/tasks/restage.sh
+  #       params:
+  #         <<: *cf
+  #         CF_APP_NAME: pages-builder-production
 
 ############################
 #  RESOURCES
 
 resources:
 
-  - name: src-staging
+  - name: src-((env))
     type: git
     icon: github
     source:
       uri: https://github.com/18F/federalist-builder
-      branch: staging
+      branch: ((branch))
 
-  - name: src-production
-    type: git
-    icon: github
-    source:
-      uri: https://github.com/18F/federalist-builder
-      branch: main
+  # - name: src-production
+  #   type: git
+  #   icon: github
+  #   source:
+  #     uri: https://github.com/18F/federalist-builder
+  #     branch: main
 
   - name: nightly
     type: time
