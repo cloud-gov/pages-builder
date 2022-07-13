@@ -20,7 +20,7 @@ const { cf_api: cfApiHost, space_name: spaceName } = appEnv.app;
 const cfCreds = appEnv.getServiceCreds('federalist-deploy-user');
 
 // TODO - revisit our service naming conventions!!!!
-const servicePrefix = spaceName === 'pages-staging' ? spaceName : `federalist-${spaceName}`;
+const servicePrefix = appEnv.name.includes('pages') ? `pages-${spaceName}` : `federalist-${spaceName}`;
 const sqsCreds = appEnv.getServiceCreds(`${servicePrefix}-sqs-creds`);
 const redisCreds = appEnv.getServiceCreds(`${servicePrefix}-redis`);
 
