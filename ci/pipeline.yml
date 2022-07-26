@@ -251,7 +251,7 @@ resources:
     icon: github
     source:
       uri: https://github.com/18F/federalist-builder
-      branch: bh-pipeline-updates
+      branch: staging
 
   - name: src-production
     type: git
