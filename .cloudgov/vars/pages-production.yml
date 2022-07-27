@@ -1,5 +1,5 @@
 env: production
-env_postfix: -production
+env_postfix: ''
 task_max_mem: 20
 instances: 1
 product: pages
