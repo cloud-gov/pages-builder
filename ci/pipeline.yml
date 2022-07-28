@@ -2,12 +2,19 @@
 ############################
 #  SHARED
 
-staging-cf: &staging-cf
+cf-staging: &cf-staging
   CF_API: https://api.fr.cloud.gov
   CF_USERNAME: ((staging-cf-username))
   CF_PASSWORD: ((staging-cf-password))
   CF_ORG: gsa-18f-federalist
   CF_SPACE: staging
+
+cf-production: &cf-production
+  CF_API: https://api.fr.cloud.gov
+  CF_USERNAME: ((production-cf-username))
+  CF_PASSWORD: ((production-cf-password))
+  CF_ORG: gsa-18f-federalist
+  CF_SPACE: production
 
 node-image: &node-image
   platform: linux
@@ -96,7 +103,7 @@ jobs:
             dir: src
             path: ci/tasks/deploy.sh
         params:
-          <<: *staging-cf
+          <<: *cf-staging
           CF_APP_NAME: pages-builder-staging
           CF_MANIFEST: .cloudgov/manifest.yml
           CF_VARS_FILE: .cloudgov/vars/pages-staging.yml
@@ -110,7 +117,7 @@ jobs:
                 dir: src
                 path: ci/tasks/cancel-deployment.sh
             params:
-              <<: *staging-cf
+              <<: *cf-staging
               CF_APP_NAME: pages-builder-staging
     on_failure:
       in_parallel:
@@ -139,6 +146,67 @@ jobs:
             username: ((slack-username))
             icon_url: ((slack-icon-url))
 
+  - name: test-and-deploy-production
+    plan:
+      - get: src
+        resource: src-production
+        trigger: true
+        params: {depth: 1}
+      - put: gh-status
+        inputs: [src]
+        params: {state: pending}
+      - do: *test
+      - task: deploy
+        config:
+          <<: *cf-image
+          inputs: [name: src]
+          run:
+            dir: src
+            path: ci/tasks/deploy.sh
+        params:
+          <<: *cf-production
+          CF_APP_NAME: pages-builder-production
+          CF_MANIFEST: .cloudgov/manifest.yml
+          CF_VARS_FILE: .cloudgov/vars/pages-production.yml
+        on_failure:
+          try:
+            task: cancel-api-deployment
+            config:
+              <<: *cf-image
+              inputs: [name: src]
+              run:
+                dir: src
+                path: ci/tasks/cancel-deployment.sh
+            params:
+              <<: *cf-production
+              CF_APP_NAME: pages-builder-production
+    on_failure:
+      in_parallel:
+        - put: gh-status
+          inputs: [src]
+          params: {state: failure}
+        - put: slack
+          params:
+            text: |
+              :x: FAILED: pages builder deployment on production
+              <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
+            channel: ((slack-channel))
+            username: ((slack-username))
+            icon_url: ((slack-icon-url))
+    on_success:
+      in_parallel:
+        - put: gh-status
+          inputs: [src]
+          params: {state: success}      
+        - put: slack
+          params:
+            text: |
+              :white_check_mark: SUCCESS: Successfully deployed pages builder on production
+              <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
+            channel: ((slack-channel))
+            username: ((slack-username))
+            icon_url: ((slack-icon-url))
+
   - name: nightly-tasks-staging
     plan:
       - get: src
@@ -153,8 +221,25 @@ jobs:
           run:
             path: src/ci/tasks/restage.sh
         params:
-          <<: *staging-cf
+          <<: *cf-staging
           CF_APP_NAME: pages-builder-staging
+
+  - name: nightly-tasks-production
+    plan:
+      - get: src
+        resource: src-production
+        params: {depth: 1}
+      - get: nightly
+        trigger: true
+      - task: restage
+        config:
+          <<: *cf-image
+          inputs: [name: src]
+          run:
+            path: src/ci/tasks/restage.sh
+        params:
+          <<: *cf-production
+          CF_APP_NAME: pages-builder-production
 
 ############################
 #  RESOURCES
@@ -167,6 +252,13 @@ resources:
     source:
       uri: https://github.com/18F/federalist-builder
       branch: staging
+
+  - name: src-production
+    type: git
+    icon: github
+    source:
+      uri: https://github.com/18F/federalist-builder
+      branch: main
 
   - name: nightly
     type: time
