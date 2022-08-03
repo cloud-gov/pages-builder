@@ -159,8 +159,6 @@ jobs:
             params:
               <<: *env-cf
               CF_APP_NAME: pages-builder-((deploy-env))
-              <<: *cf-staging
-              CF_APP_NAME: pages-builder-staging
     on_failure:
       in_parallel:
         - put: gh-status
