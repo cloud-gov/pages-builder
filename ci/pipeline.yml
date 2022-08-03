@@ -7,7 +7,7 @@ env-cf: &env-cf
   CF_USERNAME: ((((deploy-env))-cf-username))
   CF_PASSWORD: ((((deploy-env))-cf-password))
   CF_ORG: gsa-18f-federalist
-  CF_SPACE: ((deploy-env))›
+  CF_SPACE: ((deploy-env))
 
 node-image: &node-image
   platform: linux
@@ -229,13 +229,6 @@ resources:
       disable_forks: true
       ignore_drafts: false
 
-  - name: src-production
-    type: git
-    icon: github
-    source:
-      uri: https://github.com/18F/federalist-builder
-      branch: main
-
   - name: nightly
     type: time
     source:
@@ -284,3 +277,8 @@ resource_types:
     type: docker-image
     source:
       repository: cfcommunity/slack-notification-resource
+
+  - name: pull-request
+    type: docker-image
+    source:
+      repository: teliaoss/github-pr-resource
