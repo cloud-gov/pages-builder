@@ -7,7 +7,7 @@ env-cf: &env-cf
   CF_USERNAME: ((((deploy-env))-cf-username))
   CF_PASSWORD: ((((deploy-env))-cf-password))
   CF_ORG: gsa-18f-federalist
-  CF_SPACE: ((deploy-env))
+  CF_SPACE: ((deploy-env))›
 
 node-image: &node-image
   platform: linux
@@ -159,6 +159,8 @@ jobs:
             params:
               <<: *env-cf
               CF_APP_NAME: pages-builder-((deploy-env))
+              <<: *cf-staging
+              CF_APP_NAME: pages-builder-staging
     on_failure:
       in_parallel:
         - put: gh-status
@@ -226,6 +228,13 @@ resources:
       base_branch: ((git-branch))
       disable_forks: true
       ignore_drafts: false
+
+  - name: src-production
+    type: git
+    icon: github
+    source:
+      uri: https://github.com/18F/federalist-builder
+      branch: main
 
   - name: nightly
     type: time
