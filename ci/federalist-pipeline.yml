@@ -1,0 +1,279 @@
+---
+############################
+#  SHARED
+
+env-cf: &env-cf
+  CF_API: https://api.fr.cloud.gov
+  CF_USERNAME: ((production-cf-username))
+  CF_PASSWORD: ((production-cf-password))
+  CF_ORG: gsa-18f-federalist
+  CF_SPACE: production
+
+node-image: &node-image
+  platform: linux
+  image_resource:
+    type: docker-image
+    source:
+      repository: node
+      tag: 16.14
+
+cf-image: &cf-image
+  platform: linux
+  image_resource:
+    type: docker-image
+    source:
+      repository: 18fgsa/concourse-task
+
+test: &test
+  - in_parallel:
+    - get: redis
+      params: {save: true}
+    - get: node
+      params: {save: true}
+  - task: prepare
+    config:
+      <<: *node-image
+      inputs: [name: src]
+      outputs: [name: src]
+      run:
+        dir: src
+        path: bash
+        args:
+          - -c
+          - |
+            yarn --pure-lockfile
+            yarn eslint
+  - task: test
+    privileged: true
+    config:
+      platform: linux
+      image_resource:
+        type: docker-image
+        source:
+          repository: karlkfi/concourse-dcind
+      inputs:
+        - name: src
+        - name: redis
+        - name: node
+      run:
+        dir: src
+        path: ci/docker/entrypoint.sh
+        args:
+          - bash
+          - -ceux
+          - |
+            pushd ..
+              docker load -i redis/image
+              docker tag "$(cat redis/image-id)" "$(cat redis/repository):$(cat redis/tag)"
+              docker load -i node/image
+              docker tag "$(cat node/image-id)" "$(cat node/repository):$(cat node/tag)"
+            popd
+            docker-compose -f ci/docker/docker-compose.yml run app app/ci/tasks/test.sh
+            docker-compose -f ci/docker/docker-compose.yml down
+            docker volume rm $(docker volume ls -q)    
+
+
+############################
+#  JOBS
+
+jobs:
+
+  - name: set-pipeline
+    plan:
+    - get: src
+      resource: src-production
+      trigger: true
+    - set_pipeline: federalist-builder
+      file: src/ci/federalist-pipeline.yml
+
+  - name: test-pr-main
+    plan:
+    - get: src
+      resource: pr-main
+      trigger: true
+      version: every
+
+    - put: src
+      resource: pr-main
+      params:
+        path: src
+        status: pending
+        base_context: concourse
+        context: test
+
+    - do: *test
+
+    on_failure:
+      put: src
+      resource: pr-main
+      params:
+        path: src
+        status: failure
+        base_context: concourse
+        context: test
+
+    on_success:
+      put: src
+      resource: pr-main
+      params:
+        path: src
+        status: success
+        base_context: concourse
+        context: test
+
+  - name: test-and-deploy-federalist-production
+    plan:
+      - get: src
+        resource: src-production
+        passed: [set-pipeline]
+        trigger: true
+        params: {depth: 1}
+      - put: gh-status
+        inputs: [src]
+        params: {state: pending}
+      - do: *test
+      - task: deploy
+        config:
+          <<: *cf-image
+          inputs: [name: src]
+          run:
+            dir: src
+            path: ci/tasks/deploy.sh
+        params:
+          <<: *env-cf
+          CF_APP_NAME: federalist-builder
+          CF_MANIFEST: .cloudgov/manifest.yml
+          CF_VARS_FILE: .cloudgov/vars/production.yml
+        on_failure:
+          try:
+            task: cancel-api-deployment
+            config:
+              <<: *cf-image
+              inputs: [name: src]
+              run:
+                dir: src
+                path: ci/tasks/cancel-deployment.sh
+            params:
+              <<: *env-cf
+              CF_APP_NAME: federalist-builder
+    on_failure:
+      in_parallel:
+        - put: gh-status
+          inputs: [src]
+          params: {state: failure}
+        - put: slack
+          params:
+            text: |
+              :x: FAILED: federalist-builder deployment on production
+              <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
+            channel: ((slack-channel))
+            username: ((slack-username))
+            icon_url: ((slack-icon-url))
+    on_success:
+      in_parallel:
+        - put: gh-status
+          inputs: [src]
+          params: {state: success}
+        - put: slack
+          params:
+            text: |
+              :white_check_mark: SUCCESS: Successfully deployed federalist-builder on production
+              <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
+            channel: ((slack-channel))
+            username: ((slack-username))
+            icon_url: ((slack-icon-url))
+
+  - name: nightly-tasks-production
+    plan:
+      - get: src
+        resource: src-production
+        passed: [set-pipeline]
+        params: {depth: 1}
+      - get: nightly
+        trigger: true
+      - task: restage
+        config:
+          <<: *cf-image
+          inputs: [name: src]
+          run:
+            dir: src
+            path: ci/tasks/restage.sh
+        params:
+          <<: *env-cf
+          CF_APP_NAME: federalist-builder
+
+############################
+#  RESOURCES
+
+resources:
+
+  - name: src-production
+    type: git
+    icon: github
+    source:
+      uri: ((git-base-url))/((builder-repository-path))
+      branch: main
+
+  - name: pr-main
+    type: pull-request
+    check_every: 1m
+    source:
+      repository: ((builder-repository-path))
+      access_token: ((gh-access-token))
+      base_branch: main
+      disable_forks: true
+      ignore_drafts: false
+
+  - name: nightly
+    type: time
+    source:
+      start: 12:00 AM
+      stop: 1:00 AM
+      location: America/New_York
+
+  - name: nginx
+    type: docker-image
+    source:
+      repository: nginx
+      tag: 1
+
+  - name: node
+    type: docker-image
+    source:
+      repository: node
+      tag: 12
+
+  - name: slack
+    type: slack-notification
+    source:
+      url: ((slack-webhook-url))
+
+  - name: gh-status
+    type: cogito
+    check_every: 1h
+    source:
+      owner: 18F
+      repo: federalist-builder
+      access_token: ((gh-access-token))
+      context_prefix: concourse
+
+############################
+#  RESOURCE TYPES
+
+resource_types:
+
+  - name: cogito
+    type: docker-image
+    check_every: 24h
+    source:
+      repository: pix4d/cogito
+
+  - name: slack-notification
+    type: docker-image
+    source:
+      repository: cfcommunity/slack-notification-resource
+
+  - name: pull-request
+    type: docker-image
+    source:
+      repository: teliaoss/github-pr-resource
