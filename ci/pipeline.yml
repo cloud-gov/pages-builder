@@ -102,7 +102,7 @@ jobs:
         path: src
         status: pending
         base_context: concourse
-        context: test
+        context: test-pages-builder
 
     - do: *test
 
@@ -113,7 +113,7 @@ jobs:
         path: src
         status: failure
         base_context: concourse
-        context: test
+        context: test-pages-builder
 
     on_success:
       put: src
@@ -122,7 +122,7 @@ jobs:
         path: src
         status: success
         base_context: concourse
-        context: test
+        context: test-pages-builder
 
   - name: test-and-deploy-((deploy-env))
     plan:
