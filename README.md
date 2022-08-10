@@ -1,5 +1,4 @@
 [![CircleCI](https://circleci.com/gh/18F/federalist-builder.svg?style=svg)](https://circleci.com/gh/18F/federalist-builder)
-[![Code Climate](https://codeclimate.com/github/18F/federalist-builder/badges/gpa.svg)](https://codeclimate.com/github/18F/federalist-builder)
 [![Known Vulnerabilities](https://snyk.io/test/github/18F/federalist-builder/badge.svg)](https://snyk.io/test/github/18F/federalist-builder)
 
 # federalist-builder
