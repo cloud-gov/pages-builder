@@ -68,6 +68,8 @@ test: &test
               docker load -i node/image
               docker tag "$(cat node/image-id)" "$(cat node/repository):$(cat node/tag)"
             popd
+            docker-compose -f ci/docker/docker-compose.yml run app app/ci/tasks/test.sh
+            docker-compose -f ci/docker/docker-compose.yml down
             docker volume rm $(docker volume ls -q)    
 
 
