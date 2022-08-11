@@ -4,10 +4,10 @@
 
 env-cf: &env-cf
   CF_API: https://api.fr.cloud.gov
-  CF_USERNAME: ((((deploy-env))-cf-username))
-  CF_PASSWORD: ((((deploy-env))-cf-password))
+  CF_USERNAME: ((production-cf-username))
+  CF_PASSWORD: ((production-cf-password))
   CF_ORG: gsa-18f-federalist
-  CF_SPACE: ((deploy-env))
+  CF_SPACE: production
 
 node-image: &node-image
   platform: linux
@@ -81,54 +81,51 @@ jobs:
   - name: set-pipeline
     plan:
     - get: src
-      resource: src-((deploy-env))
+      resource: src-production
       trigger: true
-    - set_pipeline: builder
-      file: src/ci/pipeline.yml
-      instance_vars:
-        deploy-env: ((deploy-env))
-        git-branch: ((git-branch))
+    - set_pipeline: federalist-builder
+      file: src/ci/federalist-pipeline.yml
 
-  - name: test-pr-((git-branch))
+  - name: test-pr-main
     plan:
     - get: src
-      resource: pr-((git-branch))
+      resource: pr-main
       trigger: true
       version: every
 
     - put: src
-      resource: pr-((git-branch))
+      resource: pr-main
       params:
         path: src
         status: pending
         base_context: concourse
-        context: test-pages-builder
+        context: test-federalist-builder
 
     - do: *test
 
     on_failure:
       put: src
-      resource: pr-((git-branch))
+      resource: pr-main
       params:
         path: src
         status: failure
         base_context: concourse
-        context: test-pages-builder
+        context: test-federalist-builder
 
     on_success:
       put: src
-      resource: pr-((git-branch))
+      resource: pr-main
       params:
         path: src
         status: success
         base_context: concourse
-        context: test-pages-builder
+        context: test-federalist-builder
 
-  - name: test-and-deploy-((deploy-env))
+  - name: test-and-deploy-federalist-production
     plan:
       - get: src
-        resource: src-((deploy-env))
-        passed: [set-pipeline]
+        resource: src-production
+        # passed: [set-pipeline]
         trigger: true
         params: {depth: 1}
       - put: gh-status
@@ -144,9 +141,9 @@ jobs:
             path: ci/tasks/deploy.sh
         params:
           <<: *env-cf
-          CF_APP_NAME: pages-builder-((deploy-env))
+          CF_APP_NAME: federalist-builder
           CF_MANIFEST: .cloudgov/manifest.yml
-          CF_VARS_FILE: .cloudgov/vars/pages-((deploy-env)).yml
+          CF_VARS_FILE: .cloudgov/vars/production.yml
         on_failure:
           try:
             task: cancel-api-deployment
@@ -158,7 +155,7 @@ jobs:
                 path: ci/tasks/cancel-deployment.sh
             params:
               <<: *env-cf
-              CF_APP_NAME: pages-builder-((deploy-env))
+              CF_APP_NAME: federalist-builder
     on_failure:
       in_parallel:
         - put: gh-status
@@ -167,7 +164,7 @@ jobs:
         - put: slack
           params:
             text: |
-              :x: FAILED: pages builder deployment on ((deploy-env))
+              :x: FAILED: federalist-builder deployment on production
               <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
             channel: ((slack-channel))
             username: ((slack-username))
@@ -180,17 +177,17 @@ jobs:
         - put: slack
           params:
             text: |
-              :white_check_mark: SUCCESS: Successfully deployed pages builder on ((deploy-env))
+              :white_check_mark: SUCCESS: Successfully deployed federalist-builder on production
               <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
             channel: ((slack-channel))
             username: ((slack-username))
             icon_url: ((slack-icon-url))
 
-  - name: nightly-tasks-((deploy-env))
+  - name: nightly-tasks-production
     plan:
       - get: src
-        resource: src-((deploy-env))
-        passed: [set-pipeline]
+        resource: src-production
+        # passed: [set-pipeline]
         params: {depth: 1}
       - get: nightly
         trigger: true
@@ -203,27 +200,27 @@ jobs:
             path: ci/tasks/restage.sh
         params:
           <<: *env-cf
-          CF_APP_NAME: pages-builder-((deploy-env))
+          CF_APP_NAME: federalist-builder
 
 ############################
 #  RESOURCES
 
 resources:
 
-  - name: src-((deploy-env))
+  - name: src-production
     type: git
     icon: github
     source:
       uri: ((git-base-url))/((builder-repository-path))
-      branch: ((git-branch))
+      branch: main
 
-  - name: pr-((git-branch))
+  - name: pr-main
     type: pull-request
     check_every: 1m
     source:
       repository: ((builder-repository-path))
       access_token: ((gh-access-token))
-      base_branch: ((git-branch))
+      base_branch: main
       disable_forks: true
       ignore_drafts: false
 
@@ -244,7 +241,7 @@ resources:
     type: docker-image
     source:
       repository: node
-      tag: 16.14
+      tag: 12
 
   - name: slack
     type: slack-notification

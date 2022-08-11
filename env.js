@@ -1,7 +1,6 @@
 const cfenv = require('cfenv');
 
 const {
-  CIRCLECI,
   CLOUD_FOUNDRY_OAUTH_TOKEN_URL,
   CLOUD_GOV,
   NODE_ENV,
@@ -34,7 +33,7 @@ appEnv.cloudFoundryApiHost = cfApiHost;
 
 appEnv.queueName = 'site-build-queue';
 
-appEnv.redisUrl = CIRCLECI ? 'redis://localhost:6379' : redisCreds.uri;
+appEnv.redisUrl = redisCreds.uri;
 appEnv.redisTls = CLOUD_GOV === 'true' ? {} : null;
 
 appEnv.sqsCreds = sqsCreds;
