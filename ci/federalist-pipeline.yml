@@ -125,7 +125,7 @@ jobs:
     plan:
       - get: src
         resource: src-production
-        passed: [set-pipeline]
+        # passed: [set-pipeline]
         trigger: true
         params: {depth: 1}
       - put: gh-status
@@ -187,7 +187,7 @@ jobs:
     plan:
       - get: src
         resource: src-production
-        passed: [set-pipeline]
+        # passed: [set-pipeline]
         params: {depth: 1}
       - get: nightly
         trigger: true
@@ -231,11 +231,11 @@ resources:
       stop: 1:00 AM
       location: America/New_York
 
-  - name: nginx
+  - name: redis
     type: docker-image
     source:
-      repository: nginx
-      tag: 1
+      repository: redis
+      tag: 5-alpine
 
   - name: node
     type: docker-image
