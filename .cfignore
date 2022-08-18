@@ -15,11 +15,9 @@ node_modules
 #######################
 ##  Everything else  ##
 #######################
-.circleci
 .cloudgov
 .dependabot
 test
-codeclimate.yml
 .env-sample
 .env-sample.json
 .eslintignore

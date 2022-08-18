@@ -1,0 +1,8 @@
+env: production
+env_postfix: '-production'
+task_max_mem: 20
+instances: 1
+product: pages
+bull_queue: "true"
+sqs_queue: "false"
+domain: pages.cloud.gov
