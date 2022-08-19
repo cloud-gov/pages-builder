@@ -255,8 +255,8 @@ resources:
     type: cogito
     check_every: 1h
     source:
-      owner: 18F
-      repo: federalist-builder
+      owner: cloud-gov
+      repo: pages-builder
       access_token: ((gh-access-token))
       context_prefix: concourse
 

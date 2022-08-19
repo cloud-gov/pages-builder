@@ -39,7 +39,7 @@ class Build {
     this.containerSize = containerSize;
   }
 
-  federalistBuildId() {
+  pagesBuildId() {
     return this.containerEnvironment.BUILD_ID;
   }
 }

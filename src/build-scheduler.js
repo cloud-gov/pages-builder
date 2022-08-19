@@ -36,7 +36,7 @@ class BuildScheduler {
   }
 
   async _attemptToStartBuild(build, queue, message) {
-    logger.verbose('Attempting to start build %s', build.federalistBuildId());
+    logger.verbose('Attempting to start build %s', build.pagesBuildId());
 
     if (await this._builderPool.canStartBuild(build)) {
       return this._startBuildAndDeleteMessage(build, queue, message);
@@ -44,7 +44,7 @@ class BuildScheduler {
 
     logger.info(
       'No resources available for build %s, waiting...',
-      build.federalistBuildId()
+      build.pagesBuildId()
     );
 
     return Promise.resolve(null);
@@ -59,7 +59,7 @@ class BuildScheduler {
           logger.verbose('Received message');
           const build = new Build(queue.extractMessageData(message));
           const { BRANCH, OWNER, REPOSITORY } = build.containerEnvironment;
-          logger.info('New build %s/%s/%s - %s', OWNER, REPOSITORY, BRANCH, build.federalistBuildId());
+          logger.info('New build %s/%s/%s - %s', OWNER, REPOSITORY, BRANCH, build.pagesBuildId());
 
           return this._attemptToStartBuild(build, queue, message);
         }
@@ -68,7 +68,7 @@ class BuildScheduler {
   }
 
   _startBuildAndDeleteMessage(build, queue, message) {
-    logger.verbose('Starting build %s', build.federalistBuildId());
+    logger.verbose('Starting build %s', build.pagesBuildId());
 
     return this._builderPool.startBuild(build)
       .then(() => queue.deleteMessage(message));
