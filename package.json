@@ -1,12 +1,12 @@
 {
-  "name": "federalist-builder",
+  "name": "pages-builder",
   "repository": {
     "type": "git",
-    "url": "git://github.com/18f/federalist-builder.git"
+    "url": "git://github.com/cloud-gov/pages-builder.git"
   },
   "version": "0.0.0",
   "private": true,
-  "description": "Checks an SQS queue and launches Federalist builds",
+  "description": "Checks a Redis queue and launches cloud.gov Pages builds",
   "main": "app.js",
   "scripts": {
     "dev": "node -r .env app",
