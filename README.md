@@ -1,12 +1,12 @@
-[![Known Vulnerabilities](https://snyk.io/test/github/18F/federalist-builder/badge.svg)](https://snyk.io/test/github/18F/federalist-builder)
+[![Known Vulnerabilities](https://snyk.io/test/github/cloud-gov/pages-builder/badge.svg)](https://snyk.io/test/github/cloud-gov/pages-builder)
 
-# federalist-builder
+# pages-builder
 
-This application is used to launch build tasks for Federalist in containers on cloud.gov based on messages from an AWS SQS queue.
+This application is used to launch build tasks for cloud.gov Pages in containers on cloud.gov based on messages from a Redis queue.
 
 ## The Build Scheduler
 
-The Build Scheduler is the component of this app that recursively monitors SQS for new messages. When a new messages is received, it checks the cluster to see if enough resources are available to run a build, and if so, starts the build as a Cloud Foundry "Task".
+The Build Scheduler is the component of this app that recursively monitors Redis for new messages. When a new messages is received, it checks the cluster to see if enough resources are available to run a build, and if so, starts the build as a Cloud Foundry "Task".
 
 ## The Task Pool
 
@@ -25,9 +25,7 @@ This application uses [`yarn`](https://yarnpkg.com) to manage node dependencies.
 
 Run this with `yarn` and `yarn start`.
 
-The AWS SDK credentials should be in place, or if running on CloudFoundry, a `federalist-aws-creds` service available.
-
-The SQS message body should be JSON that takes the form of an ECS task override object:
+The Redis message body should be JSON that takes the form of an ECS task override object:
 
 ```js
 {
@@ -64,9 +62,9 @@ Additional configuration is set up through environment variables:
 
 ## Running locally
 
-`federalist-builder` is not currently designed to be run locally. Due to its tight coupling with the build process and its dependence on the Cloud Foundry environment, running it locally has the potential to create a race condition between builds running in Cloud Foundry and builds that were scheduled locally.
+`pages-builder` is not currently designed to be run locally. Due to its tight coupling with the build process and its dependence on the Cloud Foundry environment, running it locally has the potential to create a race condition between builds running in Cloud Foundry and builds that were scheduled locally.
 
-To locally test `federalist-builder`, you can run:
+To locally test `pages-builder`, you can run:
 
 ```
 yarn
@@ -75,7 +73,7 @@ yarn test
 
 ### Using docker to test locally
 
-Since `federalist-builder` has tightly coupled build process, a dependence on the Cloud Foundry platform, and third party services, running tests locally with `docker-compose` can make the development experience a bit simpler.
+Since `pages-builder` has tightly coupled build process, a dependence on the Cloud Foundry platform, and third party services, running tests locally with `docker-compose` can make the development experience a bit simpler.
 
 To build the containers run:
 `$ docker-compose build`
