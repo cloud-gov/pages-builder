@@ -1,7 +1,7 @@
 env: production
 env_postfix: '-production'
-task_max_mem: 20
-instances: 1
+task_max_mem: 40
+instances: 2
 product: pages
 bull_queue: "true"
 sqs_queue: "false"
