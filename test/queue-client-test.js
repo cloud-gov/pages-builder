@@ -1,6 +1,10 @@
 const { expect } = require('chai');
 const QueueClient = require('../src/queue-client');
-const { testAddJobsToQueue, testEmptyQueue } = require('./helpers');
+const {
+  testAddActiveJobToQueue,
+  testAddJobsToQueue,
+  testEmptyQueue,
+} = require('./helpers');
 
 const jobKeys = [
   'id',
@@ -32,6 +36,23 @@ describe('QueueClient', () => {
       };
 
       return testAddJobsToQueue(queueName, jobData, testMethod);
+    });
+
+    it('should check the active jobs if there are no new jobs waiting in the queue', () => {
+      const queueName = 'active-message';
+      const jobData = [{
+        data: { test: 'data', job_id: 1 },
+      }];
+      const testMethod = (queue) => {
+        const queueClient = new QueueClient(queue);
+        return queueClient.receiveMessage()
+          .then((response) => {
+            expect(response).to.have.keys(jobKeys);
+            expect(response.data).to.deep.equal(jobData[0].data);
+          });
+      };
+
+      return testAddActiveJobToQueue(queueName, jobData, testMethod);
     });
 
     it('should receive a the FIFO message from the queue', () => {

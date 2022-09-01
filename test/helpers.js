@@ -1,5 +1,16 @@
 const bullQueue = require('../src/bull-queue');
 
+const testAddActiveJobToQueue = (queueName, jobData, testMethod) => {
+  const testQueue = bullQueue(queueName);
+  return testQueue.addBulk(jobData)
+    .then(() => testQueue.getNextJob())
+    .then((job) => job.progress({ state: 'active' }))
+    .then(() => testMethod(testQueue))
+    .then(() => testQueue.obliterate({ force: true }))
+    .then(() => testQueue.empty())
+    .then(() => testQueue.close());
+};
+
 const testAddJobsToQueue = (queueName, jobData, testMethod) => {
   const testQueue = bullQueue(queueName);
   return testQueue.addBulk(jobData)
@@ -16,6 +27,7 @@ const testEmptyQueue = (queueName, testMethod) => {
 };
 
 module.exports = {
+  testAddActiveJobToQueue,
   testAddJobsToQueue,
   testEmptyQueue,
 };
