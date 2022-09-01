@@ -4,7 +4,7 @@ const testAddActiveJobToQueue = (queueName, jobData, testMethod) => {
   const testQueue = bullQueue(queueName);
   return testQueue.addBulk(jobData)
     .then(() => testQueue.getNextJob())
-    .then((job) => job.progress({ state: 'active' }))
+    .then(job => job.progress({ state: 'active' }))
     .then(() => testMethod(testQueue))
     .then(() => testQueue.obliterate({ force: true }))
     .then(() => testQueue.empty())

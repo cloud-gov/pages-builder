@@ -8,18 +8,18 @@ class QueueClient {
 
   _checkAndGrabActiveJob() {
     return this._queue.getActiveCount()
-      .then(count => {
-        if (count === 0) return undefined
+      .then((count) => {
+        if (count === 0) return undefined;
 
         return this._queue.getActive(0, 0)
-          .then(jobs => {
+          .then((jobs) => {
             const {
               id,
               data,
               timestamp,
               processedOn,
               failedReason,
-            } = jobs[0]
+            } = jobs[0];
 
             return {
               id,
@@ -27,9 +27,9 @@ class QueueClient {
               timestamp,
               processedOn,
               failedReason,
-            }
-          })
-      })
+            };
+          });
+      });
   }
 
   deleteMessage(message) {
