@@ -20,7 +20,6 @@ const cfCreds = appEnv.getServiceCreds('federalist-deploy-user');
 
 // TODO - revisit our service naming conventions!!!!
 const servicePrefix = appEnv.name.includes('pages') ? `pages-${spaceName}` : `federalist-${spaceName}`;
-const sqsCreds = appEnv.getServiceCreds(`${servicePrefix}-sqs-creds`);
 const redisCreds = appEnv.getServiceCreds(`${servicePrefix}-redis`);
 
 // Some helpful attributes
@@ -35,9 +34,6 @@ appEnv.queueName = 'site-build-queue';
 
 appEnv.redisUrl = redisCreds.uri;
 appEnv.redisTls = CLOUD_GOV === 'true' ? {} : null;
-
-appEnv.sqsCreds = sqsCreds;
-appEnv.sqsUrl = sqsCreds.sqs_url;
 
 // Task Builder Pool
 appEnv.taskDisk = TASK_DISK_GB && parseInt(TASK_DISK_GB, 10) * 1024;

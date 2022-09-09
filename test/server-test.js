@@ -2,14 +2,12 @@ const { expect } = require('chai');
 const nock = require('nock');
 
 const server = require('../src/server');
-const SQSClient = require('../src/sqs-client');
 const BullQueueClient = require('../src/queue-client');
 const mockTokenRequest = require('./nocks/cloud-foundry-oauth-token-nock');
 const mockListAppsRequest = require('./nocks/cloud-foundry-list-apps-by-label-nock');
 const mockListAppStatsRequest = require('./nocks/cloud-foundry-list-app-stats-nock');
 
 const mockCluster = () => ({ });
-const mockSQSBuildQueue = (sqs = {}) => new SQSClient(sqs, 'QUEUE_URL');
 const mockBullBuildQueue = (bull = {}) => new BullQueueClient(bull);
 
 describe('server', () => {
@@ -20,7 +18,7 @@ describe('server', () => {
 
   describe('GET /', () => {
     it('should respond with a 200', (done) => {
-      const testServer = server(mockCluster(), [mockSQSBuildQueue()]);
+      const testServer = server(mockCluster(), [mockBullBuildQueue()]);
 
       testServer.inject({
         method: 'GET',
@@ -52,7 +50,6 @@ describe('server', () => {
     };
 
     it('should be ok all is good', () => {
-      const queueSQSAttributes = { Attributes: { ApproximateNumberOfMessages: 2 } };
       const queueBullAttributes = {
         waiting: 5,
         active: 1,
@@ -63,10 +60,7 @@ describe('server', () => {
 
       const testServer = server(
         mockCluster(),
-        [mockSQSBuildQueue({
-          getQueueAttributes: (_, cb) => cb(null, queueSQSAttributes),
-        }),
-        mockBullBuildQueue({
+        [mockBullBuildQueue({
           getJobCounts: () => new Promise((resolve) => { resolve(queueBullAttributes); }),
         })]
       );
@@ -86,7 +80,6 @@ describe('server', () => {
               started: 2,
             },
             queueAttributes: [
-              queueSQSAttributes.Attributes,
               queueBullAttributes,
             ],
           };
@@ -99,10 +92,7 @@ describe('server', () => {
     it('should not be ok when an access token cannot be retrieved', () => {
       const testServer = server(
         mockCluster(),
-        [mockSQSBuildQueue({
-          getQueueAttributes: (_, cb) => cb(null, {}),
-        }),
-        mockBullBuildQueue({
+        [mockBullBuildQueue({
           getJobCounts: () => new Promise((resolve) => { resolve({}); }),
         })]
       );
@@ -126,7 +116,6 @@ describe('server', () => {
     });
 
     it('should not be ok when an access token is non-existent', () => {
-      const queueSQSAttributes = { Attributes: { ApproximateNumberOfMessages: 2 } };
       const queueBullAttributes = {
         waiting: 5,
         active: 1,
@@ -137,10 +126,7 @@ describe('server', () => {
 
       const testServer = server(
         mockCluster(),
-        [mockSQSBuildQueue({
-          getQueueAttributes: (_, cb) => cb(null, queueSQSAttributes),
-        }),
-        mockBullBuildQueue({
+        [mockBullBuildQueue({
           getJobCounts: () => new Promise((resolve) => { resolve(queueBullAttributes); }),
         })]
       );
@@ -163,14 +149,11 @@ describe('server', () => {
         });
     });
 
-    it('should not be ok if SQS attributes cannot be retrieved', () => {
+    it('should not be ok if attributes cannot be retrieved', () => {
       const error = { error: 'Queue attributes unavailable.' };
       const testServer = server(
         mockCluster(),
-        [mockSQSBuildQueue({
-          getQueueAttributes: (_, cb) => cb(error),
-        }),
-        mockBullBuildQueue({
+        [mockBullBuildQueue({
           getJobCounts: () => Promise.reject(error),
         })]
       );
@@ -197,7 +180,6 @@ describe('server', () => {
     });
 
     it('should not be ok if there are not enough build containers', () => {
-      const queueSQSAttributes = { Attributes: { ApproximateNumberOfMessages: 2 } };
       const queueBullAttributes = {
         waiting: 5,
         active: 1,
@@ -208,10 +190,7 @@ describe('server', () => {
 
       const testServer = server(
         mockCluster(),
-        [mockSQSBuildQueue({
-          getQueueAttributes: (_, cb) => cb(null, queueSQSAttributes),
-        }),
-        mockBullBuildQueue({
+        [mockBullBuildQueue({
           getJobCounts: () => new Promise((resolve) => { resolve(queueBullAttributes); }),
         })]
       );
@@ -239,7 +218,6 @@ describe('server', () => {
     });
 
     it('should not be ok if any container is not STARTED', () => {
-      const queueSQSAttributes = { Attributes: { ApproximateNumberOfMessages: 2 } };
       const queueBullAttributes = {
         waiting: 5,
         active: 1,
@@ -250,10 +228,7 @@ describe('server', () => {
 
       const testServer = server(
         mockCluster(),
-        [mockSQSBuildQueue({
-          getQueueAttributes: (_, cb) => cb(null, queueSQSAttributes),
-        }),
-        mockBullBuildQueue({
+        [mockBullBuildQueue({
           getJobCounts: () => new Promise((resolve) => { resolve(queueBullAttributes); }),
         })]
       );
@@ -291,10 +266,7 @@ describe('server', () => {
       const error = { error: 'Queue attributes unavailable.' };
       const testServer = server(
         mockCluster(),
-        [mockSQSBuildQueue({
-          getQueueAttributes: (_, cb) => cb(error),
-        }),
-        mockBullBuildQueue({
+        [mockBullBuildQueue({
           getJobCounts: () => Promise.reject(error),
         })]
       );
