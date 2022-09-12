@@ -170,7 +170,6 @@ describe('server', () => {
             ok: false,
             reasons: [
               error.error,
-              error.error,
             ],
           };
 
@@ -286,7 +285,6 @@ describe('server', () => {
               [
                 'Not all build containers are in the STARTED state.',
               ].join('\n'),
-              error.error,
               error.error,
             ],
           };
