@@ -89,7 +89,11 @@ describe('BuildScheduler', () => {
   });
 
   it('should not run more tasks than the cluster can handle', (done) => {
-    const bull = {};
+    const bull = {
+      extractMessageData(message) {
+        return message.data;
+      },
+    };
     const data = {
       environment: [
         { name: 'OVERRIDE_A', value: 'Value A' },
