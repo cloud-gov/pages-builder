@@ -70,7 +70,7 @@ test: &test
             popd
             docker-compose -f ci/docker/docker-compose.yml run app app/ci/tasks/test.sh
             docker-compose -f ci/docker/docker-compose.yml down
-            docker volume rm $(docker volume ls -q)    
+            docker volume rm $(docker volume ls -q)
 
 
 ############################
@@ -125,7 +125,7 @@ jobs:
     plan:
       - get: src
         resource: src-production
-        # passed: [set-pipeline]
+        passed: [set-pipeline]
         trigger: true
         params: {depth: 1}
       - put: gh-status
@@ -187,7 +187,7 @@ jobs:
     plan:
       - get: src
         resource: src-production
-        # passed: [set-pipeline]
+        passed: [set-pipeline]
         params: {depth: 1}
       - get: nightly
         trigger: true
@@ -252,8 +252,8 @@ resources:
     type: cogito
     check_every: 1h
     source:
-      owner: 18F
-      repo: federalist-builder
+      owner: cloud-gov
+      repo: pages-builder
       access_token: ((gh-access-token))
       context_prefix: concourse
 
