@@ -1,5 +1,4 @@
 const appEnv = require('./env');
-const AWS = require('./src/aws');
 const bullQueue = require('./src/bull-queue');
 const BuildScheduler = require('./src/build-scheduler');
 const logger = require('./src/logger');
