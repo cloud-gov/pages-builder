@@ -133,7 +133,7 @@ describe('BuildScheduler', () => {
       expect(runningBuildCount).to.equal(10);
       buildScheduler.stop();
       done();
-    }, 90);
+    }, 900);
   });
 
   it('should not delete the message if the build fails to start', (done) => {
