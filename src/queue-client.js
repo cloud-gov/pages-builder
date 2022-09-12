@@ -6,6 +6,32 @@ class QueueClient {
     this._queue = bullQueue;
   }
 
+  _checkAndGrabActiveJob() {
+    return this._queue.getActiveCount()
+      .then((count) => {
+        if (count === 0) return undefined;
+
+        return this._queue.getActive(0, 0)
+          .then((jobs) => {
+            const {
+              id,
+              data,
+              timestamp,
+              processedOn,
+              failedReason,
+            } = jobs[0];
+
+            return {
+              id,
+              data,
+              timestamp,
+              processedOn,
+              failedReason,
+            };
+          });
+      });
+  }
+
   deleteMessage(message) {
     const { id } = message;
     return this._queue.getJob(id)
@@ -32,7 +58,7 @@ class QueueClient {
   receiveMessage() {
     return this._queue.getNextJob()
       .then((job) => {
-        if (!job) return undefined;
+        if (!job) return this._checkAndGrabActiveJob();
 
         const {
           id,
