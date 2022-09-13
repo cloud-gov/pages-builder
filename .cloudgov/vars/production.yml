@@ -1,8 +1,0 @@
-env: production
-env_postfix: ''
-task_max_mem: 40
-instances: 2
-product: federalist
-bull_queue: "false"
-sqs_queue: "true"
-domain: app.cloud.gov
