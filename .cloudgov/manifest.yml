@@ -14,7 +14,7 @@ applications:
       TASK_DISK_GB: 4
       TASK_MAX_MEM_GB: ((task_max_mem))
       TASK_CUSTOM_MEM_GB: 8
-      TASK_CUSTOM_DISK_GB: 6
+      TASK_CUSTOM_DISK_GB: 7
       CLOUD_FOUNDRY_OAUTH_TOKEN_URL: https://login.fr.cloud.gov/oauth/token
       LOG_LEVEL: verbose
       CLOUD_GOV: "true"
