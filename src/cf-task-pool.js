@@ -1,6 +1,7 @@
 /* eslint-disable max-classes-per-file */
 const BuildStatusReporter = require('./build-status-reporter');
 const CloudFoundryAPIClient = require('./cloud-foundry-api-client');
+const { getContainerName } = require('./handle-config');
 const logger = require('./logger');
 
 class TaskStartError extends Error {}
@@ -32,7 +33,7 @@ class CFTaskPool {
       throw new TaskStartError('No build containers exist in this space.');
     }
 
-    const containerName = build.containerName || 'default';
+    const containerName = await getContainerName(build);
     const container = containers.find(c => c.containerName === containerName);
     if (!container) {
       throw new TaskStartError(`Could not find build container with name: "${containerName}"`);
