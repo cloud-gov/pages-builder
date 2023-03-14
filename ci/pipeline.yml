@@ -8,6 +8,7 @@ env-cf: &env-cf
   CF_PASSWORD: ((((deploy-env))-cf-password))
   CF_ORG: gsa-18f-federalist
   CF_SPACE: ((deploy-env))
+  CF_STACK: cflinuxfs4
 
 node-image: &node-image
   platform: linux
@@ -70,7 +71,7 @@ test: &test
             popd
             docker-compose -f ci/docker/docker-compose.yml run app app/ci/tasks/test.sh
             docker-compose -f ci/docker/docker-compose.yml down
-            docker volume rm $(docker volume ls -q)    
+            docker volume rm $(docker volume ls -q)
 
 
 ############################

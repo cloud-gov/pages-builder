@@ -1,7 +1,6 @@
 ---
 applications:
   - name: ((product))-builder((env_postfix))
-    stack: cflinuxfs4
     routes:
       - route: ((product))-builder((env_postfix)).((domain))
     disk_quota: 512M
