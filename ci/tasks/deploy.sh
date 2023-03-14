@@ -10,4 +10,4 @@ cf t -o $CF_ORG -s $CF_SPACE
 cf push $CF_APP_NAME -f $CF_MANIFEST \
   --strategy rolling \
   --vars-file $CF_VARS_FILE \
-  --stack cflinuxfs4
+  --stack $CF_STACK
