@@ -36,7 +36,9 @@ class CFTaskPool {
     const containerName = await getContainerName(build);
     const container = containers.find(c => c.containerName === containerName);
     if (!container) {
-      throw new TaskStartError(`Could not find build container with name: "${containerName}"`);
+      const errMsg = `Could not find build container with name: "${containerName}"`;
+      this._buildStatusReporter.reportBuildStatus(build, 'error', errMsg);
+      throw new TaskStartError(errMsg);
     }
 
     const buildTask = this._buildTask(build, container.command);
