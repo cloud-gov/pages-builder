@@ -22,7 +22,7 @@ describe('BuildStatusReporter', () => {
         },
       };
 
-      await BuildStatusReporter.reportBuildStatus(build, 'error');
+      await BuildStatusReporter.reportBuildStatus(build, buildStatus);
       expect(statusCallbackNock.isDone()).to.be.true;
     });
   });
