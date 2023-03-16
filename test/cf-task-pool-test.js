@@ -1,7 +1,15 @@
 const { expect } = require('chai');
 const sinon = require('sinon');
+const proxyquire = require('proxyquire');
 
-const CFTaskPool = require('../src/cf-task-pool');
+proxyquire.noCallThru();
+
+const getContainerNameStub = sinon.stub();
+const CFTaskPool = proxyquire('../src/cf-task-pool', {
+  './handle-config': {
+    getContainerName: getContainerNameStub,
+  },
+});
 
 const defaults = {
   maxTaskMemory: 30 * 1024,
@@ -20,6 +28,8 @@ function createPool(params = {}) {
 
   return new CFTaskPool(args);
 }
+
+let buildStatusStub;
 
 describe('CFTaskPool', () => {
   afterEach(() => {
@@ -60,7 +70,7 @@ describe('CFTaskPool', () => {
       builderPool = createPool();
 
       const buildTaskSpy = sinon.spy(builderPool, '_buildTask');
-      sinon.spy(builderPool._buildStatusReporter, 'reportBuildStatus');
+      buildStatusStub = sinon.stub(builderPool._buildStatusReporter, 'reportBuildStatus');
 
       getBuildTask = () => buildTaskSpy.getCall(0).returnValue;
     });
@@ -77,13 +87,15 @@ describe('CFTaskPool', () => {
     });
 
     describe('when no build containers for the specified name are found', () => {
-      it('rejects with a `TaskStartError`', async () => {
+      it('rejects with a `TaskStartError` and reports the build status', async () => {
         sinon.stub(builderPool._apiClient, 'fetchBuildContainersByLabel').resolves([{}]);
-
+        getContainerNameStub.resolves('not-default');
         const result = await builderPool.startBuild({}).catch(error => error);
 
+        const expectedErrMsg = 'Could not find build container with name: "not-default"';
+        sinon.assert.calledWith(buildStatusStub, {}, 'error', expectedErrMsg);
         expect(result).to.be.a('Error');
-        expect(result.message).to.equal('Could not find build container with name: "default"');
+        expect(result.message).to.equal(expectedErrMsg);
       });
     });
 
@@ -96,7 +108,7 @@ describe('CFTaskPool', () => {
 
         sinon.stub(builderPool._apiClient, 'fetchBuildContainersByLabel').resolves([container]);
         sinon.stub(builderPool._apiClient, 'startTaskForApp').rejects(new Error('uh oh'));
-
+        getContainerNameStub.resolves('default');
         const result = await builderPool.startBuild(build).catch(error => error);
 
         sinon.assert.calledWith(builderPool._buildTask, build);
@@ -120,6 +132,7 @@ describe('CFTaskPool', () => {
 
         sinon.stub(builderPool._apiClient, 'fetchBuildContainersByLabel').resolves([container]);
         sinon.stub(builderPool._apiClient, 'startTaskForApp').resolves(task);
+        getContainerNameStub.resolves('default');
 
         await builderPool.startBuild(build);
 
