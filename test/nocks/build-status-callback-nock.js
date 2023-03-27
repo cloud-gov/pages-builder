@@ -1,8 +1,7 @@
 const nock = require('nock');
 
-const mockBuildStatusCallback = (url, buildStatus) => {
-  const statusMessage = buildStatus === 'error' ? 'The build timed out' : '';
-  const encodedStatusMessage = Buffer.from(statusMessage).toString('base64');
+const mockBuildStatusCallback = (url, buildStatus, buildErrorMsg = '') => {
+  const encodedStatusMessage = Buffer.from(buildErrorMsg).toString('base64');
 
   return nock(`${url.protocol}//${url.hostname}`)
     .post(url.path, {
