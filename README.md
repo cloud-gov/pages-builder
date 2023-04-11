@@ -84,6 +84,25 @@ To install the dependencies run:
 To test the builder run:
 `$ docker-compose run app yarn test`
 
+#### CI deployments
+This repository contains two distinct deployment pipelines in concourse:
+- [__Builder__](./ci/pipeline.yml)
+- [__Builder Dev__](./ci/pipeline-dev.yml)
+
+__Builder__ deploys the Pages app/api, the admin app, and the queues app. __Metrics__ deploys concourse tasks to check our app/infrastructure health.
+
+__*&#8595; NOTICE &#8595;*__
+
+> __Builder Dev__ deploys the Pages app/api, the admin app, and the queues app when a PR is created into the `staging` branch. This uses a unique pipeline file: [./ci/pipeline-dev.yml](./ci/pipeline-dev.yml)
+
+##### Pipeline instance variables
+Two instances of the pipeline are set for the `pages staging` and `pages production` environments. Instance variables are used to fill in Concourse pipeline parameter variables bearing the same name as the instance variable. See more on [Concourse vars](https://concourse-ci.org/vars.html). Each instance of the pipeline has three instance variables associated to it: `deploy-env`, `git-branch`. `product`
+
+|Instance Variable|Pages Dev|Pages Staging|Pages Production|
+--- | --- | ---| ---|
+|**`deploy-env`**|`dev`|`staging`|`production`|
+|**`git-branch`**|`staging`|`staging`|`main`|
+
 
 ## Public domain
 
