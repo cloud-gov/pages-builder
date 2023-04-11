@@ -93,7 +93,7 @@ __Builder__ deploys the Pages app/api, the admin app, and the queues app. __Metr
 
 __*&#8595; NOTICE &#8595;*__
 
-> __Builder Dev__ deploys the Pages app/api, the admin app, and the queues app when a PR is created into the `staging` branch. This uses a unique pipeline file: [./ci/pipeline-dev.yml](./ci/pipeline-dev.yml)
+> __Builder Dev__ deploys the Pages builder app when a PR is created into the `staging` branch. This uses a unique pipeline file: [./ci/pipeline-dev.yml](./ci/pipeline-dev.yml)
 
 ##### Pipeline instance variables
 Two instances of the pipeline are set for the `pages staging` and `pages production` environments. Instance variables are used to fill in Concourse pipeline parameter variables bearing the same name as the instance variable. See more on [Concourse vars](https://concourse-ci.org/vars.html). Each instance of the pipeline has three instance variables associated to it: `deploy-env`, `git-branch`. `product`
