@@ -100,9 +100,6 @@ jobs:
         resource: pr-((git-branch))
         passed: [set-pipeline]
         trigger: true
-      - put: gh-status
-        inputs: [src]
-        params: {state: pending}
       - do: *test
       - task: deploy
         config:
@@ -130,9 +127,6 @@ jobs:
               CF_APP_NAME: pages-builder-((deploy-env))
     on_failure:
       in_parallel:
-        - put: gh-status
-          inputs: [src]
-          params: {state: failure}
         - put: slack
           params:
             text: |
@@ -143,9 +137,6 @@ jobs:
             icon_url: ((slack-icon-url))
     on_success:
       in_parallel:
-        - put: gh-status
-          inputs: [src]
-          params: {state: success}
         - put: slack
           params:
             text: |
@@ -212,25 +203,10 @@ resources:
     source:
       url: ((slack-webhook-url))
 
-  - name: gh-status
-    type: cogito
-    check_every: 1h
-    source:
-      owner: cloud-gov
-      repo: pages-builder
-      access_token: ((gh-access-token))
-      context_prefix: concourse
-
 ############################
 #  RESOURCE TYPES
 
 resource_types:
-
-  - name: cogito
-    type: docker-image
-    check_every: 24h
-    source:
-      repository: pix4d/cogito
 
   - name: slack-notification
     type: docker-image
