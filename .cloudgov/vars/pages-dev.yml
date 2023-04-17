@@ -1,0 +1,6 @@
+env: dev
+env_postfix: -dev
+task_max_mem: 20
+instances: 1
+product: pages
+domain: pages-dev.cloud.gov

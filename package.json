@@ -41,7 +41,7 @@
     "sinon": "^14.0.0"
   },
   "engines": {
-    "node": "16.x.x",
+    "node": "18.x.x",
     "npm": "8.x.x"
   },
   "nyc": {

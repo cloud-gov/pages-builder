@@ -86,59 +86,20 @@ jobs:
   - name: set-pipeline
     plan:
     - get: src
-      resource: src-((deploy-env))
+      resource: pr-((git-branch))
       trigger: true
     - set_pipeline: builder
-      file: src/ci/pipeline.yml
+      file: src/ci/pipeline-dev.yml
       instance_vars:
         deploy-env: ((deploy-env))
         git-branch: ((git-branch))
 
-  - name: test-pr-((git-branch))
-    plan:
-    - get: src
-      resource: pr-((git-branch))
-      trigger: true
-      version: every
-
-    - put: src
-      resource: pr-((git-branch))
-      params:
-        path: src
-        status: pending
-        base_context: concourse
-        context: test-pages-builder
-
-    - do: *test
-
-    on_failure:
-      put: src
-      resource: pr-((git-branch))
-      params:
-        path: src
-        status: failure
-        base_context: concourse
-        context: test-pages-builder
-
-    on_success:
-      put: src
-      resource: pr-((git-branch))
-      params:
-        path: src
-        status: success
-        base_context: concourse
-        context: test-pages-builder
-
   - name: test-and-deploy-((deploy-env))
     plan:
       - get: src
-        resource: src-((deploy-env))
+        resource: pr-((git-branch))
         passed: [set-pipeline]
         trigger: true
-        params: {depth: 1}
-      - put: gh-status
-        inputs: [src]
-        params: {state: pending}
       - do: *test
       - task: deploy
         config:
@@ -166,9 +127,6 @@ jobs:
               CF_APP_NAME: pages-builder-((deploy-env))
     on_failure:
       in_parallel:
-        - put: gh-status
-          inputs: [src]
-          params: {state: failure}
         - put: slack
           params:
             text: |
@@ -179,9 +137,6 @@ jobs:
             icon_url: ((slack-icon-url))
     on_success:
       in_parallel:
-        - put: gh-status
-          inputs: [src]
-          params: {state: success}
         - put: slack
           params:
             text: |
@@ -194,9 +149,8 @@ jobs:
   - name: nightly-tasks-((deploy-env))
     plan:
       - get: src
-        resource: src-((deploy-env))
+        resource: pr-((git-branch))
         passed: [set-pipeline]
-        params: {depth: 1}
       - get: nightly
         trigger: true
       - task: restage
@@ -214,13 +168,6 @@ jobs:
 #  RESOURCES
 
 resources:
-
-  - name: src-((deploy-env))
-    type: git
-    icon: github
-    source:
-      uri: ((git-base-url))/((builder-repository-path))
-      branch: ((git-branch))
 
   - name: pr-((git-branch))
     type: pull-request
@@ -256,25 +203,10 @@ resources:
     source:
       url: ((slack-webhook-url))
 
-  - name: gh-status
-    type: cogito
-    check_every: 1h
-    source:
-      owner: cloud-gov
-      repo: pages-builder
-      access_token: ((gh-access-token))
-      context_prefix: concourse
-
 ############################
 #  RESOURCE TYPES
 
 resource_types:
-
-  - name: cogito
-    type: docker-image
-    check_every: 24h
-    source:
-      repository: pix4d/cogito
 
   - name: slack-notification
     type: docker-image
