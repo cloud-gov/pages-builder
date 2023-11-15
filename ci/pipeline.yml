@@ -16,7 +16,7 @@ node-image: &node-image
     type: docker-image
     source:
       repository: node
-      tag: 18
+      tag: 18.15
 
 cf-image: &cf-image
   platform: linux
@@ -55,7 +55,7 @@ test: &test
       image_resource:
         type: docker-image
         source:
-          repository: karlkfi/concourse-dcind
+          repository: cloudgov/concourse-dcind
       inputs:
         - name: src
         - name: redis
@@ -250,7 +250,7 @@ resources:
     type: docker-image
     source:
       repository: node
-      tag: 18
+      tag: 18.15
 
   - name: slack
     type: slack-notification
