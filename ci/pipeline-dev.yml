@@ -13,10 +13,13 @@ env-cf: &env-cf
 node-image: &node-image
   platform: linux
   image_resource:
-    type: docker-image
+    type: registry-image
     source:
-      repository: node
-      tag: 18.15
+      aws_access_key_id: ((ecr-aws-key))
+      aws_secret_access_key: ((ecr-aws-secret))
+      repository: pages-node-v20
+      aws_region: us-gov-west-1
+      tag: latest
 
 cf-image: &cf-image
   platform: linux
@@ -33,8 +36,6 @@ test: &test
   - in_parallel:
     - get: redis
       params: {save: true}
-    - get: node
-      params: {save: true}
   - task: prepare
     config:
       <<: *node-image
@@ -50,33 +51,7 @@ test: &test
             yarn eslint
   - task: test
     privileged: true
-    config:
-      platform: linux
-      image_resource:
-        type: docker-image
-        source:
-          repository: cloudgov/concourse-dcind
-          tag: original
-      inputs:
-        - name: src
-        - name: redis
-        - name: node
-      run:
-        dir: src
-        path: ci/docker/entrypoint.sh
-        args:
-          - bash
-          - -ceux
-          - |
-            pushd ..
-              docker load -i redis/image
-              docker tag "$(cat redis/image-id)" "$(cat redis/repository):$(cat redis/tag)"
-              docker load -i node/image
-              docker tag "$(cat node/image-id)" "$(cat node/repository):$(cat node/tag)"
-            popd
-            docker-compose -f ci/docker/docker-compose.yml run app app/ci/tasks/test.sh
-            docker-compose -f ci/docker/docker-compose.yml down
-            docker volume rm $(docker volume ls -q)
+    file: src/ci/partials/test.yml
 
 
 ############################
@@ -193,12 +168,6 @@ resources:
       repository: redis
       tag: 5-alpine
 
-  - name: node
-    type: docker-image
-    source:
-      repository: node
-      tag: 18.15
-
   - name: slack
     type: slack-notification
     source:
@@ -210,11 +179,28 @@ resources:
 resource_types:
 
   - name: slack-notification
-    type: docker-image
+    type: registry-image
     source:
-      repository: cfcommunity/slack-notification-resource
+      aws_access_key_id: ((ecr_aws_key))
+      aws_secret_access_key: ((ecr_aws_secret))
+      repository: slack-notification-resource
+      aws_region: us-gov-west-1
+      tag: latest
 
   - name: pull-request
-    type: docker-image
+    type: registry-image
     source:
-      repository: teliaoss/github-pr-resource
+      aws_access_key_id: ((ecr_aws_key))
+      aws_secret_access_key: ((ecr_aws_secret))
+      repository: github-pr-resource
+      aws_region: us-gov-west-1
+      tag: latest
+
+  - name: time
+    type: registry-image
+    source:
+      aws_access_key_id: ((ecr_aws_key))
+      aws_secret_access_key: ((ecr_aws_secret))
+      repository: time-resource
+      aws_region: us-gov-west-1
+      tag: latest

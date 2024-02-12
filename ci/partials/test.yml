@@ -1,0 +1,26 @@
+platform: linux
+image_resource:
+  type: registry-image
+  source:
+    aws_access_key_id: ((ecr-aws-key))
+    aws_secret_access_key: ((ecr-aws-secret))
+    repository: pages-dind-v25
+    aws_region: us-gov-west-1
+    tag: latest
+inputs:
+  - name: src
+  - name: redis
+run:
+  dir: src
+  path: ci/docker/entrypoint.sh
+  args:
+    - bash
+    - -ceux
+    - |
+      pushd ..
+        docker load -i redis/image
+        docker tag "$(cat redis/image-id)" "$(cat redis/repository):$(cat redis/tag)"
+      popd
+      docker-compose -f ci/docker/docker-compose.yml run app app/ci/tasks/test.sh
+      docker-compose -f ci/docker/docker-compose.yml down
+      docker volume rm $(docker volume ls -q)
