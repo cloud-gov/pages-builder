@@ -28,9 +28,9 @@ cf-image: &cf-image
     source:
       aws_access_key_id: ((ecr-aws-key))
       aws_secret_access_key: ((ecr-aws-secret))
-      repository: harden-concourse-task
+      repository: general-task
       aws_region: us-gov-west-1
-      tag: ((harden-concourse-task-tag))
+      tag: latest
 
 test: &test
   - in_parallel:
@@ -256,5 +256,14 @@ resource_types:
       aws_access_key_id: ((ecr_aws_key))
       aws_secret_access_key: ((ecr_aws_secret))
       repository: time-resource
+      aws_region: us-gov-west-1
+      tag: latest
+
+  - name: registry-image
+    type: registry-image
+    source:
+      aws_access_key_id: ((ecr_aws_key))
+      aws_secret_access_key: ((ecr_aws_secret))
+      repository: registry-image-resource
       aws_region: us-gov-west-1
       tag: latest
